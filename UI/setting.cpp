@@ -1,0 +1,913 @@
+//
+// eXcellent Multi-Platform emulator type 8 - 'XM8'
+// based on ePC-8801MA
+//
+// Author (ePC-8801MA) : Takeda.Toshiya
+// Author (XM8) : Tanaka.Yasushi
+//
+// [ setting ]
+//
+
+#ifdef SDL
+
+#include "os.h"
+#include "common.h"
+#include "fileio.h"
+#include "vm.h"
+#include "config.h"
+#include "setting.h"
+
+//
+// defines
+//
+#define SETTING_CPU_8MHZ		0
+										// uPD70008AC CPU (Z80H compatible, clock 8MHz)
+#define SETTING_CPU_4MHZ		1
+										// uPD780C-1 CPU (Z80A compatible, clock 4MHz)
+#define SETTING_MEMORY_WAIT		1
+										// memory wait = on
+#define SETTING_8MHZ_HIGH		2
+										// 8MHz H mode (FE2/MC)
+#define SETTING_USE_JOYSTICK	0
+										// Joystick for ATARI port
+#define SETTING_MONITOR_24K		0
+										// 24KHz analog monitor
+#define SETTING_MONITOR_15K		1
+										// 15kHz analog monitor
+#define SETTING_SOUND_OPNA		0
+										// YM2608 (PC-8801FA/MA/MA2/MC/VA2/VA3/DO+)
+#define SETTING_SOUND_OPN		1
+										// YM2203 (PC-8801mkIISR/TR/FR/MR/FH/MH/FE/FE2/VA/DO)
+#define SETTING_ORG				"retro_pc_pi"
+										// organization name
+#define SETTING_APP				"xm8"
+										// application name
+#define SETTING_FILENAME		"setting.bin"
+										// setting file name
+#define SETTING_VERSION			20150621
+										// setting version
+
+// video
+#define DEFAULT_WINDOW_WIDTH	640
+										// window width
+#define DEFAULT_SKIP_FRAME		0
+										// skip frame
+#ifdef __ANDROID__
+#define DEFAULT_SCAN_LINE		(false)
+										// scan line
+#define DEFAULT_BRIGHTNESS		0xE8
+										// brightness for vm
+#else
+#define DEFAULT_SCAN_LINE		(true)
+										// scan line
+#define DEFAULT_BRIGHTNESS		0xFF
+										// brightness for vm
+#endif // __ANDROID__
+#define DEFAULT_MENU_ALPHA		0xD0
+										// alpha blending level for menu
+
+// audio
+#ifdef __ANDROID__
+#define DEFAULT_AUDIO_FREQ		48000
+										// audio freqency (Hz)
+#else
+#define DEFAULT_AUDIO_FREQ		55467
+										// audio freqency (Hz)
+#endif // __ANDROID__
+#define DEFAULT_AUDIO_POWER		11
+										// audio power (2^n)
+#define DEFAULT_AUDIO_UNIT		15
+										// audio unit (ms)
+#ifdef __ANDROID__
+#define DEFAULT_AUDIO_BUFFER	150
+										// audio buffer (ms)
+#else
+#define DEFAULT_AUDIO_BUFFER	120
+										// audio buffer (ms)
+#endif // __ANDROID__
+
+// input
+#define DEFAULT_SOFTKEY_ALPHA	0x80
+										// alpha blending level for softkey
+#define DEFAULT_SOFTKEY_TIME	4000
+										// softkey timeout (ms)
+#define DEFAULT_MOUSE_TIME		3000
+										// mouse timeout (ms)
+
+//
+// Setting()
+// constructor
+//
+Setting::Setting()
+{
+	int loop;
+
+	// virtual machine
+	SDL_zero(config);
+
+	// directory and path
+	setting_dir[0] = '\0';
+	setting_path[0] = '\0';
+
+	// setting (video)
+	window_width = DEFAULT_WINDOW_WIDTH;
+	skip_frame = DEFAULT_SKIP_FRAME;
+	brightness = DEFAULT_BRIGHTNESS;
+
+	// setting (input)
+	softkey_index = 0;
+	for (loop=0; loop<SDL_arraysize(softkey_set); loop++) {
+		softkey_set[loop] = loop;
+	}
+	softkey_alpha = DEFAULT_SOFTKEY_ALPHA;
+	softkey_time = DEFAULT_SOFTKEY_TIME;
+	joystick_enable = true;
+	joystick_swap = false;
+	joystick_key = true;
+	mouse_time = DEFAULT_MOUSE_TIME;
+
+	// save state
+	state_num = 0;
+}
+
+//
+// ~Setting()
+// destructor
+//
+Setting::~Setting()
+{
+}
+
+//
+// Init()
+// initialize
+//
+bool Setting::Init()
+{
+	// directory
+#ifdef __ANDROID__
+	strcpy(setting_dir, SDL_AndroidGetExternalStoragePath());
+	strcat(setting_dir, "/");
+#else
+	strcpy(setting_dir, SDL_GetPrefPath(SETTING_ORG, SETTING_APP));
+#endif // __ANDROID__
+	strcpy(setting_path, setting_dir);
+	strcat(setting_path, SETTING_FILENAME);
+
+	// default settings (misc)
+	config.use_direct_input = false;
+	config.disable_dwm = false;
+
+	// default settings (system)
+	config.boot_mode = SETTING_V2_MODE;
+	config.cpu_type = SETTING_CPU_4MHZ;
+	config.dipswitch = 0;
+	config.device_type = SETTING_USE_JOYSTICK;
+
+	// defult settings (floppy disk)
+	config.ignore_crc = false;
+
+	// default settings (tape)
+	config.tape_sound = false;
+	config.wave_shaper = false;
+	config.direct_load_mzt = false;
+	config.baud_high = false;
+
+	// default settings (directory and path)
+	config.initial_disk_dir[0] = '\0';
+	memset(config.recent_disk_path, 0, sizeof(config.recent_disk_path));
+	config.initial_tape_dir[0] = '\0';
+	memset(config.recent_tape_path, 0, sizeof(config.recent_tape_path));
+
+	// default settings (screen)
+	config.window_mode = 0;
+	config.use_d3d9 = false;
+	config.wait_vsync = false;
+	config.stretch_type = 0;
+	config.monitor_type = SETTING_MONITOR_24K;
+	config.crt_filter = false;
+	config.scan_line = DEFAULT_SCAN_LINE;
+
+	// default settings (sound)
+	config.sound_frequency = DEFAULT_AUDIO_FREQ;
+	config.sound_latency = DEFAULT_AUDIO_BUFFER;
+	config.sound_device_type = SETTING_SOUND_OPN;
+	config.fmgen_dll_path[0] = '\0';
+
+	// load
+	Load();
+	return true;
+}
+
+//
+// Deinit()
+// deinitialize
+//
+void Setting::Deinit()
+{
+	Save();
+}
+
+//
+// Load()
+// load setting
+//
+void Setting::Load()
+{
+	FILEIO fileio;
+
+	// open
+	if (fileio.Fopen(setting_path, FILEIO_READ_BINARY) == true) {
+		// common
+		LoadSetting(&fileio);
+
+		// close
+		fileio.Fclose();
+	}
+}
+
+//
+// LoadSetting()
+// load common
+//
+bool Setting::LoadSetting(FILEIO *fio)
+{
+	Uint32 version;
+	int loop;
+
+	// check version
+	version = fio->FgetUint32();
+	if (version == SETTING_VERSION) {
+		// system
+		config.boot_mode = fio->FgetInt32();
+		config.cpu_type = fio->FgetInt32();
+		config.dipswitch = fio->FgetUint32();
+
+		// video
+		window_width = fio->FgetInt32();
+		skip_frame = fio->FgetInt32();
+		config.monitor_type = fio->FgetInt32();
+		config.scan_line = fio->FgetBool();
+		brightness = fio->FgetUint8();
+
+		// audio
+		config.sound_frequency = fio->FgetInt32();
+		config.sound_latency = fio->FgetInt32();
+		config.sound_device_type = fio->FgetInt32();
+
+		// input
+		softkey_index = fio->FgetInt32();
+		for (loop=0; loop<SDL_arraysize(softkey_set); loop++) {
+			softkey_set[loop] = fio->FgetInt32();
+		}
+		softkey_alpha = fio->FgetUint8();
+		softkey_time = fio->FgetUint32();
+		joystick_enable = fio->FgetBool();
+		joystick_swap = fio->FgetBool();
+		joystick_key = fio->FgetBool();
+		mouse_time = fio->FgetUint32();
+
+		// load and save state
+		state_num = fio->FgetInt32();
+
+		return true;
+	}
+
+	return false;
+}
+
+//
+// Save()
+// save setting
+//
+void Setting::Save()
+{
+	FILEIO fileio;
+
+	// open
+	if (fileio.Fopen(setting_path, FILEIO_WRITE_BINARY) == true) {
+		// common
+		SaveSetting(&fileio);
+
+		// close
+		fileio.Fclose();
+	}
+}
+
+//
+// SaveSetting()
+// save common
+//
+void Setting::SaveSetting(FILEIO *fio)
+{
+	int loop;
+
+	// version
+	fio->FputUint32(SETTING_VERSION);
+
+	// system
+	fio->FputInt32(config.boot_mode);
+	fio->FputInt32(config.cpu_type);
+	fio->FputUint32(config.dipswitch);
+
+	// video
+	fio->FputInt32(window_width);
+	fio->FputInt32(skip_frame);
+	fio->FputInt32(config.monitor_type);
+	fio->FputBool(config.scan_line);
+	fio->FputUint8(brightness);
+
+	// audio
+	fio->FputInt32(config.sound_frequency);
+	fio->FputInt32(config.sound_latency);
+	fio->FputInt32(config.sound_device_type);
+
+	// input
+	fio->FputInt32(softkey_index);
+	for (loop=0; loop<SDL_arraysize(softkey_set); loop++) {
+		fio->FputInt32(softkey_set[loop]);
+	}
+	fio->FputUint8(softkey_alpha);
+	fio->FputUint32(softkey_time);
+	fio->FputBool(joystick_enable);
+	fio->FputBool(joystick_swap);
+	fio->FputBool(joystick_key);
+	fio->FputUint32(mouse_time);
+
+	// load and save state
+	fio->FputInt32(state_num);
+}
+
+//
+// GetSettingDir()
+// get setting directory
+//
+const char* Setting::GetSettingDir()
+{
+	return setting_dir;
+}
+
+//
+// GetSystemMode()
+// get system mode (0-3)
+//
+int Setting::GetSystemMode()
+{
+	return config.boot_mode;
+}
+
+//
+// SetSystemMode()
+// set system mode (0-3)
+//
+void Setting::SetSystemMode(int mode)
+{
+	config.boot_mode = mode;
+}
+
+//
+// GetCPUClock()
+// get cpu clock (4 or 8)
+//
+int Setting::GetCPUClock()
+{
+	if (config.cpu_type == SETTING_CPU_8MHZ) {
+		return 8;
+	}
+	else {
+		return 4;
+	}
+}
+
+//
+// SetCPUClock()
+// set cpu clock (4 or 8)
+//
+void Setting::SetCPUClock(int clock)
+{
+	switch (clock) {
+	// 4MHz
+	case 4:
+		config.cpu_type = SETTING_CPU_4MHZ;
+		break;
+
+	// 8MHz
+	case 8:
+		config.cpu_type = SETTING_CPU_8MHZ;
+		break;
+
+	default:
+		break;
+	}
+}
+
+//
+// HasMemoryWait()
+// get memory wait
+//
+bool Setting::HasMemoryWait()
+{
+	if ((config.dipswitch & SETTING_MEMORY_WAIT) != 0) {
+		return true;
+	}
+	else {
+		return false;
+	}
+}
+
+//
+// SetMemoryWait()
+// set memory wait
+//
+void Setting::SetMemoryWait(bool wait)
+{
+	if (wait == true) {
+		config.dipswitch |= SETTING_MEMORY_WAIT;
+	}
+	else {
+		config.dipswitch &= ~SETTING_MEMORY_WAIT;
+	}
+}
+
+//
+// Is8HMode()
+// get 8MHzH mode
+//
+bool Setting::Is8HMode()
+{
+	if ((config.dipswitch & SETTING_8MHZ_HIGH) != 0) {
+		return true;
+	}
+	else {
+		return false;
+	}
+}
+
+//
+// Set8HMode()
+// set 8MHzH mode
+//
+void Setting::Set8HMode(bool high)
+{
+	if (high == true) {
+		config.dipswitch |= SETTING_8MHZ_HIGH;
+	}
+	else {
+		config.dipswitch &= ~SETTING_8MHZ_HIGH;
+	}
+}
+
+//
+// GetSystems()
+// get system information
+//
+Uint32 Setting::GetSystems()
+{
+	Uint32 info;
+
+	info = (Uint32)config.dipswitch;
+	info <<= 8;
+	info |= (Uint32)config.cpu_type;
+	info <<= 8;
+	info |= (Uint32)config.boot_mode;
+
+	return info;
+}
+
+//
+// GetWindowWidth()
+// get window width
+//
+int Setting::GetWindowWidth()
+{
+	return window_width;
+}
+
+//
+// SetWindowWidth()
+// set window width
+//
+void Setting::SetWindowWidth(int width)
+{
+	window_width = width;
+}
+
+//
+// GetSkipFrame()
+// get skip frame
+//
+int Setting::GetSkipFrame()
+{
+	return skip_frame;
+}
+
+//
+// SetSkipFrame()
+// set skip frame
+//
+void Setting::SetSkipFrame(int frame)
+{
+	skip_frame = frame;
+}
+
+//
+// GetBrightness()
+// get brightness for vm
+//
+Uint8 Setting::GetBrightness()
+{
+	return brightness;
+}
+
+//
+// SetBrightness()
+// set brightness for vm
+//
+void Setting::SetBrightness(Uint8 bri)
+{
+	brightness = bri;
+}
+
+//
+// GetMenuAlpha
+// get alpha blending level for menu
+//
+Uint8 Setting::GetMenuAlpha()
+{
+	return DEFAULT_MENU_ALPHA;
+}
+
+//
+// IsLowReso()
+// get 15kHz monitor
+//
+bool Setting::IsLowReso()
+{
+	if (config.monitor_type == SETTING_MONITOR_15K) {
+		return true;
+	}
+	else {
+		return false;
+	}
+}
+
+//
+// SetLowReso()
+// set 15KHz monitor
+//
+void Setting::SetLowReso(bool low)
+{
+	if (low == true) {
+		config.monitor_type = SETTING_MONITOR_15K;
+	}
+	else {
+		config.monitor_type = SETTING_MONITOR_24K;
+	}
+}
+
+//
+// HasScanline()
+// get scan line
+//
+bool Setting::HasScanline()
+{
+	return config.scan_line;
+}
+
+//
+// SetScanline()
+// set scan line
+//
+void Setting::SetScanline(bool scanline)
+{
+	config.scan_line = scanline;
+}
+
+//
+// GetAudioDevice()
+// get audio device index
+//
+int Setting::GetAudioDevice()
+{
+	// always use default device
+	return 0;
+}
+
+//
+// GetAudioFreq()
+// get audio frequency
+//
+int Setting::GetAudioFreq()
+{
+	return config.sound_frequency;
+}
+
+//
+// SetAudioFreq()
+// set audio frequency
+//
+void Setting::SetAudioFreq(int freq)
+{
+	config.sound_frequency = freq;
+}
+
+//
+// GetAudioPower()
+// get audio samples (for SDL_OpenAudioDevice)
+//
+int Setting::GetAudioPower()
+{
+	return DEFAULT_AUDIO_POWER;
+}
+
+//
+// GetAudioUnit()
+// get audio samples (for vm->create_sound)
+//
+int Setting::GetAudioUnit()
+{
+	return DEFAULT_AUDIO_UNIT;
+}
+
+//
+// GetAudioBuffer()
+// get audio buffer (ms)
+//
+int Setting::GetAudioBuffer()
+{
+	return config.sound_latency;
+}
+
+//
+// SetAudioBuffer()
+// set audio buffer (ms)
+//
+void Setting::SetAudioBuffer(int ms)
+{
+	config.sound_latency = ms;
+}
+
+//
+// HasOPNA()
+// get sound board II
+//
+bool Setting::HasOPNA()
+{
+	if (config.sound_device_type == SETTING_SOUND_OPNA) {
+		return true;
+	}
+	else {
+		return false;
+	}
+}
+
+//
+// SetOPNA()
+// set sound board II
+//
+void Setting::SetOPNA(bool opna)
+{
+	if (opna == true) {
+		config.sound_device_type = SETTING_SOUND_OPNA;
+	}
+	else {
+		config.sound_device_type = SETTING_SOUND_OPN;
+	}
+}
+
+//
+// GetSoftKeyType()
+// get softkey type
+//
+int Setting::GetSoftKeyType()
+{
+	return softkey_set[softkey_index];
+}
+
+//
+// NextSoftKey()
+// next softkey
+//
+bool Setting::NextSoftKey()
+{
+	int loop;
+	int current;
+	int index;
+
+	// get current
+	current = GetSoftKeyType();
+	index = softkey_index;
+
+	// loop
+	for (loop=0; loop<SDL_arraysize(softkey_set); loop++) {
+		// next index
+		index++;
+		if (index >= SDL_arraysize(softkey_set)) {
+			index = 0;
+		}
+
+		// compare
+		if (softkey_set[index] != current) {
+			break;
+		}
+	}
+
+	// compare
+	if (softkey_set[index] != current) {
+		softkey_index = index;
+		return true;
+	}
+
+	// all equal
+	return false;
+}
+
+//
+// PrevSoftKey()
+// prev softkey
+//
+bool Setting::PrevSoftKey()
+{
+	int loop;
+	int current;
+	int index;
+
+	// get current
+	current = GetSoftKeyType();
+	index = softkey_index;
+
+	// loop
+	for (loop=0; loop<SDL_arraysize(softkey_set); loop++) {
+		// prev index
+		index--;
+		if (index < 0) {
+			index = SDL_arraysize(softkey_set) - 1;
+		}
+
+		// compare
+		if (softkey_set[index] != current) {
+			break;
+		}
+	}
+
+	// compare
+	if (softkey_set[index] != current) {
+		softkey_index = index;
+		return true;
+	}
+
+	// all equal
+	return false;
+}
+
+//
+// GetSoftKeySet()
+// get softkey set
+//
+int Setting::GetSoftKeySet(int set)
+{
+	return softkey_set[set];
+}
+
+//
+// SetSoftKeySet()
+// set softkey set
+//
+bool Setting::SetSoftKeySet(int set, int type)
+{
+	if (softkey_set[set] == type) {
+		return false;
+	}
+
+	softkey_set[set] = type;
+	return true;
+}
+
+
+//
+// GetSoftKeyAlpha()
+// get alpha blending level for softkey
+//
+Uint8 Setting::GetSoftKeyAlpha()
+{
+	return softkey_alpha;
+}
+
+//
+// SetSoftKeyAlpha()
+// set alpha blending level for softkey
+//
+void Setting::SetSoftKeyAlpha(Uint8 alpha)
+{
+	softkey_alpha = alpha;
+}
+
+//
+// GetSoftKeyTime()
+// get softkey timeout
+//
+Uint32 Setting::GetSoftKeyTime()
+{
+	return softkey_time;
+}
+
+//
+// SetSoftKeyTime()
+// set softkey timeout
+//
+void Setting::SetSoftKeyTime(Uint32 ms)
+{
+	softkey_time = ms;
+}
+
+//
+// IsJoyEnable()
+// get joystick enable
+//
+bool Setting::IsJoyEnable()
+{
+	return joystick_enable;
+}
+
+//
+// SetJoyEnable()
+// set joystick enable
+//
+void Setting::SetJoyEnable(bool enable)
+{
+	joystick_enable = enable;
+}
+
+//
+// IsJoySwap()
+// get joystick button swap
+//
+bool Setting::IsJoySwap()
+{
+	return joystick_swap;
+}
+
+//
+// SetJoySwap()
+// set joystick button swap
+//
+void Setting::SetJoySwap(bool swap)
+{
+	joystick_swap = swap;
+}
+
+//
+// IsJoyKey()
+// get joystick to key
+//
+bool Setting::IsJoyKey()
+{
+	return joystick_key;
+}
+
+//
+// SetJoyKey()
+// set joystick to key
+//
+void Setting::SetJoyKey(bool enable)
+{
+	joystick_key = enable;
+}
+
+//
+// GetMouseTime()
+// get mouse timeout
+//
+Uint32 Setting::GetMouseTime()
+{
+	return mouse_time;
+}
+
+//
+// SetMouseTime()
+// set mouse timeout
+//
+void Setting::SetMouseTime(Uint32 ms)
+{
+	mouse_time = ms;
+}
+
+//
+// GetStateNum()
+// get state number
+//
+int Setting::GetStateNum()
+{
+	return state_num;
+}
+
+//
+// SetStateNum()
+// set state number
+//
+void Setting::SetStateNum(int num)
+{
+	state_num = num;
+}
+
+#endif // SDL
