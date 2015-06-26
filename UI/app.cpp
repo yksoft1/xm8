@@ -38,12 +38,14 @@
 //
 #define APP_NAME				"XM8 (based on ePC-8801MA)";
 										// application name
-#define APP_VER					0x0100
+#define APP_VER					0x0110
 										// version (BCD)
 #define APP_WIDTH				SCREEN_WIDTH
 										// window width
-#define APP_HEIGHT				(SCREEN_HEIGHT + 18)
-										// window height
+#define APP_HEIGHT_TRANSPARENT	SCREEN_HEIGHT
+										// window height (transparent)
+#define APP_HEIGHT_STATUS		(SCREEN_HEIGHT + 18)
+										// window height (status line)
 #define MS_SHIFT				16
 										// float to uint shift (ex:0x10000=1ms)
 #define SLEEP_MENU				50
@@ -174,10 +176,6 @@ bool App::Init()
 		// Android platform
 		app_mobile = true;
 	}
-	if (strcmp(name, PLATFORM_WINDOWS) == 0) {
-		// Windows platform
-		SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "2");
-	}
 
 	// semaphore
 	if (app_mobile == true) {
@@ -195,12 +193,22 @@ bool App::Init()
 		return false;
 	}
 
+	if (strcmp(name, PLATFORM_WINDOWS) == 0) {
+		// Windows platform
+		SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, setting->GetScaleQuality());
+	}
+
 	// platform (1)
 	platform = new Platform(this);
 
 	// window
 	width = setting->GetWindowWidth();
-	height = (width * APP_HEIGHT) / APP_WIDTH;
+	if (setting->HasStatusLine() == true) {
+		height = (width * APP_HEIGHT_STATUS) / APP_WIDTH;
+	}
+	else {
+		height = (width * APP_HEIGHT_TRANSPARENT) / APP_WIDTH;
+	}
 	window = SDL_CreateWindow(  GetAppTitle(),
 								SDL_WINDOWPOS_UNDEFINED,
 								SDL_WINDOWPOS_UNDEFINED,
@@ -1159,13 +1167,13 @@ void App::Poll(SDL_Event *e)
 		break;
 
 	case SDL_KEYDOWN:
-		if (app_background == false) {
+		if ((app_background == false) && (setting->IsKeyEnable() == true)) {
 			OnKeyDown(e);
 		}
 		break;
 
 	case SDL_KEYUP:
-		if (app_background == false) {
+		if ((app_background == false) && (setting->IsKeyEnable() == true)) {
 			OnKeyUp(e);
 		}
 		break;
@@ -1723,7 +1731,12 @@ void App::SetWindowWidth()
 	int height;
 
 	width = setting->GetWindowWidth();
-	height = (width * APP_HEIGHT) / APP_WIDTH;
+	if (setting->HasStatusLine() == true) {
+		height = (width * APP_HEIGHT_STATUS) / APP_WIDTH;
+	}
+	else {
+		height = (width * APP_HEIGHT_TRANSPARENT) / APP_WIDTH;
+	}
 
 	// resize window
 	SDL_SetWindowSize(window, width, height);

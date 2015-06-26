@@ -6,7 +6,7 @@ eXellent Multi-platform emulator type 8 - 'XM8'
 based on ePC-8801MA
 
 Copyright (C) 2015 ＰＩ．
-Version 1.00 (2015/06/07)
+Version 1.10 (2015/06/26)
 
 -----------------------------------------------------------------------
 
@@ -89,6 +89,15 @@ Releaseターゲットはランタイムライブラリを静的リンクしま�
 はこれと異なり、ランタイムDLLを利用する設定としています。
 
 
+＜SDL＞
+
+XM8.exeに同梱して配布しているSDL2.dllは、SDL 2.0.3にタッチ操作の不具合修正
+パッチを当てたバージョンです。これを作成する場合は、SDL 2.0.3のソースツリー
+に対し、以下のファイルを差し替えてください。
+
+src/video/windows/SDL_windowsevents.c
+
+
 
 □Linux
 
@@ -150,6 +159,11 @@ https://www.libsdl.org/download-2.0.php
 Source/Android/XM8/jni/SDL/Android.mk（ndk-build向けmakeファイル）
 Source/Android/XM8/jni/SDL/include/*（インクルードファイル）
 Source/Android/XM8/jni/SDL/src/*（SDLソースコード）
+
+version 1.10以降、キーボードとジョイスティックの両方をサポートするためSDLに
+パッチを入れることにしました。以下のファイルを差し替えてください。
+
+src/joystick/android/SDL_sysjoystick.c
 
 
 ＜ビルド＞

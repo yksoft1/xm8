@@ -1325,7 +1325,7 @@ bool MenuList::PosToItem(int *x, int *y)
 	if (xx < ((SCREEN_WIDTH / 2)- (MENUITEM_WIDTH / 2))) {
 		return false;
 	}
-	if (xx >= ((SCREEN_WIDTH / 2) + (MENUITEM_WIDTH / 2))) {
+	if (xx > ((SCREEN_WIDTH / 2) + (MENUITEM_WIDTH / 2))) {
 		return false;
 	}
 

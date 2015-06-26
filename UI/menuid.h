@@ -254,6 +254,12 @@
 										// scanline
 #define MENU_VIDEO_BRIGHTNESS	813
 										// brightness
+#define MENU_VIDEO_STATUSCHK	814
+										// status line
+#define MENU_VIDEO_STATUSALPHA	815
+										// status alpha
+#define MENU_VIDEO_SCALEFILTER	816
+										// scaling filter
 #define MENU_VIDEO_WINDOW		896
 										// window radio
 #define MENU_VIDEO_SKIP			897
@@ -318,6 +324,8 @@
 										// joystick to keyboard
 #define MENU_INPUT_MOUSETIME	1011
 										// mouse timeout
+#define MENU_INPUT_KEYENABLE	1012
+										// keyboard enable
 #define MENU_INPUT_MAX			1099
 										// maximum
 

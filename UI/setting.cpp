@@ -44,8 +44,14 @@
 										// application name
 #define SETTING_FILENAME		"setting.bin"
 										// setting file name
-#define SETTING_VERSION			20150621
-										// setting version
+
+// version
+#define SETTING_VERSION_100		20150621
+										// version 1.00
+#define SETTING_VERSION_105		20150624
+										// version 1.05
+#define SETTING_VERSION_110		20150626
+										// version 1.10
 
 // video
 #define DEFAULT_WINDOW_WIDTH	640
@@ -65,6 +71,12 @@
 #endif // __ANDROID__
 #define DEFAULT_MENU_ALPHA		0xD0
 										// alpha blending level for menu
+#define DEFAULT_STATUS_LINE		(true)
+										// status line
+#define DEFAULT_STATUS_ALPHA	0x60
+										// alpha blending level for status
+#define DEFAULT_SCALE_QUALITY	2
+										// render scale quality
 
 // audio
 #ifdef __ANDROID__
@@ -93,6 +105,13 @@
 										// softkey timeout (ms)
 #define DEFAULT_MOUSE_TIME		3000
 										// mouse timeout (ms)
+#ifdef __ANDROID__
+#define DEFAULT_KEYBOARD_ENABLE	(false)
+										// keyboard enable
+#else
+#define DEFAULT_KEYBOARD_ENABLE	(true)
+										// keyboard enable
+#endif // __ANDROID__
 
 //
 // Setting()
@@ -113,6 +132,10 @@ Setting::Setting()
 	window_width = DEFAULT_WINDOW_WIDTH;
 	skip_frame = DEFAULT_SKIP_FRAME;
 	brightness = DEFAULT_BRIGHTNESS;
+	status_line = DEFAULT_STATUS_LINE;
+	status_alpha = DEFAULT_STATUS_ALPHA;
+	scale_quality[0] = (char)('0' + DEFAULT_SCALE_QUALITY);
+	scale_quality[1] = '\0';
 
 	// setting (input)
 	softkey_index = 0;
@@ -125,6 +148,7 @@ Setting::Setting()
 	joystick_swap = false;
 	joystick_key = true;
 	mouse_time = DEFAULT_MOUSE_TIME;
+	keyboard_enable = DEFAULT_KEYBOARD_ENABLE;
 
 	// save state
 	state_num = 0;
@@ -237,7 +261,7 @@ bool Setting::LoadSetting(FILEIO *fio)
 
 	// check version
 	version = fio->FgetUint32();
-	if (version == SETTING_VERSION) {
+	if (version >= SETTING_VERSION_100) {
 		// system
 		config.boot_mode = fio->FgetInt32();
 		config.cpu_type = fio->FgetInt32();
@@ -269,6 +293,18 @@ bool Setting::LoadSetting(FILEIO *fio)
 
 		// load and save state
 		state_num = fio->FgetInt32();
+
+		// version 1.05
+		if (version >= SETTING_VERSION_105) {
+			status_line = fio->FgetBool();
+			status_alpha = fio->FgetUint8();
+			scale_quality[0] = (char)('0' + fio->FgetInt32());
+		}
+
+		// version 1.10
+		if (version >= SETTING_VERSION_110) {
+			keyboard_enable = fio->FgetBool();
+		}
 
 		return true;
 	}
@@ -303,7 +339,7 @@ void Setting::SaveSetting(FILEIO *fio)
 	int loop;
 
 	// version
-	fio->FputUint32(SETTING_VERSION);
+	fio->FputUint32(SETTING_VERSION_110);
 
 	// system
 	fio->FputInt32(config.boot_mode);
@@ -336,6 +372,14 @@ void Setting::SaveSetting(FILEIO *fio)
 
 	// load and save state
 	fio->FputInt32(state_num);
+
+	// version 1.05
+	fio->FputBool(status_line);
+	fio->FputUint8(status_alpha);
+	fio->FputInt32((int)(scale_quality[0] - '0'));
+
+	// version 1.10
+	fio->FputBool(keyboard_enable);
 }
 
 //
@@ -581,6 +625,60 @@ bool Setting::HasScanline()
 void Setting::SetScanline(bool scanline)
 {
 	config.scan_line = scanline;
+}
+
+//
+// HasStatusLine()
+// get status line
+//
+bool Setting::HasStatusLine()
+{
+	return status_line;
+}
+
+//
+// SetStatusLine()
+// set status line
+//
+void Setting::SetStatusLine(bool enable)
+{
+	status_line = enable;
+}
+
+//
+// GetStatusAlpha()
+// get alpha blending level for status
+//
+Uint8 Setting::GetStatusAlpha()
+{
+	return status_alpha;
+}
+
+//
+// SetStatusAlpha()
+// set alpha blending level for status
+//
+void Setting::SetStatusAlpha(Uint8 alpha)
+{
+	status_alpha = alpha;
+}
+
+//
+// GetScaleQuality()
+// get render scale quality
+//
+const char* Setting::GetScaleQuality()
+{
+	return scale_quality;
+}
+
+//
+// SetScaleQuality()
+// set render scale quality
+//
+void Setting::SetScaleQuality(int quality)
+{
+	scale_quality[0] = (char)('0' + quality);
 }
 
 //
@@ -890,6 +988,24 @@ Uint32 Setting::GetMouseTime()
 void Setting::SetMouseTime(Uint32 ms)
 {
 	mouse_time = ms;
+}
+
+//
+// IsKeyEnable()
+// get keyboard enable
+//
+bool Setting::IsKeyEnable()
+{
+	return keyboard_enable;
+}
+
+//
+// SetKeyEnable()
+// set keyboard enable
+//
+void Setting::SetKeyEnable(bool enable)
+{
+	keyboard_enable = enable;
 }
 
 //

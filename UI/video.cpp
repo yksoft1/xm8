@@ -70,6 +70,7 @@ Video::Video(App *a)
 	draw_texture = NULL;
 	menu_texture = NULL;
 	softkey_texture = NULL;
+	status_texture = NULL;
 	frame_buf = NULL;
 	menu_buf = NULL;
 	softkey_buf = NULL;
@@ -82,14 +83,13 @@ Video::Video(App *a)
 	brightness = 0xff;
 	softkey_mode = false;
 	softkey_mod = 0xff;
+	video_height = (SCREEN_HEIGHT + MINIMUM_HEIGHT + STATUS_HEIGHT);
+	status_alpha = 0;
 
-	// draw rect
+	// rect
 	SDL_zero(draw_rect);
-
-	// status(rest) rect
-	for (loop=0; loop<2; loop++) {
-		SDL_zero(status_rect[loop]);
-	}
+	SDL_zero(status_rect);
+	memset(clear_rect, 0, sizeof(clear_rect));
 
 	// drive status
 	for (loop=0; loop<MAX_DRIVE; loop++) {
@@ -100,12 +100,12 @@ Video::Video(App *a)
 	}
 
 	// frame rate
-	frame_rate[0] = 10000;
-	frame_rate[1] = 0;
+	frame_rate[0] = 0;
+	frame_rate[1] = 0x10000;
 
 	// system information
 	system_info[0] = 0;
-	system_info[1] = 0;
+	system_info[1] = 0xffff;
 
 	// full speed
 	full_speed[0] = false;
@@ -142,23 +142,23 @@ bool Video::Init(SDL_Window *win)
 		Deinit();
 		return false;
 	}
-	memset(frame_buf, 0, SCREEN_WIDTH * (SCREEN_HEIGHT + MINIMUM_HEIGHT + STATUS_HEIGHT) * sizeof(uint32));
+	memset(frame_buf, 0, SCREEN_WIDTH * SCREEN_HEIGHT * sizeof(uint32));
 
 	// menu buffer
-	menu_buf = (uint32*)SDL_malloc(SCREEN_WIDTH * (SCREEN_HEIGHT + MINIMUM_HEIGHT + STATUS_HEIGHT) * sizeof(uint32));
+	menu_buf = (uint32*)SDL_malloc(SCREEN_WIDTH * SCREEN_HEIGHT * sizeof(uint32));
 	if (menu_buf == NULL) {
 		Deinit();
 		return false;
 	}
-	memset(menu_buf, 0, SCREEN_WIDTH * (SCREEN_HEIGHT + MINIMUM_HEIGHT + STATUS_HEIGHT) * sizeof(uint32));
+	memset(menu_buf, 0, SCREEN_WIDTH * SCREEN_HEIGHT * sizeof(uint32));
 
 	// softkey buffer
-	softkey_buf = (uint32*)SDL_malloc(SCREEN_WIDTH * (SCREEN_HEIGHT + MINIMUM_HEIGHT + STATUS_HEIGHT) * sizeof(uint32));
+	softkey_buf = (uint32*)SDL_malloc(SCREEN_WIDTH * SCREEN_HEIGHT * sizeof(uint32));
 	if (softkey_buf == NULL) {
 		Deinit();
 		return false;
 	}
-	memset(softkey_buf, 0, SCREEN_WIDTH * (SCREEN_HEIGHT + MINIMUM_HEIGHT + STATUS_HEIGHT) * sizeof(uint32));
+	memset(softkey_buf, 0, SCREEN_WIDTH * SCREEN_HEIGHT * sizeof(uint32));
 
 	// support RGB888 format only (see common.h)
 #ifndef _RGB888
@@ -177,7 +177,7 @@ bool Video::Init(SDL_Window *win)
 										SDL_PIXELFORMAT_RGB888,
 										SDL_TEXTUREACCESS_STREAMING,
 										SCREEN_WIDTH,
-										SCREEN_HEIGHT + MINIMUM_HEIGHT + STATUS_HEIGHT);
+										SCREEN_HEIGHT);
 	if (draw_texture == NULL) {
 		Deinit();
 		return false;
@@ -188,7 +188,7 @@ bool Video::Init(SDL_Window *win)
 										SDL_PIXELFORMAT_ARGB8888,
 										SDL_TEXTUREACCESS_STREAMING,
 										SCREEN_WIDTH,
-										SCREEN_HEIGHT + MINIMUM_HEIGHT + STATUS_HEIGHT);
+										SCREEN_HEIGHT);
 	if (menu_texture == NULL) {
 		Deinit();
 		return false;
@@ -199,8 +199,19 @@ bool Video::Init(SDL_Window *win)
 										SDL_PIXELFORMAT_ARGB8888,
 										SDL_TEXTUREACCESS_STREAMING,
 										SCREEN_WIDTH,
-										SCREEN_HEIGHT + MINIMUM_HEIGHT + STATUS_HEIGHT);
+										SCREEN_HEIGHT);
 	if (softkey_texture == NULL) {
+		Deinit();
+		return false;
+	}
+
+	// status texture
+	status_texture = SDL_CreateTexture( renderer,
+										SDL_PIXELFORMAT_ARGB8888,
+										SDL_TEXTUREACCESS_STREAMING,
+										SCREEN_WIDTH,
+										MINIMUM_HEIGHT + STATUS_HEIGHT);
+	if (status_texture == NULL) {
 		Deinit();
 		return false;
 	}
@@ -213,6 +224,7 @@ bool Video::Init(SDL_Window *win)
 	SDL_SetTextureBlendMode(draw_texture, SDL_BLENDMODE_NONE);
 	SDL_SetTextureBlendMode(menu_texture, SDL_BLENDMODE_BLEND);
 	SDL_SetTextureBlendMode(softkey_texture, SDL_BLENDMODE_BLEND);
+	SDL_SetTextureBlendMode(status_texture, SDL_BLENDMODE_NONE);
 	SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_NONE);
 
 	return true;
@@ -224,6 +236,12 @@ bool Video::Init(SDL_Window *win)
 //
 void Video::Deinit()
 {
+	// status texture
+	if (status_texture != NULL) {
+		SDL_DestroyTexture(status_texture);
+		status_texture = NULL;
+	}
+
 	// softkey texture
 	if (softkey_texture != NULL) {
 		SDL_DestroyTexture(softkey_texture);
@@ -273,6 +291,9 @@ void Video::Deinit()
 //
 void Video::SetWindowSize(int width, int height)
 {
+	bool status;
+	int v_height;
+
 	// font and disk manager
 	if (font == NULL) {
 		font = app->GetFont();
@@ -285,8 +306,23 @@ void Video::SetWindowSize(int width, int height)
 	window_width = width;
 	window_height = height;
 
+	// update video_height
+	status = setting->HasStatusLine();
+	if (status == true) {
+		v_height = SCREEN_HEIGHT + MINIMUM_HEIGHT + STATUS_HEIGHT;
+	}
+	else {
+		v_height = SCREEN_HEIGHT;
+	}
+	if (v_height != video_height) {
+		video_height = v_height;
+
+		// rebuild texture (status only)
+		RebuildTexture(true);
+	}
+
 	// check aspect
-	if ((height * SCREEN_WIDTH) >= (width * (SCREEN_HEIGHT + MINIMUM_HEIGHT + STATUS_HEIGHT))) {
+	if ((height * SCREEN_WIDTH) >= (width * video_height)) {
 		horizontal = false;
 	}
 	else {
@@ -298,52 +334,153 @@ void Video::SetWindowSize(int width, int height)
 		draw_rect.x = 0;
 		draw_rect.y = 0;
 		draw_rect.w = width;
-		draw_rect.h = (width * (SCREEN_HEIGHT + MINIMUM_HEIGHT + STATUS_HEIGHT)) / SCREEN_WIDTH;
+		draw_rect.h = (width * video_height) / SCREEN_WIDTH;
 		if (draw_rect.h == height) {
 			// just window rect = draw rect
-			status_rect[0].w = 0;
-			status_rect[0].h = 0;
-			status_rect[1].w = 0;
-			status_rect[1].h = 0;
+			clear_rect[0].w = 0;
+			clear_rect[0].h = 0;
+			clear_rect[1].w = 0;
+			clear_rect[1].h = 0;
 		}
 		else {
 			// centering
 			draw_rect.y = (height / 2) - (draw_rect.h / 2);
-			status_rect[0].x = 0;
-			status_rect[0].y = 0;
-			status_rect[0].w = width;
-			status_rect[0].h = draw_rect.y;
-			status_rect[1].x = 0;
-			status_rect[1].y = draw_rect.y + draw_rect.h;
-			status_rect[1].w = width;
-			status_rect[1].h = height - status_rect[1].y;
+			clear_rect[0].x = 0;
+			clear_rect[0].y = 0;
+			clear_rect[0].w = width;
+			clear_rect[0].h = draw_rect.y;
+			clear_rect[1].x = 0;
+			clear_rect[1].y = draw_rect.y + draw_rect.h;
+			clear_rect[1].w = width;
+			clear_rect[1].h = height - clear_rect[1].y;
 		}
 	}
 	else {
 		// horizontal (landscape)
 		draw_rect.x = 0;
 		draw_rect.y = 0;
-		draw_rect.w = (height * SCREEN_WIDTH) / (SCREEN_HEIGHT + MINIMUM_HEIGHT + STATUS_HEIGHT);
+		draw_rect.w = (height * SCREEN_WIDTH) / video_height;
 		draw_rect.h = height;
 		if (draw_rect.w == width) {
 			// just window rect = draw rect
-			status_rect[0].w = 0;
-			status_rect[0].h = 0;
-			status_rect[1].w = 0;
-			status_rect[1].h = 0;
+			clear_rect[0].w = 0;
+			clear_rect[0].h = 0;
+			clear_rect[1].w = 0;
+			clear_rect[1].h = 0;
 		}
 		else {
 			// centering
 			draw_rect.x = (width / 2) - (draw_rect.w / 2);
-			status_rect[0].x = 0;
-			status_rect[0].y = 0;
-			status_rect[0].w = draw_rect.x;
-			status_rect[0].h = height;
-			status_rect[1].x = draw_rect.x + draw_rect.w;
-			status_rect[1].y = 0;
-			status_rect[1].w = width - status_rect[1].x;
-			status_rect[1].h = height;
+			clear_rect[0].x = 0;
+			clear_rect[0].y = 0;
+			clear_rect[0].w = draw_rect.x;
+			clear_rect[0].h = height;
+			clear_rect[1].x = draw_rect.x + draw_rect.w;
+			clear_rect[1].y = 0;
+			clear_rect[1].w = width - clear_rect[1].x;
+			clear_rect[1].h = height;
 		}
+	}
+
+	// status rect
+	if (status == true) {
+		// add status line
+		status_rect.h = draw_rect.h;
+		draw_rect.h = (draw_rect.w * SCREEN_HEIGHT) / SCREEN_WIDTH;
+		status_rect.x = draw_rect.x;
+		status_rect.w = draw_rect.w;
+		status_rect.y = draw_rect.y + draw_rect.h;
+		status_rect.h -= draw_rect.h;
+	}
+	else {
+		// transparent status line
+		status_rect.x = draw_rect.x;
+		status_rect.y = (draw_rect.w * (SCREEN_HEIGHT - STATUS_HEIGHT)) / SCREEN_WIDTH;
+		status_rect.w = draw_rect.w;
+		status_rect.h = draw_rect.h - status_rect.y;
+		status_rect.y += draw_rect.y;
+	}
+}
+
+//
+// RebuildTexture()
+// rebulid texture
+//
+void Video::RebuildTexture(bool statusonly)
+{
+	SDL_Texture *texture;
+
+	if (statusonly == false) {
+		// set hint
+		SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, setting->GetScaleQuality());
+
+		// drawing texture
+		texture = SDL_CreateTexture(renderer,
+									SDL_PIXELFORMAT_RGB888,
+									SDL_TEXTUREACCESS_STREAMING,
+									SCREEN_WIDTH,
+									SCREEN_HEIGHT);
+		if (texture != NULL) {
+			SDL_DestroyTexture(draw_texture);
+			draw_texture = texture;
+			SDL_SetTextureBlendMode(draw_texture, SDL_BLENDMODE_NONE);
+		}
+
+		// menu texture
+		texture = SDL_CreateTexture(renderer,
+									SDL_PIXELFORMAT_ARGB8888,
+									SDL_TEXTUREACCESS_STREAMING,
+									SCREEN_WIDTH,
+									SCREEN_HEIGHT);
+		if (texture != NULL) {
+			SDL_DestroyTexture(menu_texture);
+			menu_texture = texture;
+			SDL_SetTextureBlendMode(menu_texture, SDL_BLENDMODE_BLEND);
+		}
+
+		// softkey texture
+		texture = SDL_CreateTexture(renderer,
+									SDL_PIXELFORMAT_ARGB8888,
+									SDL_TEXTUREACCESS_STREAMING,
+									SCREEN_WIDTH,
+									SCREEN_HEIGHT);
+		if (texture != NULL) {
+			SDL_DestroyTexture(softkey_texture);
+			softkey_texture = texture;
+			SDL_SetTextureBlendMode(softkey_texture, SDL_BLENDMODE_BLEND);
+			CopyFrameBuf(softkey_texture, softkey_buf, SCREEN_HEIGHT);
+		}
+	}
+
+	if (setting->HasStatusLine() == true) {
+		// rebuild status texture
+		texture = SDL_CreateTexture(renderer,
+									SDL_PIXELFORMAT_ARGB8888,
+									SDL_TEXTUREACCESS_STREAMING,
+									SCREEN_WIDTH,
+									MINIMUM_HEIGHT + STATUS_HEIGHT);
+	}
+	else {
+		texture = SDL_CreateTexture(renderer,
+									SDL_PIXELFORMAT_ARGB8888,
+									SDL_TEXTUREACCESS_STREAMING,
+									SCREEN_WIDTH,
+									STATUS_HEIGHT);
+	}
+	if (texture != NULL) {
+		SDL_DestroyTexture(status_texture);
+		status_texture = texture;
+
+		// blend mode
+		if (setting->HasStatusLine() == true) {
+			SDL_SetTextureBlendMode(status_texture, SDL_BLENDMODE_NONE);
+		}
+		else {
+			SDL_SetTextureBlendMode(status_texture, SDL_BLENDMODE_BLEND);
+		}
+
+		// reset status area
+		ResetStatus();
 	}
 }
 
@@ -384,7 +521,7 @@ void Video::SetPowerDown(bool down)
 }
 
 //
-// SetSoftKey
+// SetSoftKey()
 // enable displaying softkey
 //
 void Video::SetSoftKey(bool visible, bool direct)
@@ -412,7 +549,7 @@ void Video::SetSoftKey(bool visible, bool direct)
 //
 void Video::UpdateSoftKey()
 {
-	CopyFrameBuf(softkey_texture, (Uint32*)softkey_buf);
+	CopyFrameBuf(softkey_texture, (Uint32*)softkey_buf, SCREEN_HEIGHT);
 }
 
 //
@@ -434,16 +571,16 @@ bool Video::ConvertPoint(int *x, int *y)
 
 	// convert
 	draw_x = (draw_x * SCREEN_WIDTH) / draw_rect.w;
-	draw_y = (draw_y * (SCREEN_HEIGHT + MINIMUM_HEIGHT + STATUS_HEIGHT)) / draw_rect.h;
+	draw_y = (draw_y * video_height) / draw_rect.h;
 
 	// over check
-	if ((draw_x < 0) || (draw_x > SCREEN_WIDTH)) {
+	if ((draw_x < 0) || (draw_x >= SCREEN_WIDTH)) {
 		*x = 0;
 		*y = 0;
 		return false;
 	}
 
-	if ((draw_y < 0) || (draw_y > (SCREEN_HEIGHT + MINIMUM_HEIGHT + STATUS_HEIGHT))) {
+	if ((draw_y < 0) || (draw_y >= video_height)) {
 		*x = 0;
 		*y = 0;
 		return false;
@@ -481,6 +618,7 @@ void Video::Draw()
 	int ret;
 	Uint8 bri;
 	Uint8 step;
+	Uint32 alpha;
 
 	// brightness
 	bri = setting->GetBrightness();
@@ -489,42 +627,61 @@ void Video::Draw()
 		SDL_SetTextureColorMod(draw_texture, brightness, brightness, brightness);
 	}
 
+	// status line alpha level
+	alpha = 0;
+	if (setting->HasStatusLine() == false) {
+		alpha = (Uint32)setting->GetStatusAlpha();
+	}
+	alpha <<= 24;
+	if (status_alpha != alpha) {
+		ResetStatus();
+		status_alpha = alpha;
+	}
+
 	// status line
 	DrawAccess();
 	DrawFrameRate();
 	DrawFullSpeed();
 	DrawSystemInfo();
+
+	// warning message
 	DrawPowerDown();
+
+	// buffer to texture
+	CopyFrameBuf(draw_texture, (Uint32*)frame_buf, SCREEN_HEIGHT);
+	if (setting->HasStatusLine() == true) {
+		CopyFrameBuf(status_texture, (Uint32*)&frame_buf[SCREEN_WIDTH * SCREEN_HEIGHT], MINIMUM_HEIGHT + STATUS_HEIGHT);
+	}
+	else {
+		CopyFrameBuf(status_texture, (Uint32*)&frame_buf[SCREEN_WIDTH * SCREEN_HEIGHT], STATUS_HEIGHT);
+	}
 
 	// menu
 	if (menu_mode == true) {
-		// buffer to texture
-		CopyFrameBuf(draw_texture, (Uint32*)frame_buf);
-
 		DrawMenu();
 		return;
 	}
 
-	// buffer to texture
-	CopyFrameBuf(draw_texture, (Uint32*)frame_buf);
-
-	// rendering
-	if ((status_rect[0].w != 0) || (status_rect[0].h != 0)) {
+	// clear if required
+	if ((clear_rect[0].w != 0) || (clear_rect[0].h != 0)) {
 		SDL_SetRenderDrawColor(renderer, 0, 0, 0, SDL_ALPHA_OPAQUE);
 		SDL_RenderClear(renderer);
 	}
 
+	// draw_texture & status_texture
+	ret = SDL_RenderCopy(renderer, draw_texture, NULL, &draw_rect);
+	if (ret == 0) {
+		ret = SDL_RenderCopy(renderer, status_texture, NULL, &status_rect);
+	}
+
 	if (softkey_mode == true) {
 		// softkey = enable
-		ret = SDL_RenderCopy(renderer, draw_texture, NULL, &draw_rect);
 		if (ret == 0) {
 			ret = SDL_RenderCopy(renderer, softkey_texture, NULL, &draw_rect);
 		}
 	}
 	else {
 		// sofkey = disable
-		ret = SDL_RenderCopy(renderer, draw_texture, NULL, &draw_rect);
-
 		if ((ret == 0) && (softkey_mod > 0)) {
 			// draw softkey with mod
 			SDL_SetTextureAlphaMod(softkey_texture, softkey_mod);
@@ -607,7 +764,12 @@ void Video::DrawAccess()
 		rect.x = 0;
 		rect.y = 0;
 		rect.w = DRIVE_WIDTH - 1;
-		rect.h = MINIMUM_HEIGHT + STATUS_HEIGHT;
+		if (setting->HasStatusLine() == true) {
+			rect.h = MINIMUM_HEIGHT + STATUS_HEIGHT;
+		}
+		else {
+			rect.h = STATUS_HEIGHT;
+		}
 
 		// set fill rect color
 		fore = COLOR_NODISK;
@@ -635,18 +797,18 @@ void Video::DrawAccess()
 
 		// fill rect (full or half)
 		if ((drive_status[drive].ready == true) && (drive_status[drive].readonly == true)) {
-			font->DrawHalfRect(buf, &rect, fore, COLOR_BLACK);
+			font->DrawHalfRect(buf, &rect, fore | status_alpha, COLOR_BLACK | status_alpha);
 		}
 		else {
-			font->DrawFillRect(buf, &rect, fore);
+			font->DrawFillRect(buf, &rect, fore | status_alpha);
 		}
 
 		// drive number
-		font->DrawAnkQuarter(buf, (char)(drive + '1'), COLOR_WHITE, COLOR_BLACK);
+		font->DrawAnkQuarter(buf, (char)(drive + '1'), COLOR_WHITE | status_alpha, COLOR_BLACK | status_alpha);
 
 		// disk name
 		if (drive_status[drive].ready == true) {
-			font->DrawSjisCenterOr(buf, &rect, drive_status[drive].name, COLOR_WHITE);
+			font->DrawSjisCenterOr(buf, &rect, drive_status[drive].name, COLOR_WHITE | status_alpha);
 		}
 	}
 }
@@ -676,8 +838,11 @@ void Video::DrawFrameRate()
 
 	// draw
 	buf = &frame_buf[SCREEN_WIDTH * SCREEN_HEIGHT];
-	buf += (SCREEN_WIDTH + FRAME_RATE_X * 8);
-	font->DrawAnkHalf(buf, string, COLOR_WHITE, COLOR_BLACK);
+	buf += (FRAME_RATE_X * 8);
+	if (setting->HasStatusLine() == true) {
+		buf += SCREEN_WIDTH;
+	}
+	font->DrawAnkHalf(buf, string, COLOR_WHITE | status_alpha, COLOR_BLACK | status_alpha);
 }
 
 //
@@ -696,13 +861,16 @@ void Video::DrawFullSpeed()
 
 	// draw
 	buf = &frame_buf[SCREEN_WIDTH * SCREEN_HEIGHT];
-	buf += (SCREEN_WIDTH + FULL_SPEED_X * 8);
+	buf += (FULL_SPEED_X * 8);
+	if (setting->HasStatusLine() == true) {
+		buf += SCREEN_WIDTH;
+	}
 
 	if (full_speed[0] == true) {
-		font->DrawAnkHalf(buf, " NOWAIT ", COLOR_WHITE, COLOR_BLACK);
+		font->DrawAnkHalf(buf, " NOWAIT ", COLOR_WHITE | status_alpha, COLOR_BLACK | status_alpha);
 	}
 	else {
-		font->DrawAnkHalf(buf, "        ", COLOR_WHITE, COLOR_BLACK);
+		font->DrawAnkHalf(buf, "        ", COLOR_WHITE | status_alpha, COLOR_BLACK | status_alpha);
 	}
 }
 
@@ -722,13 +890,8 @@ void Video::DrawSystemInfo()
 		return;
 	}
 
-	// if system_info[0] == 0, return immediately
-	info = system_info[0];
-	if (info == 0) {
-		return;
-	}
-
 	// copy
+	info = system_info[0];
 	system_info[1] = info;
 
 	// cpu clock
@@ -766,8 +929,39 @@ void Video::DrawSystemInfo()
 
 	// draw
 	buf = &frame_buf[SCREEN_WIDTH * SCREEN_HEIGHT];
-	buf += (SCREEN_WIDTH + SYSTEM_INFO_X * 8);
-	font->DrawAnkHalf(buf, string, COLOR_WHITE, COLOR_BLACK);
+	buf += (SYSTEM_INFO_X * 8);
+	if (setting->HasStatusLine() == true) {
+		buf += SCREEN_WIDTH;
+	}
+	font->DrawAnkHalf(buf, string, COLOR_WHITE | status_alpha, COLOR_BLACK | status_alpha);
+}
+
+//
+// ResetStatus()
+// reset status information
+//
+void Video::ResetStatus()
+{
+	int drive;
+
+	// drive
+	for (drive=0; drive<MAX_DRIVE; drive++) {
+		drive_status[drive].access = ACCESS_MAX;
+	}
+
+	// frame rate
+	frame_rate[1] = 0x10000;
+
+	// full speed
+	if (app->IsFullSpeed() == true) {
+		full_speed[1] = false;
+	}
+	else {
+		full_speed[1] = true;
+	}
+
+	// system information
+	system_info[1] = 0xffff;
 }
 
 //
@@ -799,19 +993,22 @@ void Video::DrawMenu()
 {
 	int ret;
 
-	SDL_assert(menu_texture != NULL);
-
 	// copy menu frame to texture
-	CopyFrameBuf(menu_texture, menu_buf);
+	CopyFrameBuf(menu_texture, menu_buf, SCREEN_HEIGHT);
 
-	// clear
-	if ((status_rect[0].w != 0) || (status_rect[0].h != 0)) {
+	// clear if required
+	if ((clear_rect[0].w != 0) || (clear_rect[0].h != 0)) {
 		SDL_SetRenderDrawColor(renderer, 0, 0, 0, SDL_ALPHA_OPAQUE);
 		SDL_RenderClear(renderer);
 	}
 
-	// draw texture
+	// draw_texture & status_texture
 	ret = SDL_RenderCopy(renderer, draw_texture, NULL, &draw_rect);
+	if (ret == 0) {
+		ret = SDL_RenderCopy(renderer, status_texture, NULL, &status_rect);
+	}
+
+	// draw texture
 	if (ret == 0) {
 		// menu texture
 		ret = SDL_RenderCopy(renderer, menu_texture, NULL, &draw_rect);
@@ -825,13 +1022,13 @@ void Video::DrawMenu()
 // CopyFrameBuf()
 // copy frame buffer to texture
 //
-void Video::CopyFrameBuf(SDL_Texture *texture, Uint32 *src)
+void Video::CopyFrameBuf(SDL_Texture *texture, Uint32 *src, int height)
 {
 	Uint32 *dest;
 	int ret;
 	void *pixels;
 	int pitch;
-	int height;
+	int y;
 
 	// lock entire texture
 	ret = SDL_LockTexture(texture, NULL, &pixels, &pitch);
@@ -840,12 +1037,12 @@ void Video::CopyFrameBuf(SDL_Texture *texture, Uint32 *src)
 
 		if (pitch == (SCREEN_WIDTH * sizeof(Uint32))) {
 			// copy entire frame
-			memcpy(dest, src, SCREEN_WIDTH * (SCREEN_HEIGHT + MINIMUM_HEIGHT + STATUS_HEIGHT) * sizeof(uint32));
+			memcpy(dest, src, SCREEN_WIDTH * height * sizeof(uint32));
 		}
 		else {
 			// copy per line
 			pitch /= sizeof(Uint32);
-			for (height=0; height<(SCREEN_HEIGHT + MINIMUM_HEIGHT + STATUS_HEIGHT); height++) {
+			for (y=0; y<height; y++) {
 				memcpy(dest, src, SCREEN_WIDTH * sizeof(uint32));
 	
 				src += SCREEN_WIDTH;

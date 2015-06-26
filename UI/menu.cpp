@@ -37,6 +37,7 @@ Menu::Menu(App *a)
 	// object
 	platform = NULL;
 	setting = NULL;
+	video = NULL;
 	list = NULL;
 	diskmgr = NULL;
 	tapemgr = NULL;
@@ -71,6 +72,7 @@ bool Menu::Init()
 	// object
 	platform = app->GetPlatform();
 	setting = app->GetSetting();
+	video = app->GetVideo();
 
 	// create menu list
 	list = new MenuList(app);
@@ -559,6 +561,7 @@ void Menu::EnterSystem()
 void Menu::EnterVideo()
 {
 	int id;
+	const char *quality;
 
 	list->SetTitle("<< Video Options >>", MENU_VIDEO);
 
@@ -587,6 +590,15 @@ void Menu::EnterVideo()
 	// else
 	list->AddCheckButton("Scan line", MENU_VIDEO_SCANLINE);
 	list->AddSlider("Brightness", MENU_VIDEO_BRIGHTNESS, 0x40, 0xff, 1);
+
+	// status line
+	list->AddCheckButton("Status area\n", MENU_VIDEO_STATUSCHK);
+	list->AddSlider("Status transparency", MENU_VIDEO_STATUSALPHA, 0, 0xff, 1);
+
+#ifdef _WIN32
+	// scaling quality
+	list->AddCheckButton("Scaling filter", MENU_VIDEO_SCALEFILTER);
+#endif // _WIN32
 
 	// skip frame
 	switch (setting->GetSkipFrame()) {
@@ -651,6 +663,21 @@ void Menu::EnterVideo()
 
 	// brightness
 	list->SetSlider(MENU_VIDEO_BRIGHTNESS, setting->GetBrightness());
+
+	// status line
+	list->SetCheck(MENU_VIDEO_STATUSCHK, setting->HasStatusLine());
+	list->SetSlider(MENU_VIDEO_STATUSALPHA, setting->GetStatusAlpha());
+
+#ifdef _WIN32
+	// scaling quality
+	quality = setting->GetScaleQuality();
+	if (quality[0] == '0') {
+		list->SetCheck(MENU_VIDEO_SCALEFILTER, false);
+	}
+	else {
+		list->SetCheck(MENU_VIDEO_SCALEFILTER, true);
+	}
+#endif // _WIN32
 
 	// set focus
 	list->SetFocus(id);
@@ -737,6 +764,9 @@ void Menu::EnterInput()
 	list->AddButton("Softkey type 4", MENU_INPUT_SOFTKEY4);
 	list->AddSlider("Softkey transparency", MENU_INPUT_SOFTALPHA, 0, 0xff, 1);
 	list->AddSlider("Softkey timeout", MENU_INPUT_SOFTTIME, 400, 20000, 200);
+#ifdef __ANDROID__
+	list->AddCheckButton("Keyboard enable", MENU_INPUT_KEYENABLE);
+#endif // __ANDROID__
 	list->AddCheckButton("Joystick enable", MENU_INPUT_JOYENABLE);
 	list->AddCheckButton("Joystick to keyboard", MENU_INPUT_JOYKEY);
 	list->AddCheckButton("Joystick button swap", MENU_INPUT_JOYSWAP);
@@ -747,6 +777,11 @@ void Menu::EnterInput()
 	// softkey
 	list->SetSlider(MENU_INPUT_SOFTALPHA, setting->GetSoftKeyAlpha());
 	list->SetSlider(MENU_INPUT_SOFTTIME, setting->GetSoftKeyTime());
+
+#ifdef __ANDROID__
+	// keyboard
+	list->SetCheck(MENU_INPUT_KEYENABLE, setting->IsKeyEnable());
+#endif // __ANDROID__
 
 	// joystick
 	list->SetCheck(MENU_INPUT_JOYENABLE, setting->IsJoyEnable());
@@ -1292,7 +1327,6 @@ void Menu::CmdCmt(int id)
 //
 void Menu::CmdLoad(int id)
 {
-	Video *video;
 	char textprev[64];
 	char textbuf[64];
 
@@ -1307,7 +1341,6 @@ void Menu::CmdLoad(int id)
 
 	// draw
 	Draw();
-	video = app->GetVideo();
 	video->Draw();
 
 	// load
@@ -1328,7 +1361,6 @@ void Menu::CmdLoad(int id)
 //
 void Menu::CmdSave(int id)
 {
-	Video *video;
 	char textprev[64];
 	char textbuf[64];
 
@@ -1343,7 +1375,6 @@ void Menu::CmdSave(int id)
 
 	// draw
 	Draw();
-	video = app->GetVideo();
 	video->Draw();
 
 	// save
@@ -1441,6 +1472,8 @@ void Menu::CmdVideo(bool down, int id)
 	bool lowreso;
 	bool radio;
 	bool scanline;
+	bool status;
+	const char *quality;
 	int width;
 
 	// initialize
@@ -1554,6 +1587,48 @@ void Menu::CmdVideo(bool down, int id)
 	case MENU_VIDEO_BRIGHTNESS:
 		setting->SetBrightness((Uint8)list->GetSlider(MENU_VIDEO_BRIGHTNESS));
 		break;
+
+	// status line
+	case MENU_VIDEO_STATUSCHK:
+		if (down == false) {
+			status = setting->HasStatusLine();
+			if (status == true) {
+				setting->SetStatusLine(false);
+				list->SetCheck(MENU_VIDEO_STATUSCHK, false);
+			}
+			else {
+				setting->SetStatusLine(true);
+				list->SetCheck(MENU_VIDEO_STATUSCHK, true);
+			}
+
+			// to resize window
+			width = setting->GetWindowWidth();
+		}
+		break;
+
+	// staus alpha
+	case MENU_VIDEO_STATUSALPHA:
+		setting->SetStatusAlpha((Uint8)list->GetSlider(MENU_VIDEO_STATUSALPHA));
+		break;
+
+#ifdef _WIN32
+	// scaling quality
+	case MENU_VIDEO_SCALEFILTER:
+		if (down == false) {
+			quality = setting->GetScaleQuality();
+			if (quality[0] != '0') {
+				setting->SetScaleQuality(0);
+				list->SetCheck(MENU_VIDEO_SCALEFILTER, false);
+				video->RebuildTexture(false);
+			}
+			else {
+				setting->SetScaleQuality(2);
+				list->SetCheck(MENU_VIDEO_SCALEFILTER, true);
+				video->RebuildTexture(false);
+			}
+		}
+		break;
+#endif // _WIN32
 
 	default:
 		break;
@@ -1719,6 +1794,23 @@ void Menu::CmdInput(bool down, int id)
 	case MENU_INPUT_SOFTTIME:
 		setting->SetSoftKeyTime((Uint32)list->GetSlider(MENU_INPUT_SOFTTIME));
 		break;
+
+#ifdef __ANDROID__
+	// keyboard enable
+	case MENU_INPUT_KEYENABLE:
+		if (down == false) {
+			enable = list->GetCheck(MENU_INPUT_KEYENABLE);
+			if (enable == true) {
+				list->SetCheck(MENU_INPUT_KEYENABLE, false);
+				setting->SetKeyEnable(false);
+			}
+			else {
+				list->SetCheck(MENU_INPUT_KEYENABLE, true);
+				setting->SetKeyEnable(true);
+			}
+		}
+		break;
+#endif // __ANDROID__
 
 	// joystick enable
 	case MENU_INPUT_JOYENABLE:

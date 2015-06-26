@@ -445,6 +445,14 @@ void PC88::reset()
 		beep_event_id = -1;
 	}
 	xm8_ext_flags = 0;
+
+	// version 1.10
+	update_tvram_memmap();
+	dmac.ch[0].addr.b.l = 0x56;
+	dmac.ch[0].addr.b.h = 0x56;
+	dmac.ch[1].addr.b.l = 0x7a;
+	dmac.ch[1].addr.b.h = 0x7a;
+	port[0x70] = 0x00;
 #endif // SDL
 }
 
@@ -753,9 +761,14 @@ void PC88::write_io8(uint32 addr, uint32 data)
 			}
 		}
 		if(mod & 0x10) {
+#ifdef SDL
+			// version 1.10
+			update_tvram_memmap();
+#else
 			if(config.boot_mode == MODE_PC88_V1H || config.boot_mode == MODE_PC88_V2) {
 				update_tvram_memmap();
 			}
+#endif // SDL
 		}
 		if(mod & 0x40) {
 			update_gvram_sel();
@@ -1025,12 +1038,22 @@ uint32 PC88::read_io8_debug(uint32 addr)
 		return (config.boot_mode == MODE_PC88_N ? 0 : 1) | 0xc2;
 #endif // SDL
 	case 0x31:
+#ifdef SDL
+		// version 1.10
+		return (config.boot_mode == MODE_PC88_V2 ? 0 : 0x80) | (config.boot_mode == MODE_PC88_V1S || config.boot_mode == MODE_PC88_N ? 0 : 0x40) | 0x39;
+#else
 		return (config.boot_mode == MODE_PC88_V2 ? 0 : 0x80) | (config.boot_mode == MODE_PC88_V1S || config.boot_mode == MODE_PC88_N ? 0 : 0x40);
+#endif // SDL
 	case 0x32:
 		return port[0x32];
 #endif
 	case 0x40:
+#ifdef SDL
+		// version 1.10
+		return (crtc.vblank ? 0x20 : 0) | (d_rtc->read_signal(0) ? 0x10 : 0) | (usart_dcd ? 4 : 0) | (hireso ? 0 : 2) | 0xc1;
+#else
 		return (crtc.vblank ? 0x20 : 0) | (d_rtc->read_signal(0) ? 0x10 : 0) | (usart_dcd ? 4 : 0) | (hireso ? 0 : 2) | 0xc0;
+#endif // SDL
 	case 0x44:
 		val = d_opn->read_io8(addr);
 #ifdef SDL
@@ -1101,7 +1124,17 @@ uint32 PC88::read_io8_debug(uint32 addr)
 	case 0x68:
 		return dmac.read_io8(addr);
 	case 0x6e:
+#ifdef SDL
+		// version 1.10
+		return (cpu_clock_low ? 0x80 : 0) | 0x10;
+#else
 		return (cpu_clock_low ? 0x80 : 0) | 0x7f;
+#endif
+#ifdef SDL
+	// version 1.10
+	case 0x6f:
+		return 0xf7;
+#endif // SDL
 #if !defined(_PC8001SR)
 	case 0x70:
 		// PC-8001mkIISR returns the constant value
@@ -1335,6 +1368,15 @@ void PC88::update_low_memmap()
 
 void PC88::update_tvram_memmap()
 {
+#ifdef SDL
+	// version 1.10
+	if(config.boot_mode == MODE_PC88_V1S || config.boot_mode == MODE_PC88_N) {
+		SET_BANK(0xf000, 0xffff, ram + 0xf000, ram + 0xf000);
+		tvram_wait_clocks_r = tvram_wait_clocks_w = 0;
+		return;
+	}
+#endif // SDL
+
 	if(Port32_TMODE) {
 		SET_BANK(0xf000, 0xffff, ram + 0xf000, ram + 0xf000);
 		tvram_wait_clocks_r = tvram_wait_clocks_w = 0;
@@ -2380,6 +2422,12 @@ uint32 pc88_crtc_t::read_param()
 			break;
 		}
 		break;
+
+#ifdef SDL
+	// version 1.10
+	default:
+		val = read_status();
+#endif // SDL
 	}
 	cmd_ptr++;
 	return val;

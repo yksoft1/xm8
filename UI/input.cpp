@@ -1686,16 +1686,16 @@ const softkey_param Input::softkey_actmove[14 + 1] = {
 	{ 69, 1, 8, 6, 1, "MENU", 0 },
 	{ 2, 1, 8, 6, 1, "NEXT", 1 },
 
-	{ 50 + 7 * 1, 12 + 7 * 2, 6, 6, 1, "4""\xa5""8", (int)SDL_SCANCODE_KP_4 << 8 | (int)SDL_SCANCODE_KP_8 },
-	{ 50 + 7 * 2, 12 + 7 * 2, 6, 6, 4, "8", (int)SDL_SCANCODE_KP_8 },
-	{ 50 + 7 * 3, 12 + 7 * 2, 6, 6, 1, "6""\xa5""8", (int)SDL_SCANCODE_KP_6 << 8 | (int)SDL_SCANCODE_KP_8 },
+	{ 50 + 7 * 1,  8 + 7 * 2, 6, 6, 1, "4""\xa5""8", (int)SDL_SCANCODE_KP_4 << 8 | (int)SDL_SCANCODE_KP_8 },
+	{ 50 + 7 * 2,  8 + 7 * 2, 6, 6, 4, "8", (int)SDL_SCANCODE_KP_8 },
+	{ 50 + 7 * 3,  8 + 7 * 2, 6, 6, 1, "6""\xa5""8", (int)SDL_SCANCODE_KP_6 << 8 | (int)SDL_SCANCODE_KP_8 },
 
-	{ 50 + 7 * 1, 12 + 7 * 3, 6, 6, 4, "4", (int)SDL_SCANCODE_KP_4 },
-	{ 50 + 7 * 3, 12 + 7 * 3, 6, 6, 4, "6", (int)SDL_SCANCODE_KP_6 },
+	{ 50 + 7 * 1,  8 + 7 * 3, 6, 6, 4, "4", (int)SDL_SCANCODE_KP_4 },
+	{ 50 + 7 * 3,  8 + 7 * 3, 6, 6, 4, "6", (int)SDL_SCANCODE_KP_6 },
 
-	{ 50 + 7 * 1, 12 + 7 * 4, 6, 6, 1, "4""\xa5""2", (int)SDL_SCANCODE_KP_4 << 8 | (int)SDL_SCANCODE_KP_2 },
-	{ 50 + 7 * 2, 12 + 7 * 4, 6, 6, 4, "2", (int)SDL_SCANCODE_KP_2 },
-	{ 50 + 7 * 3, 12 + 7 * 4, 6, 6, 1, "6""\xa5""2", (int)SDL_SCANCODE_KP_6 << 8 | (int)SDL_SCANCODE_KP_2 },
+	{ 50 + 7 * 1,  8 + 7 * 4, 6, 6, 1, "4""\xa5""2", (int)SDL_SCANCODE_KP_4 << 8 | (int)SDL_SCANCODE_KP_2 },
+	{ 50 + 7 * 2,  8 + 7 * 4, 6, 6, 4, "2", (int)SDL_SCANCODE_KP_2 },
+	{ 50 + 7 * 3,  8 + 7 * 4, 6, 6, 1, "6""\xa5""2", (int)SDL_SCANCODE_KP_6 << 8 | (int)SDL_SCANCODE_KP_2 },
 
 	{  2 + 7 * 0, 12 + 7 * 1, 13, 6, 4, "ESC", (int)SDL_SCANCODE_ESCAPE },
 	{  2 + 7 * 0, 12 + 7 * 4, 13, 6, 4, "RET", (int)SDL_SCANCODE_RETURN },
@@ -1712,16 +1712,16 @@ const softkey_param Input::softkey_moveact[14 + 1] = {
 	{ 69, 1, 8, 6, 1, "MENU", 0 },
 	{ 2, 1, 8, 6, 1, "NEXT", 1 },
 
-	{  2 + 7 * 0, 12 + 7 * 2, 6, 6, 1, "4""\xa5""8", (int)SDL_SCANCODE_KP_4 << 8 | (int)SDL_SCANCODE_KP_8 },
-	{  2 + 7 * 1, 12 + 7 * 2, 6, 6, 4, "8", (int)SDL_SCANCODE_KP_8 },
-	{  2 + 7 * 2, 12 + 7 * 2, 6, 6, 1, "6""\xa5""8", (int)SDL_SCANCODE_KP_6 << 8 | (int)SDL_SCANCODE_KP_8 },
+	{  2 + 7 * 0,  8 + 7 * 2, 6, 6, 1, "4""\xa5""8", (int)SDL_SCANCODE_KP_4 << 8 | (int)SDL_SCANCODE_KP_8 },
+	{  2 + 7 * 1,  8 + 7 * 2, 6, 6, 4, "8", (int)SDL_SCANCODE_KP_8 },
+	{  2 + 7 * 2,  8 + 7 * 2, 6, 6, 1, "6""\xa5""8", (int)SDL_SCANCODE_KP_6 << 8 | (int)SDL_SCANCODE_KP_8 },
 
-	{  2 + 7 * 0, 12 + 7 * 3, 6, 6, 4, "4", (int)SDL_SCANCODE_KP_4 },
-	{  2 + 7 * 2, 12 + 7 * 3, 6, 6, 4, "6", (int)SDL_SCANCODE_KP_6 },
+	{  2 + 7 * 0,  8 + 7 * 3, 6, 6, 4, "4", (int)SDL_SCANCODE_KP_4 },
+	{  2 + 7 * 2,  8 + 7 * 3, 6, 6, 4, "6", (int)SDL_SCANCODE_KP_6 },
 
-	{  2 + 7 * 0, 12 + 7 * 4, 6, 6, 1, "4""\xa5""2", (int)SDL_SCANCODE_KP_4 << 8 | (int)SDL_SCANCODE_KP_2 },
-	{  2 + 7 * 1, 12 + 7 * 4, 6, 6, 4, "2", (int)SDL_SCANCODE_KP_2 },
-	{  2 + 7 * 2, 12 + 7 * 4, 6, 6, 1, "6""\xa5""2", (int)SDL_SCANCODE_KP_6 << 8 | (int)SDL_SCANCODE_KP_2 },
+	{  2 + 7 * 0,  8 + 7 * 4, 6, 6, 1, "4""\xa5""2", (int)SDL_SCANCODE_KP_4 << 8 | (int)SDL_SCANCODE_KP_2 },
+	{  2 + 7 * 1,  8 + 7 * 4, 6, 6, 4, "2", (int)SDL_SCANCODE_KP_2 },
+	{  2 + 7 * 2,  8 + 7 * 4, 6, 6, 1, "6""\xa5""2", (int)SDL_SCANCODE_KP_6 << 8 | (int)SDL_SCANCODE_KP_2 },
 
 	{ 50 + 7 * 2, 12 + 7 * 1, 13, 6, 4, "ESC", (int)SDL_SCANCODE_ESCAPE },
 	{ 50 + 7 * 2, 12 + 7 * 4, 13, 6, 4, "RET", (int)SDL_SCANCODE_RETURN },
@@ -1739,16 +1739,16 @@ const softkey_param Input::softkey_zxmove[14 + 1] = {
 	{ 69, 1, 8, 6, 1, "MENU", 0 },
 	{ 2, 1, 8, 6, 1, "NEXT", 1 },
 
-	{ 50 + 7 * 1, 12 + 7 * 2, 6, 6, 1, "4""\xa5""8", (int)SDL_SCANCODE_KP_4 << 8 | (int)SDL_SCANCODE_KP_8 },
-	{ 50 + 7 * 2, 12 + 7 * 2, 6, 6, 4, "8", (int)SDL_SCANCODE_KP_8 },
-	{ 50 + 7 * 3, 12 + 7 * 2, 6, 6, 1, "6""\xa5""8", (int)SDL_SCANCODE_KP_6 << 8 | (int)SDL_SCANCODE_KP_8 },
+	{ 50 + 7 * 1,  8 + 7 * 2, 6, 6, 1, "4""\xa5""8", (int)SDL_SCANCODE_KP_4 << 8 | (int)SDL_SCANCODE_KP_8 },
+	{ 50 + 7 * 2,  8 + 7 * 2, 6, 6, 4, "8", (int)SDL_SCANCODE_KP_8 },
+	{ 50 + 7 * 3,  8 + 7 * 2, 6, 6, 1, "6""\xa5""8", (int)SDL_SCANCODE_KP_6 << 8 | (int)SDL_SCANCODE_KP_8 },
 
-	{ 50 + 7 * 1, 12 + 7 * 3, 6, 6, 4, "4", (int)SDL_SCANCODE_KP_4 },
-	{ 50 + 7 * 3, 12 + 7 * 3, 6, 6, 4, "6", (int)SDL_SCANCODE_KP_6 },
+	{ 50 + 7 * 1,  8 + 7 * 3, 6, 6, 4, "4", (int)SDL_SCANCODE_KP_4 },
+	{ 50 + 7 * 3,  8 + 7 * 3, 6, 6, 4, "6", (int)SDL_SCANCODE_KP_6 },
 
-	{ 50 + 7 * 1, 12 + 7 * 4, 6, 6, 1, "4""\xa5""2", (int)SDL_SCANCODE_KP_4 << 8 | (int)SDL_SCANCODE_KP_2 },
-	{ 50 + 7 * 2, 12 + 7 * 4, 6, 6, 4, "2", (int)SDL_SCANCODE_KP_2 },
-	{ 50 + 7 * 3, 12 + 7 * 4, 6, 6, 1, "6""\xa5""2", (int)SDL_SCANCODE_KP_6 << 8 | (int)SDL_SCANCODE_KP_2 },
+	{ 50 + 7 * 1,  8 + 7 * 4, 6, 6, 1, "4""\xa5""2", (int)SDL_SCANCODE_KP_4 << 8 | (int)SDL_SCANCODE_KP_2 },
+	{ 50 + 7 * 2,  8 + 7 * 4, 6, 6, 4, "2", (int)SDL_SCANCODE_KP_2 },
+	{ 50 + 7 * 3,  8 + 7 * 4, 6, 6, 1, "6""\xa5""2", (int)SDL_SCANCODE_KP_6 << 8 | (int)SDL_SCANCODE_KP_2 },
 
 	{  2 + 7 * 0, 12 + 7 * 1, 13, 6, 4, "ESC", (int)SDL_SCANCODE_ESCAPE },
 	{  2 + 7 * 0, 12 + 7 * 4, 13, 6, 4, "Z", (int)SDL_SCANCODE_Z },
@@ -1765,16 +1765,16 @@ const softkey_param Input::softkey_movezx[14 + 1] = {
 	{ 69, 1, 8, 6, 1, "MENU", 0 },
 	{ 2, 1, 8, 6, 1, "NEXT", 1 },
 
-	{  2 + 7 * 0, 12 + 7 * 2, 6, 6, 1, "4""\xa5""8", (int)SDL_SCANCODE_KP_4 << 8 | (int)SDL_SCANCODE_KP_8 },
-	{  2 + 7 * 1, 12 + 7 * 2, 6, 6, 4, "8", (int)SDL_SCANCODE_KP_8 },
-	{  2 + 7 * 2, 12 + 7 * 2, 6, 6, 1, "6""\xa5""8", (int)SDL_SCANCODE_KP_6 << 8 | (int)SDL_SCANCODE_KP_8 },
+	{  2 + 7 * 0,  8 + 7 * 2, 6, 6, 1, "4""\xa5""8", (int)SDL_SCANCODE_KP_4 << 8 | (int)SDL_SCANCODE_KP_8 },
+	{  2 + 7 * 1,  8 + 7 * 2, 6, 6, 4, "8", (int)SDL_SCANCODE_KP_8 },
+	{  2 + 7 * 2,  8 + 7 * 2, 6, 6, 1, "6""\xa5""8", (int)SDL_SCANCODE_KP_6 << 8 | (int)SDL_SCANCODE_KP_8 },
 
-	{  2 + 7 * 0, 12 + 7 * 3, 6, 6, 4, "4", (int)SDL_SCANCODE_KP_4 },	
-	{  2 + 7 * 2, 12 + 7 * 3, 6, 6, 4, "6", (int)SDL_SCANCODE_KP_6 },
+	{  2 + 7 * 0,  8 + 7 * 3, 6, 6, 4, "4", (int)SDL_SCANCODE_KP_4 },	
+	{  2 + 7 * 2,  8 + 7 * 3, 6, 6, 4, "6", (int)SDL_SCANCODE_KP_6 },
 
-	{  2 + 7 * 0, 12 + 7 * 4, 6, 6, 1, "4""\xa5""2", (int)SDL_SCANCODE_KP_4 << 8 | (int)SDL_SCANCODE_KP_2 },
-	{  2 + 7 * 1, 12 + 7 * 4, 6, 6, 4, "2", (int)SDL_SCANCODE_KP_2 },
-	{  2 + 7 * 2, 12 + 7 * 4, 6, 6, 1, "6""\xa5""2", (int)SDL_SCANCODE_KP_6 << 8 | (int)SDL_SCANCODE_KP_2 },
+	{  2 + 7 * 0,  8 + 7 * 4, 6, 6, 1, "4""\xa5""2", (int)SDL_SCANCODE_KP_4 << 8 | (int)SDL_SCANCODE_KP_2 },
+	{  2 + 7 * 1,  8 + 7 * 4, 6, 6, 4, "2", (int)SDL_SCANCODE_KP_2 },
+	{  2 + 7 * 2,  8 + 7 * 4, 6, 6, 1, "6""\xa5""2", (int)SDL_SCANCODE_KP_6 << 8 | (int)SDL_SCANCODE_KP_2 },
 
 	{ 50 + 7 * 2, 12 + 7 * 1, 13, 6, 4, "ESC", (int)SDL_SCANCODE_ESCAPE },
 	{ 50 + 7 * 2, 12 + 7 * 4, 13, 6, 4, "Z", (int)SDL_SCANCODE_Z },

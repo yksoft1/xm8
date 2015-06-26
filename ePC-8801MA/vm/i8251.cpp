@@ -54,7 +54,12 @@ void I8251::release()
 void I8251::reset()
 {
 	mode = MODE_CLEAR;
+#ifdef SDL
+	// version 1.10
+	recv = 0x00;
+#else
 	recv = 0xff;
+#endif // SDL
 	// dont reset dsr
 	status &= DSR;
 	status |= TXRDY | TXE;
@@ -132,6 +137,12 @@ void I8251::write_io8(uint32 addr, uint32 data)
 uint32 I8251::read_io8(uint32 addr)
 {
 	if(addr & 1) {
+#ifdef SDL
+		// version 1.10
+		if (txen == false) {
+			return status & ~(TXRDY | TXE);
+		}
+#endif // SDL
 		return status;
 	} else {
 		if(status & RXRDY) {

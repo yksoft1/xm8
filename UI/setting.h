@@ -89,6 +89,18 @@ public:
 										// get scan line
 	void SetScanline(bool scanline);
 										// set scan line
+	bool HasStatusLine();
+										// get status line
+	void SetStatusLine(bool enable);
+										// get status line
+	Uint8 GetStatusAlpha();
+										// get alpha blending level for status
+	void SetStatusAlpha(Uint8 alpha);
+										// set alpha blending level for status
+	const char* GetScaleQuality();
+										// get render scale quality
+	void SetScaleQuality(int quality);
+										// set render scale quality
 
 	// audio
 	int GetAudioDevice();
@@ -145,6 +157,10 @@ public:
 										// get mouse timeout
 	void SetMouseTime(Uint32 ms);
 										// set mouse timeout
+	bool IsKeyEnable();
+										// get keyboard enable
+	void SetKeyEnable(bool enable);
+										// set keyboard enable
 
 	// state
 	int GetStateNum();
@@ -185,6 +201,14 @@ private:
 										// mouse timeout
 	int state_num;
 										// state number
+	bool status_line;
+										// status line (version 1.05)
+	Uint8 status_alpha;
+										// status alpha (version 1.05)
+	char scale_quality[2];
+										// render scale quality (version 1.05)
+	bool keyboard_enable;
+										// keyboard enable (version 1.10)
 };
 
 #endif // SETTING_H

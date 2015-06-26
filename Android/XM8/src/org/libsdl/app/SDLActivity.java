@@ -710,6 +710,23 @@ class SDLSurface extends SurfaceView implements SurfaceHolder.Callback,
     // Key events
     @Override
     public boolean onKey(View  v, int keyCode, KeyEvent event) {
+        int modKeyCode;
+
+        modKeyCode = keyCode;
+        // swap button A,B and button X,Y from keyboard device (for Xperia Play)
+        if ((event.getSource() & InputDevice.SOURCE_KEYBOARD) == InputDevice.SOURCE_KEYBOARD && keyCode == KeyEvent.KEYCODE_BUTTON_X) {
+            modKeyCode = KeyEvent.KEYCODE_BUTTON_A;
+        }
+        if ((event.getSource() & InputDevice.SOURCE_KEYBOARD) == InputDevice.SOURCE_KEYBOARD && keyCode == KeyEvent.KEYCODE_BUTTON_Y) {
+           modKeyCode = KeyEvent.KEYCODE_BUTTON_B;
+        }
+        if ((event.getSource() & InputDevice.SOURCE_KEYBOARD) == InputDevice.SOURCE_KEYBOARD && keyCode == KeyEvent.KEYCODE_BUTTON_A) {
+            modKeyCode = KeyEvent.KEYCODE_BUTTON_X;
+        }
+        if ((event.getSource() & InputDevice.SOURCE_KEYBOARD) == InputDevice.SOURCE_KEYBOARD && keyCode == KeyEvent.KEYCODE_BUTTON_B) {
+            modKeyCode = KeyEvent.KEYCODE_BUTTON_Y;
+        }
+
         // Dispatch the different events depending on where they come from
         // Some SOURCE_DPAD or SOURCE_GAMEPAD are also SOURCE_KEYBOARD
         // So, we try to process them as DPAD or GAMEPAD events first, if that fails we try them as KEYBOARD
@@ -717,25 +734,21 @@ class SDLSurface extends SurfaceView implements SurfaceHolder.Callback,
         if ( (event.getSource() & 0x00000401) != 0 || /* API 12: SOURCE_GAMEPAD */
                    (event.getSource() & InputDevice.SOURCE_DPAD) != 0 ) {
             if (event.getAction() == KeyEvent.ACTION_DOWN) {
-                if (SDLActivity.onNativePadDown(event.getDeviceId(), keyCode) == 0) {
-                    return true;
-                }
+                SDLActivity.onNativePadDown(event.getDeviceId(), modKeyCode);
             } else if (event.getAction() == KeyEvent.ACTION_UP) {
-                if (SDLActivity.onNativePadUp(event.getDeviceId(), keyCode) == 0) {
-                    return true;
-                }
+                SDLActivity.onNativePadUp(event.getDeviceId(), modKeyCode);
             }
         }
         
         if( (event.getSource() & InputDevice.SOURCE_KEYBOARD) != 0) {
             if (event.getAction() == KeyEvent.ACTION_DOWN) {
                 //Log.v("SDL", "key down: " + keyCode);
-                SDLActivity.onNativeKeyDown(keyCode);
+                SDLActivity.onNativeKeyDown(modKeyCode);
                 return true;
             }
             else if (event.getAction() == KeyEvent.ACTION_UP) {
                 //Log.v("SDL", "key up: " + keyCode);
-                SDLActivity.onNativeKeyUp(keyCode);
+                SDLActivity.onNativeKeyUp(modKeyCode);
                 return true;
             }
         }

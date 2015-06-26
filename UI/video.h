@@ -29,6 +29,8 @@ public:
 										// deinitialize
 	void SetWindowSize(int width, int height);
 										// set window sizse
+	void RebuildTexture(bool statusonly);
+										// rebuild texture
 	void Draw();
 										// rendering
 
@@ -89,8 +91,10 @@ private:
 										// draw power down
 	void DrawMenu();
 										// draw menu
-	void CopyFrameBuf(SDL_Texture *texture, Uint32 *src);
+	void CopyFrameBuf(SDL_Texture *texture, Uint32 *src, int height);
 										// copy frame buffer to texture
+	void ResetStatus();
+										// reset status line
 
 	// object
 	App *app;
@@ -121,14 +125,20 @@ private:
 										// window height
 	SDL_Rect draw_rect;
 										// drawing rect
-	SDL_Rect status_rect[2];
+	SDL_Rect status_rect;
 										// status rect
+	SDL_Rect clear_rect[2];
+										// clear rect
 	Uint8 brightness;
 										// brightness
 	bool softkey_mode;
 										// softkey mode
 	Uint8 softkey_mod;
 										// softkey mod
+	int video_height;
+										// video height (SCREEN_HEIGHT or + MINIMUM_HEIGHT + STATUS_HEIGHT)
+	Uint32 status_alpha;
+										// alpha blending color for status
 
 	// drive status
 	drive_info drive_status[MAX_DRIVE];
@@ -161,6 +171,8 @@ private:
 										// menu texture
 	SDL_Texture *softkey_texture;
 										// softkey texture
+	SDL_Texture *status_texture;
+										// status texture
 };
 
 #endif // VIDEO_H

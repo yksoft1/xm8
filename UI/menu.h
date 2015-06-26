@@ -125,6 +125,8 @@ private:
 										// platform
 	Setting *setting;
 										// setting
+	Video *video;
+										// video
 	MenuList *list;
 										// curret menu list
 	DiskManager **diskmgr;

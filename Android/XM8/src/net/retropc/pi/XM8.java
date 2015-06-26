@@ -4,9 +4,11 @@ import java.io.File;
 
 import org.libsdl.app.SDLActivity;
 
+import android.annotation.TargetApi;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.util.Log;
@@ -36,6 +38,12 @@ public class XM8 extends SDLActivity {
     // JNI native routine
     public static native void nativeIntent(String name);
 
+    // wrapper for API level 11
+    @TargetApi(11)
+    private void setUiVisibility(View view, int value) {
+        view.setSystemUiVisibility(value);
+    }
+
     // setup
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -61,11 +69,21 @@ public class XM8 extends SDLActivity {
         // set ROM status
         mDisableThread = mROMError;
 
+        // immersive full-screen mode or dim status bar / navigation icon
+        View decorView = getWindow().getDecorView();
+        if (Build.VERSION.SDK_INT >= 19) {
+            // 0x1000 = SYSTEM_UI_FLAG_IMMERSIVE_STICKY (API level 19), 2 = SYSTEM_UI_FLAG_HIDE_NAVIGATION (API level 14)
+            setUiVisibility(decorView, 0x1000 | 2);
+        }
+        else {
+            if (Build.VERSION.SDK_INT >= 14) {
+                // 1 = SYSTEM_UI_FLAG_LOW_PROFILE (API level 14)
+                setUiVisibility(decorView, 1);
+            }
+        }
+
         // super class
         super.onCreate(savedInstanceState);
-
-        // dim status bar or navigation icon
-        getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LOW_PROFILE);
 
         // process intent
         if (Intent.ACTION_VIEW.equals(getIntent().getAction()) == true) {
@@ -76,6 +94,24 @@ public class XM8 extends SDLActivity {
         }
         else {
             nativeIntent("");
+        }
+    }
+
+    @Override
+    protected void onResume() {
+        // super class
+        super.onResume();
+
+        View decorView = getWindow().getDecorView();
+        if (Build.VERSION.SDK_INT >= 19) {
+            // 0x1000 = SYSTEM_UI_FLAG_IMMERSIVE_STICKY (API level 19), 2 = SYSTEM_UI_FLAG_HIDE_NAVIGATION (API level 14)
+            setUiVisibility(decorView, 0x1000 | 2);
+        }
+        else {
+            if (Build.VERSION.SDK_INT >= 14) {
+                // 1 = SYSTEM_UI_FLAG_LOW_PROFILE (API level 14)
+                setUiVisibility(decorView, 1);
+            }
         }
     }
 
