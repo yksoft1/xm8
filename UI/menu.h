@@ -47,7 +47,7 @@ public:
 										// enter load menu
 	void EnterSave();
 										// enter save menu
-	void EnterSystem();
+	void EnterSystem(int id);
 										// enter system menu
 	void EnterVideo();
 										// enter video menu
@@ -61,6 +61,8 @@ public:
 										// enter quit menu
 	void EnterSoftKey();
 										// enter softkey menu
+	void EnterDip();
+										// enter dip menu
 	void EnterFile();
 										// enter file menu
 	void Command(bool down, int id);
@@ -93,6 +95,8 @@ public:
 										// command (quit)
 	void CmdSoftKey(int id);
 										// command (softkey)
+	void CmdDip(int id);
+										// command (dip)
 	void CmdFile(int id);
 										// command (file)
 	void Draw();

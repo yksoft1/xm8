@@ -421,7 +421,11 @@ void OPN::Mix(Sample* buffer, int nsamples)
 			if (actch & 0x01) s  = ch[0].Calc();
 			if (actch & 0x04) s += ch[1].Calc();
 			if (actch & 0x10) s += ch[2].Calc();
+#ifdef SDL
+			// if fmvolume == 0x4000, no need to limit 16bit
+#else
 			s = IStoSample(s);
+#endif // SDL
 			StoreSample(dest[0], s);
 			StoreSample(dest[1], s);
 		}
@@ -1274,8 +1278,14 @@ void OPNABase::Mix6(Sample* buffer, int nsamples, int activech)
 			LFO(), MixSubSL(activech, idest);
 		else
 			MixSubS(activech, idest);
+#ifdef SDL
+		// if fmvolume == 0x4000, no need to limit 16bit
+		StoreSample(dest[0], ibuf[2] + ibuf[3]);
+		StoreSample(dest[1], ibuf[1] + ibuf[3]);
+#else
 		StoreSample(dest[0], IStoSample(ibuf[2] + ibuf[3]));
 		StoreSample(dest[1], IStoSample(ibuf[1] + ibuf[3]));
+#endif // SDL
 	}
 }
 

@@ -104,7 +104,7 @@ void PCM1BIT::mix(int32* buffer, int cnt)
 		}
 
 		// mix_step = number of clocks per sample (x1024)
-		mix_step64 = (int64)get_main_clock();
+		mix_step64 = (int64)cpu_clock;
 		mix_step64 <<= 10;
 		mix_step64 /= get_mix_rate();
 		mix_step = (int)mix_step64;
@@ -163,13 +163,13 @@ void PCM1BIT::mix(int32* buffer, int cnt)
 		}
 	} else if(last_vol > 0) {
 		// suppress petite noise when go to mute
-		for(int i = 0; i < cnt && last_vol > 0; i++, last_vol-=4) {
+		for(int i = 0; i < cnt && last_vol > 0; i++, last_vol--) {
 			*buffer++ += last_vol; // L
 			*buffer++ += last_vol; // R
 		}
 	} else if(last_vol < 0) {
 		// suppress petite noise when go to mute
-		for(int i = 0; i < cnt && last_vol < 0; i++, last_vol+=4) {
+		for(int i = 0; i < cnt && last_vol < 0; i++, last_vol++) {
 			*buffer++ += last_vol; // L
 			*buffer++ += last_vol; // R
 		}
@@ -205,6 +205,13 @@ void PCM1BIT::mix(int32* buffer, int cnt)
 	positive_clocks = negative_clocks = 0;
 #endif // SDL
 }
+
+#ifdef SDL
+void PCM1BIT::update_timing(int new_clocks, double new_frames_per_sec, int new_lines_per_frame)
+{
+	cpu_clock = new_clocks;
+}
+#endif // SDL
 
 void PCM1BIT::init(int rate, int volume)
 {

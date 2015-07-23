@@ -124,6 +124,9 @@ public:
 #ifdef _DEBUG_LOG
 		initialize_done = false;
 #endif
+#ifdef SDL
+		regist_event_ctrl = true;
+#endif // SDL
 	}
 	~EVENT() {}
 	
@@ -213,11 +216,15 @@ public:
 	int32* create_sound32(int* extra_frames);
 	void create_sound32_after(int samples);
 	bool single_exec;
-	void single_exec_mode(bool enable) { single_exec = enable; }
 	int sample_multi;
 	void set_sample_multi(int multi) { sample_multi = multi; }
 	int get_mix_rate() { return mix_rate; }
-	int get_main_clock() { return d_cpu[0].cpu_clocks; }
+
+	// version 1.20
+	bool regist_event_ctrl;
+	int vblank_clocks;
+	void request_single_exec();
+	uint32 single_exec_clock;
 #endif // SDL
 };
 

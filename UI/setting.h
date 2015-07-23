@@ -24,6 +24,42 @@
 										// BOOT MODE (V2)
 #define SETTING_N_MODE			3
 										// BOOT MODE (N)
+#define DIP_MEM_WAIT			0x00000001
+										// memory wait (on)
+#define DIP_CLOCK_8MHZH			0x00000002
+										// 8MHzH (high)
+#define DIP_DISABLE_EXRAM		0x00000004
+										// disable EXRAM (disable)
+#define DIP_TERMINAL_MODE		0x00000008
+										// terminal mode (terminal)
+#define DIP_WIDTH_40			0x00000010
+										// width 40 (40)
+#define DIP_LINE_25				0x00000020
+										// line 20 (20)
+#define DIP_BOOT_ROM			0x00000040
+										// boot from ROM (ROM)
+#define DIP_BAUDRATE			0x00000780
+										// baudrate (0-6:1200bps 7:75bps 15:19200bps)
+#define DIP_BAUDRATE_SHIFT		7
+										// baudrate shift
+#define DIP_HALFDUPLEX			0x00000800
+										// duplex (half)
+#define DIP_DATA7BIT			0x00001000
+										// data bit (7bit)
+#define DIP_STOP2BIT			0x00002000
+										// stop bit (2bit)
+#define DIP_DISABLE_X			0x00004000
+										// X parameter (disable)
+#define DIP_ENABLE_S			0x00008000
+										// S parameter (enable)
+#define DIP_DISABLE_DEL			0x00010000
+										// DEL code (disable)
+#define DIP_PARITY				0x00060000
+										// parity (0:none 2:odd)
+#define DIP_PARITY_SHIFT		17
+										// parity shift
+#define DIP_MAX					0x00ffffff
+										// max settings - see Settings::GetSystems()
 
 //
 // platform dependent
@@ -55,16 +91,24 @@ public:
 										// get cpu clock (4 or 8)
 	void SetCPUClock(int clock);
 										// set cpu clock (4 or 8)
-	bool HasMemoryWait();
-										// get memory wait
-	void SetMemoryWait(bool wait);
-										// set memory wait
 	bool Is8HMode();
 										// get 8MHzH mode
 	void Set8HMode(bool high);
 										// set 8MHzH mode
+	bool HasExRAM();
+										// get extended RAM
+	void SetExRAM(bool enable);
+										// set extended RAM
+	Uint32 GetDip();
+										// get dip switch
+	void SetDip(uint32 dip);
+										// set dip switch
 	Uint32 GetSystems();
 										// get system information
+	bool IsFastDisk();
+										// get pseudo fast disk mode
+	void SetFastDisk(bool enable);
+										// set pseudo fast disk mode
 
 	// video
 	int GetWindowWidth();
@@ -101,6 +145,10 @@ public:
 										// get render scale quality
 	void SetScaleQuality(int quality);
 										// set render scale quality
+	bool IsForceRGB565();
+										// get RGB565 mode (Android only)
+	void SetForceRGB565(bool enable);
+										// set RGB565 mode (Android only)
 
 	// audio
 	int GetAudioDevice();
@@ -209,6 +257,8 @@ private:
 										// render scale quality (version 1.05)
 	bool keyboard_enable;
 										// keyboard enable (version 1.10)
+	bool force_rgb565;
+										// force RGB565 (version 1.20)
 };
 
 #endif // SETTING_H

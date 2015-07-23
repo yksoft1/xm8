@@ -19,6 +19,9 @@
 #define SIG_PC88_USART_IRQ	0
 #define SIG_PC88_SOUND_IRQ	1
 #define SIG_PC88_USART_OUT	2
+#ifdef SDL
+#define SIG_PC88_SB2_IRQ	3
+#endif // SDL
 
 #define CMT_BUFFER_SIZE		0x40000
 
@@ -98,7 +101,12 @@ typedef struct {
 class PC88 : public DEVICE
 {
 private:
+#ifdef SDL
+	FMSound *d_opn;
+	FMSound *d_sb2;
+#else
 	YM2203 *d_opn;
+#endif // SDL
 	Z80 *d_cpu;
 	DEVICE *d_pcm, *d_pio, *d_rtc, *d_sio;
 #ifdef SUPPORT_PC88_PCG8100
@@ -266,7 +274,11 @@ public:
 	void write_signal(int id, uint32 data, uint32 mask);
 	void event_callback(int event_id, int err);
 	void event_frame();
+#ifdef SDL
+	int event_vline(int v);
+#else
 	void event_vline(int v, int clock);
+#endif // SDL
 	uint32 intr_ack();
 	void intr_ei();
 	void save_state(FILEIO* state_fio);
@@ -277,10 +289,21 @@ public:
 	{
 		d_cpu = device;
 	}
+#ifdef SDL
+	void set_context_opn(FMSound *device)
+	{
+		d_opn = device;
+	}
+	void set_context_sb2(FMSound *device)
+	{
+		d_sb2 = device;
+	}
+#else
 	void set_context_opn(YM2203* device)
 	{
 		d_opn = device;
 	}
+#endif // SDL
 	void set_context_pcm(DEVICE* device)
 	{
 		d_pcm = device;
@@ -332,6 +355,61 @@ public:
 	void get_key_status(uint8 *buf) { memcpy(buf, key_status, sizeof(key_status)); }
 	int beep_event_id;
 	uint32 xm8_ext_flags;
+
+	// version 1.20
+	bool is_sr_mr() { return (n88rom[0x79d7] < 0x38); }
+
+	// GVAM(1bit)+GHSM(1bit)+GRPHE(1bit)+VRTC(1bit)+MMODE(1bit)+RMODE(1bit)+IEROM(1bit)+EROMSL(2bit)+REWE(1bit)+CS(2bit)+GVRAM(2bit)+TMODE(1bit)
+	// GVAM, GHSM, GRAPHE and VRTC are for read_waits and write_waits
+	uint8 **read_bank_ptr;
+	uint8 **write_bank_ptr;
+	int *read_wait_ptr;
+	int *write_wait_ptr;
+	int *m1_wait_ptr;
+	uint8 *read_banks[0x40 * 0x800];
+	uint8 *write_banks[0x40 * 0x800];
+	int read_waits[0x40 * 0x8000];
+	int write_waits[0x40 * 0x8000];
+	int m1_waits[0x40 * 0x800];
+	int read_pattern;
+	int write_pattern;
+	int gvram_access_count;
+	int gvram_access_limit[2];
+	int get_main_wait(int pattern, bool read, bool c000);
+	int get_tvram_wait(int pattern, bool read);
+	int get_gvram_wait(int pattern, bool read);
+	int get_m1_wait(int pattern, uint32 addr);
+	void create_pattern(int pattern, bool read);
+	void update_memmap(int pattern, bool read);
+	void insert_gvram_wait(int index, int *wait);
+	uint32 port30_in();
+	void port31_out(uint8 mod);
+	uint32 port31_in();
+	void port32_out(uint8 mod);
+	void port35_out(uint8 mod);
+	uint32 port40_in();
+	void port40_out(uint32 data, uint8 mod);
+	void port44_out(uint32 addr, uint32 data);
+	uint32 port44_in(uint32 addr);
+	void port5c_out();
+	void port5d_out();
+	void port5e_out();
+	void port5f_out();
+	uint32 port6e_in();
+	void port6f_out();
+	uint32 port6f_in();
+	void port71_out(uint8 mod);
+	void port78_out();
+	void porta8_out(uint32 addr, uint32 data);
+	uint32 porta8_in(uint32 addr);
+	void porte2_out();
+	void porte3_out();
+	void portf0_out(uint8 mod);
+	uint32 portf0_in();
+	void portf1_out(uint8 mod);
+	uint32 portf1_in();
+	void portfc_out(uint32 addr, uint32 data);
+	uint32 portfc_in(uint32 addr);
 #endif // SDL
 };
 

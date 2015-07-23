@@ -92,7 +92,20 @@ bool Timer::Count(int32 clock)
 //
 int32 Timer::GetNextEvent()
 {
+#ifdef SDL
+	if ((timera_count > 0) && (timerb_count > 0)) {
+		return (timera_count < timerb_count ? timera_count : timerb_count);
+	}
+	if (timera_count > 0) {
+		return timera_count;
+	}
+	if (timerb_count > 0) {
+		return timerb_count;
+	}
+	return 0;
+#else
 	return (timera_count < timerb_count ? timera_count : timerb_count) + 1;
+#endif // SDL
 }
 
 // ---------------------------------------------------------------------------

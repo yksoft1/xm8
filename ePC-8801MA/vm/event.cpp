@@ -14,6 +14,11 @@
 
 #define EVENT_MIX	0
 
+#ifdef SDL
+#define SINGLE_EXEC_TIMEOUT		10000
+										// exit single exec mode (us)
+#endif // SDL
+
 void EVENT::initialize()
 {
 	// load config
@@ -96,8 +101,11 @@ void EVENT::reset()
 
 	// sub cpu counter
 	d_cpu[1].accum_clocks = 0;
-#endif // SDL
 
+	// version 1.20
+	vblank_clocks = 0;
+	single_exec_clock = 0;
+#endif // SDL
 	
 	event_remain = 0;
 	cpu_remain = cpu_accum = cpu_done = 0;
@@ -116,8 +124,34 @@ void EVENT::reset()
 #endif
 }
 
+#ifdef SDL
+void EVENT::request_single_exec()
+{
+	if (single_exec == false) {
+		// enter single execution mode
+		single_exec = true;
+
+		// abort main cpu and sub cpu
+		d_cpu[0].device->write_signal(SIG_CPU_FIRQ, 1, 1);
+		d_cpu[1].device->write_signal(SIG_CPU_FIRQ, 1, 1);
+	}
+
+	// save (extend) clock
+	single_exec_clock = current_clock();
+}
+#endif // SDL
+
 void EVENT::drive()
 {
+#ifdef SDL
+	if (single_exec == true) {
+		// if passed 10ms, disable single_exec
+		if (passed_usec(single_exec_clock) > SINGLE_EXEC_TIMEOUT) {
+			single_exec = false;
+		}
+	}
+#endif // SDL
+
 	// raise pre frame events to update timing settings
 	for(int i = 0; i < frame_event_count; i++) {
 		frame_event[i]->event_pre_frame();
@@ -147,79 +181,136 @@ void EVENT::drive()
 				device->update_timing(d_cpu[0].cpu_clocks, frames_per_sec, lines_per_frame);
 			}
 		}
+
+#ifdef SDL
+		// main cpu clocks for v-blank
+		vblank_clocks = 0;
+#endif // SDL
 	}
 	
 	// run virtual machine for 1 frame period
 	for(int i = 0; i < frame_event_count; i++) {
 		frame_event[i]->event_frame();
 	}
-	for(int v = 0; v < lines_per_frame; v++) {
-		// run virtual machine per line
-		for(int i = 0; i < vline_event_count; i++) {
-			vline_event[i]->event_vline(v, vclocks[v]);
-		}
-		
 #ifdef SDL
-		event_remain += vclocks[v];
-
+	for(int v = 0; v < lines_per_frame;) {
+		int exec_lines;
 		int min_event_clock;
 		int main_cpu_exec;
+		int sub_cpu_exec;
 		int sub_cpu_done;
 
+		// get execute lines from PC88::event_vline()
+		exec_lines = vline_event[0]->event_vline(v);
+
+		if (exec_lines == 1) {
+			// V-DISP
+			event_remain += vclocks[v];
+			cpu_remain += vclocks[v++];
+		}
+		else {
+			// V-BLANK
+			exec_lines = lines_per_frame - v;
+			if (vblank_clocks == 0) {
+				for (int loop=0; loop<exec_lines; loop++) {
+					vblank_clocks += vclocks[v++];
+				}
+			}
+			else {
+				v += exec_lines;
+			}
+			event_remain += vblank_clocks;
+			cpu_remain += vblank_clocks;
+		}
+
 		while (event_remain > 0) {
-			// run main cpu
+			// reset regist_event_ctrl and cpu_done
+			regist_event_ctrl = false;
+			cpu_done = 0;
+
+			// resume for running (clear Z80::abort)
+			d_cpu[0].device->write_signal(SIG_CPU_FIRQ, 0, 0);
+			d_cpu[1].device->write_signal(SIG_CPU_FIRQ, 0, 0);
+
+			// running main cpu
 			main_cpu_exec = event_remain;
 			min_event_clock = (first_fire_event->remain_clock - first_fire_event->passed_clock + 0x3ff) >> 10;
+
+			// max(event_remain, min_event_clock)
 			if ((min_event_clock > 0) && (min_event_clock < event_remain)) {
 				main_cpu_exec = min_event_clock;
 			}
-			if (single_exec == true) {
-				main_cpu_exec = -1;
+
+			if (main_cpu_exec > 0) {
+				// single execution ?
+				if (single_exec == true) {
+					if (main_cpu_exec > 4) {
+						main_cpu_exec = 4;
+					}
+				}
+				cpu_done = d_cpu[0].device->run(main_cpu_exec);
 			}
 
-			cpu_done = d_cpu[0].device->run(main_cpu_exec);
+			// if registered new event during main cpu execution, recalc min_event_clock
+			if (regist_event_ctrl == true) {
+				event_remain -= cpu_done;
+				continue;
+			}
 
-			// resume for next run (clear Z80::abort)
-			d_cpu[0].device->write_signal(SIG_CPU_FIRQ, 0, 0);
-
-			// run sub cpu
+			// running sub cpu
 			if (d_cpu[1].update_clocks == 0x400) {
 				// main 4MHz
-				d_cpu[1].accum_clocks += (cpu_done << 10);
+				if (cpu_remain > 0) {
+					sub_cpu_exec = cpu_remain;
+					if (single_exec == true) {
+						if (sub_cpu_exec > 4) {
+							sub_cpu_exec = 4;
+						}
+					}
+
+					sub_cpu_done = d_cpu[1].device->run(sub_cpu_exec);
+					cpu_remain -= sub_cpu_done;
+				}
 			}
 			else {
 				// main 8MHz
-				d_cpu[1].accum_clocks += (cpu_done << 9);
+				if (cpu_remain > 2) {
+					sub_cpu_exec = cpu_remain / 2;
+					if (single_exec == true) {
+						if (sub_cpu_exec > 4) {
+							sub_cpu_exec = 4;
+						}
+					}
+					
+					sub_cpu_done = d_cpu[1].device->run(sub_cpu_exec);
+					cpu_remain -= (sub_cpu_done * 2);
+				}
 			}
 
-			// sub requires minimum 4 clock
-			if ((d_cpu[1].accum_clocks >= 0x1000) && (d_cpu[1].accum_clocks < 0x80000000)) {
-				sub_cpu_done = d_cpu[1].device->run(d_cpu[1].accum_clocks >> 10);
-				d_cpu[1].accum_clocks -= (sub_cpu_done << 10);
-			}
-
-			// resume for next run (clear Z80::abort)
-			d_cpu[1].device->write_signal(SIG_CPU_FIRQ, 0, 0);
-
-			// reset sub cpu
-			if (get_cpu_pc(1) == 0x00cc) {
-				// for Final Zone Demo (2nd loop)
-				single_exec = false;
-				d_cpu[1].accum_clocks = 0;
+			// if registered new event during sub cpu execution, recalc min_event_clock
+			if (regist_event_ctrl == true) {
+				event_remain -= cpu_done;
+				continue;
 			}
 
 			// update event
-			update_event(cpu_done);
-			event_remain -= cpu_done;
+			if (cpu_done > 0) {
+				regist_event_ctrl = true;
+				update_event(cpu_done);
+				event_remain -= cpu_done;
+			}
 		}
-
-		// force sync
-		cpu_remain = event_remain;
 	}
 
 	// mix sound at the end of frame
 	mix_sound_block();
 #else
+	for(int v = 0; v < lines_per_frame; v++) {
+		// run virtual machine per line
+		for(int i = 0; i < vline_event_count; i++) {
+			vline_event[i]->event_vline(v, vclocks[v]);
+		}
+
 		if(event_remain < 0) {
 			if(-event_remain > vclocks[v]) {
 				update_event(vclocks[v]);
@@ -282,23 +373,16 @@ void EVENT::update_event(int clock)
 	event_clocks += clock;
 	clock <<= 10;
 
-	first_fire_event->passed_clock += (uint32)clock;
+	// add passed_clock to all valid events
+	event_handle = first_fire_event;
+	while (event_handle != NULL) {
+		event_handle->passed_clock += (uint32)clock;
+		event_handle = event_handle->next;
+	}
+
 	if (first_fire_event->passed_clock < first_fire_event->remain_clock) {
 		// have remain
 		return;
-	}
-
-	// add passed_clock and clear update_done at all events
-	event_handle = first_fire_event;
-	while (event_handle != NULL) {
-		if (event_handle != first_fire_event) {
-			// except first_fire_event
-			event_handle->passed_clock += first_fire_event->passed_clock;
-		}
-
-		// clear update_done
-		event_handle->update_done = false;
-		event_handle = event_handle->next;
 	}
 
 	// event loop
@@ -375,6 +459,13 @@ void EVENT::update_event(int clock)
 		// restart loop from first_fire_event
 		event_handle = first_fire_event;
 	}
+
+	// clear update_done for next update
+	event_handle = first_fire_event;
+	while (event_handle != NULL) {
+		event_handle->update_done = false;
+		event_handle = event_handle->next;
+	}
 #else
 	uint64 event_clocks_tmp = event_clocks + clock;
 	
@@ -408,8 +499,14 @@ uint32 EVENT::current_clock()
 {
 #ifdef SDL
 	Z80 *z80;
-	z80 = (Z80*)d_cpu[0].device;
-	return event_clocks + z80->get_current_icount();
+
+	if (regist_event_ctrl == false) {
+		z80 = (Z80*)d_cpu[0].device;
+		return event_clocks + z80->get_current_icount();
+	}
+	else {
+		return event_clocks;
+	}
 #else
 	return (uint32)(event_clocks & 0xffffffff);
 #endif // SDL
@@ -433,6 +530,34 @@ uint32 EVENT::get_cpu_pc(int index)
 
 void EVENT::register_event(DEVICE* device, int event_id, double usec, bool loop, int* register_id)
 {
+#ifdef SDL
+	Z80 *z80;
+
+	if (regist_event_ctrl == false) {
+		// regist during execution
+		if (cpu_done == 0) {
+			// running main cpu or skip
+			z80 = (Z80*)d_cpu[0].device;
+			if (z80->get_current_icount() > 0) {
+				update_event(z80->get_current_icount());
+			}
+
+			// abort running both cpus and continue
+			abort_main_cpu();
+			abort_sub_cpu();
+			regist_event_ctrl = true;
+		}
+		else {
+			// running sub cpu
+			update_event(cpu_done);
+
+			// abort running sub cpu and continue
+			abort_sub_cpu();
+			regist_event_ctrl = true;
+		}
+	}
+#endif // SDL
+
 #ifdef _DEBUG_LOG
 	if(!initialize_done && !loop) {
 		emu->out_debug_log(_T("EVENT: non-loop event is registered before initialize is done\n"));
@@ -465,6 +590,7 @@ void EVENT::register_event(DEVICE* device, int event_id, double usec, bool loop,
 	event_handle->loop_clock = event_handle->remain_clock;
 	event_handle->passed_clock = 0;
 	event_handle->loop_enable = loop;
+	event_handle->update_done = false;
 #else
 	uint64 clock;
 	if(loop) {
@@ -489,6 +615,33 @@ void EVENT::register_event_by_clock(DEVICE* device, int event_id, uint32 clock, 
 void EVENT::register_event_by_clock(DEVICE* device, int event_id, uint64 clock, bool loop, int* register_id)
 #endif // SDL
 {
+#ifdef SDL
+	Z80 *z80;
+
+	if (regist_event_ctrl == false) {
+		// regist during execution
+		if (cpu_done == 0) {
+			// running main cpu
+			z80 = (Z80*)d_cpu[0].device;
+			if (z80->get_current_icount() > 0) {
+				update_event(z80->get_current_icount());
+			}
+
+			// abort running main cpu and continue
+			abort_main_cpu();
+			regist_event_ctrl = true;
+		}
+		else {
+			// running sub cpu
+			update_event(cpu_done);
+
+			// abort running sub cpu and continue
+			abort_sub_cpu();
+			regist_event_ctrl = true;
+		}
+	}
+#endif // SDL
+
 #ifdef _DEBUG_LOG
 	if(!initialize_done && !loop) {
 		emu->out_debug_log(_T("EVENT: non-loop event is registered before initialize is done\n"));
@@ -520,6 +673,7 @@ void EVENT::register_event_by_clock(DEVICE* device, int event_id, uint64 clock, 
 	event_handle->loop_clock = event_handle->remain_clock;
 	event_handle->passed_clock = 0;
 	event_handle->loop_enable = loop;
+	event_handle->update_done = false;
 #else
 	event_handle->expired_clock = event_clocks + clock;
 	event_handle->loop_clock = loop ? (clock << 10) : 0;
@@ -537,7 +691,8 @@ void EVENT::insert_event(event_t *event_handle)
 	} else {
 		for(event_t *insert_pos = first_fire_event; insert_pos != NULL; insert_pos = insert_pos->next) {
 #ifdef SDL
-			if (insert_pos->remain_clock > event_handle->remain_clock) {
+			if ((insert_pos->remain_clock > insert_pos->passed_clock) &&
+				((insert_pos->remain_clock - insert_pos->passed_clock) > event_handle->remain_clock)) {
 #else
 			if(insert_pos->expired_clock > event_handle->expired_clock) {
 #endif // SDL
@@ -815,11 +970,14 @@ void EVENT::update_config()
 	}
 }
 
-#define STATE_VERSION	2
+#define STATE_VERSION_100		2
+								// version 1.00 - version 1.10
+#define STATE_VERSION_120		3
+								// version 1.20 -
 
 void EVENT::save_state(FILEIO* state_fio)
 {
-	state_fio->FputUint32(STATE_VERSION);
+	state_fio->FputUint32(STATE_VERSION_120);
 	state_fio->FputInt32(this_device_id);
 	
 	state_fio->FputInt32(dcount_cpu);
@@ -864,14 +1022,28 @@ void EVENT::save_state(FILEIO* state_fio)
 	state_fio->FputInt32(next_lines_per_frame);
 #ifdef SDL
 	state_fio->FputBool(single_exec);
+
+	// version 1.20
+	state_fio->FputBool(regist_event_ctrl);
+	state_fio->FputInt32(vblank_clocks);
+	state_fio->FputUint32(single_exec_clock);
 #endif // SDL
 }
 
 bool EVENT::load_state(FILEIO* state_fio)
 {
-	if(state_fio->FgetUint32() != STATE_VERSION) {
+#ifdef SDL
+	uint32 version;
+
+	version = state_fio->FgetUint32();
+	if ((version < STATE_VERSION_100) || (version > STATE_VERSION_120)) {
 		return false;
 	}
+#else
+	if(state_fio->FgetUint32() != STATE_VERSION_100) {
+		return false;
+	}
+#endif // SDL
 	if(state_fio->FgetInt32() != this_device_id) {
 		return false;
 	}
@@ -919,6 +1091,41 @@ bool EVENT::load_state(FILEIO* state_fio)
 	next_lines_per_frame = state_fio->FgetInt32();
 #ifdef SDL
 	single_exec = state_fio->FgetBool();
+
+	// version 1.20
+	if (version >= STATE_VERSION_120) {
+		regist_event_ctrl = state_fio->FgetBool();
+		vblank_clocks = state_fio->FgetInt32();
+		single_exec_clock = state_fio->FgetUint32();
+	}
+	else {
+		// version 1.10 -> version 1.20 conversion
+		event_t *event_handle;
+
+		// keep regist_event_ctrl current value
+		vblank_clocks = 0;
+		cpu_remain = event_remain;
+		single_exec_clock = event_clocks;
+
+		// add first_fire_event->passed_clock to all valid events
+		if (first_fire_event != NULL) {
+			event_handle = first_fire_event->next;
+			while (event_handle != NULL) {
+				event_handle->passed_clock += first_fire_event->passed_clock;
+				if (event_handle->passed_clock >= event_handle->remain_clock) {
+					event_handle->passed_clock = event_handle->remain_clock - 1;
+				}
+				event_handle = event_handle->next;
+			}
+		}
+	}
+
+	// force update timing
+	for(DEVICE* device = vm->first_device; device; device = device->next_device) {
+		if(device->event_manager_id() == this_device_id) {
+			device->update_timing(d_cpu[0].cpu_clocks, frames_per_sec, lines_per_frame);
+		}
+	}
 #endif // SDL
 	
 	// post process

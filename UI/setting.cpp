@@ -24,10 +24,6 @@
 										// uPD70008AC CPU (Z80H compatible, clock 8MHz)
 #define SETTING_CPU_4MHZ		1
 										// uPD780C-1 CPU (Z80A compatible, clock 4MHz)
-#define SETTING_MEMORY_WAIT		1
-										// memory wait = on
-#define SETTING_8MHZ_HIGH		2
-										// 8MHz H mode (FE2/MC)
 #define SETTING_USE_JOYSTICK	0
 										// Joystick for ATARI port
 #define SETTING_MONITOR_24K		0
@@ -52,6 +48,8 @@
 										// version 1.05
 #define SETTING_VERSION_110		20150626
 										// version 1.10
+#define SETTING_VERSION_120		20150710
+										// version 1.20
 
 // video
 #define DEFAULT_WINDOW_WIDTH	640
@@ -77,6 +75,8 @@
 										// alpha blending level for status
 #define DEFAULT_SCALE_QUALITY	2
 										// render scale quality
+#define DEFAULT_FORCE_RGB565	(true)
+										// force RGB565
 
 // audio
 #ifdef __ANDROID__
@@ -91,7 +91,7 @@
 #define DEFAULT_AUDIO_UNIT		15
 										// audio unit (ms)
 #ifdef __ANDROID__
-#define DEFAULT_AUDIO_BUFFER	150
+#define DEFAULT_AUDIO_BUFFER	140
 										// audio buffer (ms)
 #else
 #define DEFAULT_AUDIO_BUFFER	120
@@ -136,6 +136,7 @@ Setting::Setting()
 	status_alpha = DEFAULT_STATUS_ALPHA;
 	scale_quality[0] = (char)('0' + DEFAULT_SCALE_QUALITY);
 	scale_quality[1] = '\0';
+	force_rgb565 = DEFAULT_FORCE_RGB565;
 
 	// setting (input)
 	softkey_index = 0;
@@ -306,6 +307,12 @@ bool Setting::LoadSetting(FILEIO *fio)
 			keyboard_enable = fio->FgetBool();
 		}
 
+		// version 1.20
+		if (version >= SETTING_VERSION_120) {
+			config.ignore_crc = fio->FgetBool();
+			force_rgb565 = fio->FgetBool();
+		}
+
 		return true;
 	}
 
@@ -339,7 +346,7 @@ void Setting::SaveSetting(FILEIO *fio)
 	int loop;
 
 	// version
-	fio->FputUint32(SETTING_VERSION_110);
+	fio->FputUint32(SETTING_VERSION_120);
 
 	// system
 	fio->FputInt32(config.boot_mode);
@@ -380,6 +387,10 @@ void Setting::SaveSetting(FILEIO *fio)
 
 	// version 1.10
 	fio->FputBool(keyboard_enable);
+
+	// version 1.20
+	fio->FputBool(config.ignore_crc);
+	fio->FputBool(force_rgb565);
 }
 
 //
@@ -446,40 +457,12 @@ void Setting::SetCPUClock(int clock)
 }
 
 //
-// HasMemoryWait()
-// get memory wait
-//
-bool Setting::HasMemoryWait()
-{
-	if ((config.dipswitch & SETTING_MEMORY_WAIT) != 0) {
-		return true;
-	}
-	else {
-		return false;
-	}
-}
-
-//
-// SetMemoryWait()
-// set memory wait
-//
-void Setting::SetMemoryWait(bool wait)
-{
-	if (wait == true) {
-		config.dipswitch |= SETTING_MEMORY_WAIT;
-	}
-	else {
-		config.dipswitch &= ~SETTING_MEMORY_WAIT;
-	}
-}
-
-//
 // Is8HMode()
 // get 8MHzH mode
 //
 bool Setting::Is8HMode()
 {
-	if ((config.dipswitch & SETTING_8MHZ_HIGH) != 0) {
+	if ((config.dipswitch & DIP_CLOCK_8MHZH) != 0) {
 		return true;
 	}
 	else {
@@ -494,11 +477,57 @@ bool Setting::Is8HMode()
 void Setting::Set8HMode(bool high)
 {
 	if (high == true) {
-		config.dipswitch |= SETTING_8MHZ_HIGH;
+		config.dipswitch |= DIP_CLOCK_8MHZH;
 	}
 	else {
-		config.dipswitch &= ~SETTING_8MHZ_HIGH;
+		config.dipswitch &= ~DIP_CLOCK_8MHZH;
 	}
+}
+
+//
+// HasExRAM()
+// get extended RAM
+//
+bool Setting::HasExRAM()
+{
+	if ((config.dipswitch & DIP_DISABLE_EXRAM) != 0) {
+		return false;
+	}
+	else {
+		return true;
+	}
+}
+
+//
+// SetExRAM()
+// set extended RAM
+//
+void Setting::SetExRAM(bool enable)
+{
+	if (enable == true) {
+		config.dipswitch &= ~DIP_DISABLE_EXRAM;
+	}
+	else {
+		config.dipswitch |= DIP_DISABLE_EXRAM;
+	}
+}
+
+//
+// GetDip()
+// get dip switch
+//
+Uint32 Setting::GetDip()
+{
+	return (Uint32)config.dipswitch;
+}
+
+//
+// SetDip()
+// set dip switch
+//
+void Setting::SetDip(Uint32 dip)
+{
+	config.dipswitch = (uint32)dip;
 }
 
 //
@@ -510,12 +539,30 @@ Uint32 Setting::GetSystems()
 	Uint32 info;
 
 	info = (Uint32)config.dipswitch;
-	info <<= 8;
+	info <<= 4;
 	info |= (Uint32)config.cpu_type;
-	info <<= 8;
+	info <<= 4;
 	info |= (Uint32)config.boot_mode;
 
 	return info;
+}
+
+//
+// IsFastDisk()
+// get pseudo fast disk mode
+//
+bool Setting::IsFastDisk()
+{
+	return config.ignore_crc;
+}
+
+//
+// SetFastDisk()
+// set pseudo fast disk mode
+//
+void Setting::SetFastDisk(bool enable)
+{
+	config.ignore_crc = enable;
 }
 
 //
@@ -679,6 +726,24 @@ const char* Setting::GetScaleQuality()
 void Setting::SetScaleQuality(int quality)
 {
 	scale_quality[0] = (char)('0' + quality);
+}
+
+//
+// IsForceRGB565()
+// get force RGB565 mode (Android only)
+//
+bool Setting::IsForceRGB565()
+{
+	return force_rgb565;
+}
+
+//
+// SetForceRGB565()
+// set force RGB565 mode (Android only)
+//
+void Setting::SetForceRGB565(bool enable)
+{
+	force_rgb565 = enable;
 }
 
 //

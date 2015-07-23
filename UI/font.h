@@ -85,7 +85,7 @@ private:
 										// shift-jis to kanji rom offset table
 	Uint8 kanji_rom[0x40000];
 										// kanji rom
-	Uint8 rom_version[3];
+	Uint8 rom_version[4];
 										// rom version
 	char rom_message[_MAX_PATH * 3];
 										// rom not found message

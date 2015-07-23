@@ -18,7 +18,7 @@
 #include "vm.h"
 #include "event.h"
 #include "upd1990a.h"
-#include "ym2203.h"
+#include "fmsound.h"
 #include "pc88.h"
 #include "setting.h"
 #include "platform.h"
@@ -38,7 +38,7 @@
 //
 #define APP_NAME				"XM8 (based on ePC-8801MA)";
 										// application name
-#define APP_VER					0x0110
+#define APP_VER					0x0120
 										// version (BCD)
 #define APP_WIDTH				SCREEN_WIDTH
 										// window width
@@ -50,8 +50,6 @@
 										// float to uint shift (ex:0x10000=1ms)
 #define SLEEP_MENU				50
 										// delay on menu mode (ms)
-#define SLEEP_BACKGROUND		10000
-										// delay on background mode (ms)
 #define SLEEP_POWERDOWN			1000
 										// delay on power down (ms)
 #define FORCE_SYNC				500
@@ -631,8 +629,8 @@ void App::Run()
 
 			// wait until event
 			if (app_background == true) {
-				// background
-				ret = SDL_WaitEventTimeout(&e, SLEEP_BACKGROUND);
+				// background -> wait infinite
+				ret = SDL_WaitEvent(&e);
 			}
 			else {
 				if (app_menu == true) {
@@ -1167,14 +1165,30 @@ void App::Poll(SDL_Event *e)
 		break;
 
 	case SDL_KEYDOWN:
-		if ((app_background == false) && (setting->IsKeyEnable() == true)) {
-			OnKeyDown(e);
+		if (app_background == false) {
+#ifdef __ANDROID__
+			if (e->key.keysym.scancode == SDL_SCANCODE_AC_BACK) {
+				OnKeyDown(e);
+				break;
+			}
+#endif // __ANDROID__
+			if (setting->IsKeyEnable() == true) {
+				OnKeyDown(e);
+			}
 		}
 		break;
 
 	case SDL_KEYUP:
-		if ((app_background == false) && (setting->IsKeyEnable() == true)) {
-			OnKeyUp(e);
+		if (app_background == false) {
+#ifdef __ANDROID__
+			if (e->key.keysym.scancode == SDL_SCANCODE_AC_BACK) {
+				OnKeyUp(e);
+				break;
+			}
+#endif // __ANDROID__
+			if (setting->IsKeyEnable() == true) {
+				OnKeyUp(e);
+			}
 		}
 		break;
 
@@ -1310,9 +1324,11 @@ void App::OnWindow(SDL_Event *e)
 		break;
 
 	case SDL_WINDOWEVENT_EXPOSED:
+		video->DrawCtrl();
 		break;
 
 	case SDL_WINDOWEVENT_MOVED:
+		video->DrawCtrl();
 		break;
 
 	case SDL_WINDOWEVENT_RESIZED:
@@ -1364,6 +1380,9 @@ void App::OnWindow(SDL_Event *e)
 			app_background = false;
 			app_forcesync = true;
 			CtrlAudio();
+
+			// force next draw
+			video->DrawCtrl();
 		}
 	}
 
@@ -1489,6 +1508,13 @@ void App::OnKeyUp(SDL_Event *e)
 	if (app_menu == true) {
 		return;
 	}
+
+#ifdef __ANDROID__
+	// Android back key
+	if (code == SDL_SCANCODE_AC_BACK) {
+		return;
+	}
+#endif // __ANDROID__
 
 	// check ALT (2)
 	if ((e->key.keysym.mod & KMOD_ALT) != 0) {
@@ -1778,7 +1804,7 @@ void App::EnterMenu(int id)
 // LeaveMenu()
 // restore run mode
 //
-void App::LeaveMenu()
+void App::LeaveMenu(bool check)
 {
 	// flag
 	app_menu = false;
@@ -1797,15 +1823,16 @@ void App::LeaveMenu()
 	video->SetMenuMode(false);
 
 	// system info
-	if (setting->GetSystems() != system_info) {
-		// rebuild virtual machine
-		system_info = setting->GetSystems();
-		ChangeSystem();
+	if (check == true) {
+		if (setting->GetSystems() != system_info) {
+			// rebuild virtual machine
+			system_info = setting->GetSystems();
+			ChangeSystem();
+		}
 	}
-	else {
-		// resync rtc
-		upd1990a->resync();
-	}
+
+	// resync rtc
+	upd1990a->resync();
 }
 
 //
@@ -1829,8 +1856,7 @@ void App::CtrlAudio()
 void App::ChangeAudio()
 {
 	Audio::OpenParam param;
-	YM2203 *ym2203;
-	int loop;
+	FMSound *fmsound;
 
 	// close audio device
 	audio->Close();
@@ -1846,18 +1872,17 @@ void App::ChangeAudio()
 	if (audio->Open(&param) == true) {
 		// release event manager
 		evmgr->release();
-		for (loop=0; loop<MAX_EVENT; loop++) {
-			evmgr->cancel_event(evmgr, loop);
-		}
 
 		// set OPN/OPNA rate
-		ym2203 = (YM2203*)vm->get_device(7);
-		if (ym2203->is_ym2608) {
-			ym2203->SetRate(7987248, param.freq, false);
-		}
-		else {
-			ym2203->SetRate(3993624, param.freq, false);
-		}
+		fmsound = (FMSound*)vm->get_device(7);
+		fmsound->change_rate(param.freq);
+#ifdef SUPPORT_PC88_PCG8100
+		fmsound = (FMSound*)vm->get_device(17);
+		fmsound->change_rate(param.freq);
+#else
+		fmsound = (FMSound*)vm->get_device(13);
+		fmsound->change_rate(param.freq);
+#endif // SUPPORT_PC88_PCG8100
 
 		// initialize event manager
 		evmgr->initialize_sound(param.freq, param.per);
@@ -2023,6 +2048,10 @@ bool App::Load(int slot)
 {
 	char name[64];
 	FILEIO fileio;
+	int freq;
+
+	// get current freq
+	freq = setting->GetAudioFreq();
 
 	// lock vm
 	LockVM();
@@ -2046,16 +2075,26 @@ bool App::Load(int slot)
 			// tape manager
 			tapemgr->Load(&fileio);
 
-			// each evice
+			// each device
 			vm->load_state(&fileio);
 
 			// close
 			fileio.Fclose();
 
+			// initialize frame rate
+			memset(draw_tick, 0, sizeof(draw_tick));
+			draw_tick_count = 0;
+			draw_tick_point = 0;
+
 			// audio
-			if (audio->IsPlay() == true) {
-				audio->Stop();
-				audio->Play();
+			if (setting->GetAudioFreq() != freq) {
+				ChangeAudio();
+			}
+			else {
+				if (audio->IsPlay() == true) {
+					audio->Stop();
+					audio->Play();
+				}
 			}
 
 			// input
@@ -2110,7 +2149,7 @@ bool App::Save(int slot)
 		// tape manager
 		tapemgr->Save(&fileio);
 
-		// each evice
+		// each device
 		vm->save_state(&fileio);
 
 		// close
@@ -2192,6 +2231,15 @@ Uint32 App::GetAppVersion()
 const char* App::GetAppTitle()
 {
 	return APP_NAME;
+}
+
+//
+// GetEvMgr()
+// get event manager
+//
+void* App::GetEvMgr()
+{
+	return (void*)evmgr;
 }
 
 //

@@ -2090,6 +2090,21 @@ void Z80::write_signal(int id, uint32 data, uint32 mask)
 
 int Z80::run(int clock)
 {
+#ifdef SDL
+	// return now if BUSREQ
+	if (busreq) {
+		start_icount = icount;
+		return 1;
+	}
+	else {
+		start_icount = icount = clock;
+		while ((icount > 0) && !abort) {
+			run_one_opecode();
+		}
+		start_icount = icount;
+		return (clock - icount);
+	}
+#else
 	// return now if BUSREQ
 	if(busreq) {
 #ifdef SINGLE_MODE_DMA
@@ -2106,14 +2121,8 @@ int Z80::run(int clock)
 	if(clock == -1) {
 		// run only one opcode
 		icount = -extra_icount;
-#ifdef SDL
-		start_icount = icount;
-#endif // SDL
 		extra_icount = 0;
 		run_one_opecode();
-#ifdef SDL
-		start_icount = icount;
-#endif // SDL
 		return -icount;
 	} else {
 		// run cpu while given clocks
@@ -2122,23 +2131,16 @@ int Z80::run(int clock)
 		icount -= extra_icount;
 		extra_icount = 0;
 		
-#ifdef SDL
-		start_icount = first_icount;
-		while(icount > 0 && !busreq && !abort) {
-#else
 		while(icount > 0 && !busreq) {
-#endif // SDL
 			run_one_opecode();
 		}
 		int passed_icount = first_icount - icount;
 		if(busreq && icount > 0) {
 			icount = 0;
 		}
-#ifdef SDL
-		start_icount = icount;
-#endif // SDL
 		return passed_icount;
 	}
+#endif // SDL
 }
 
 #ifdef SDL

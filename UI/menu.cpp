@@ -440,17 +440,13 @@ void Menu::EnterSave()
 // EnterSystem()
 // enter system menu
 //
-void Menu::EnterSystem()
+void Menu::EnterSystem(int id)
 {
-	int id;
-	Uint8 ver[2];
+	Uint8 ver[3];
 	Font *font;
 	bool add;
 
 	list->SetTitle("<< System Options >>", MENU_SYSTEM);
-
-	// default focus
-	id = MENU_SYSTEM_V1S;
 
 	list->AddRadioButton("V1S mode (w/reset)", MENU_SYSTEM_V1S, MENU_SYSTEM_MODE);
 	list->AddRadioButton("V1H mode (w/reset)", MENU_SYSTEM_V1H, MENU_SYSTEM_MODE);
@@ -459,12 +455,15 @@ void Menu::EnterSystem()
 	list->AddRadioButton("Clock 4MHz  (w/reset)", MENU_SYSTEM_4M, MENU_SYSTEM_CLOCK);
 	list->AddRadioButton("Clock 8MHz  (w/reset)", MENU_SYSTEM_8M, MENU_SYSTEM_CLOCK);
 	list->AddRadioButton("Clock 8MHzH (FE2/MC,w/reset)", MENU_SYSTEM_8MH, MENU_SYSTEM_CLOCK);
-	list->AddCheckButton("Memory wait (w/reset)", MENU_SYSTEM_WAIT);
+	list->AddCheckButton("128KB RAM board (Mx,w/reset)", MENU_SYSTEM_EXRAM);
+	list->AddCheckButton("Pseudo fast disk access", MENU_SYSTEM_FASTDISK);
+	list->AddButton("DIP settings (w/reset)", MENU_SYSTEM_DIP);
 
-	// rom version
+	// get rom version
 	font = app->GetFont();
 	ver[0] = font->GetROMVersion(1);
 	ver[1] = font->GetROMVersion(2);
+	ver[2] = font->GetROMVersion(3);
 	add = false;
 
 	if ((ver[0] < 0x32) && (add == false)) {
@@ -480,19 +479,39 @@ void Menu::EnterSystem()
 		add = true;
 	}
 	if ((ver[0] < 0x38) && (add == false)) {
-		list->AddButton("ROM: PC-8801mkIIFR/MR\n", MENU_SYSTEM_ROMVER);
+		if (ver[2] == 0xfe) {
+			list->AddButton("ROM: PC-8801mkIIMR\n", MENU_SYSTEM_ROMVER);
+		}
+		else {
+			list->AddButton("ROM: PC-8801mkIIFR\n", MENU_SYSTEM_ROMVER);
+		}
 		add = true;
 	}
 	if ((ver[0] == 0x38) && (add == false)) {
-		list->AddButton("ROM: PC-8801FH/MH\n", MENU_SYSTEM_ROMVER);
+		if (ver[2] == 0xfe) {
+			list->AddButton("ROM: PC-8801MH\n", MENU_SYSTEM_ROMVER);
+		}
+		else {
+			list->AddButton("ROM: PC-8801FH\n", MENU_SYSTEM_ROMVER);
+		}
 		add = true;
 	}
 	if ((ver[1] < 0x31) && (add == false)) {
-		list->AddButton("ROM: PC-8801FA/MA\n", MENU_SYSTEM_ROMVER);
+		if (ver[2] == 0xfe) {
+			list->AddButton("ROM: PC-8801MA\n", MENU_SYSTEM_ROMVER);
+		}
+		else {
+			list->AddButton("ROM: PC-8801FA\n", MENU_SYSTEM_ROMVER);
+		}
 		add = true;
 	}
 	if ((ver[1] == 0x31) && (add == false)) {
-		list->AddButton("ROM: PC-8801FE/MA2\n", MENU_SYSTEM_ROMVER);
+		if (ver[2] == 0xfe) {
+			list->AddButton("ROM: PC-8801MA2\n", MENU_SYSTEM_ROMVER);
+		}
+		else {
+			list->AddButton("ROM: PC-8801FE\n", MENU_SYSTEM_ROMVER);
+		}
 		add = true;
 	}
 	if ((ver[1] == 0x32) && (add == false)) {
@@ -500,7 +519,12 @@ void Menu::EnterSystem()
 		add = true;
 	}
 	if ((ver[1] == 0x33) && (add == false)) {
-		list->AddButton("ROM: PC-8801FE2/MC\n", MENU_SYSTEM_ROMVER);
+		if (ver[2] == 0xfe) {
+			list->AddButton("ROM: PC-8801MC\n", MENU_SYSTEM_ROMVER);
+		}
+		else {
+			list->AddButton("ROM: PC-8801FE2\n", MENU_SYSTEM_ROMVER);
+		}
 		add = true;
 	}
 	if ((ver[1] > 0x33) && (add == false)) {
@@ -512,43 +536,47 @@ void Menu::EnterSystem()
 	switch (setting->GetSystemMode()) {
 	case SETTING_V1S_MODE:
 		list->SetRadio(MENU_SYSTEM_V1S, MENU_SYSTEM_MODE);
-		id = MENU_SYSTEM_V1S;
 		break;
 	case SETTING_V1H_MODE:
 		list->SetRadio(MENU_SYSTEM_V1H, MENU_SYSTEM_MODE);
-		id = MENU_SYSTEM_V1H;
+		if (id == MENU_SYSTEM_V1S) {
+			id = MENU_SYSTEM_V1H;
+		}
 		break;
 	case SETTING_V2_MODE:
 		list->SetRadio(MENU_SYSTEM_V2, MENU_SYSTEM_MODE);
-		id = MENU_SYSTEM_V2;
+		if (id == MENU_SYSTEM_V1S) {
+			id = MENU_SYSTEM_V2;
+		}
 		break;
 	case SETTING_N_MODE:
 		list->SetRadio(MENU_SYSTEM_N, MENU_SYSTEM_MODE);
-		id = MENU_SYSTEM_N;
+		if (id == MENU_SYSTEM_V1S) {
+			id = MENU_SYSTEM_N;
+		}
 		break;
 	default:
 		break;
 	}
 
 	// clock
-	switch (setting->GetCPUClock()) {
-	case 4:
+	if (setting->GetCPUClock() == 4) {
 		list->SetRadio(MENU_SYSTEM_4M, MENU_SYSTEM_CLOCK);
-		break;
-	case 8:
+	}
+	else {
 		if (setting->Is8HMode() == true) {
 			list->SetRadio(MENU_SYSTEM_8MH, MENU_SYSTEM_CLOCK);
 		}
 		else {
 			list->SetRadio(MENU_SYSTEM_8M, MENU_SYSTEM_CLOCK);
 		}
-		break;
-	default:
-		break;
 	}
 
-	// wait
-	list->SetCheck(MENU_SYSTEM_WAIT, setting->HasMemoryWait());
+	// 128KB ram
+	list->SetCheck(MENU_SYSTEM_EXRAM, setting->HasExRAM());
+
+	// pseudo fast disk mode
+	list->SetCheck(MENU_SYSTEM_FASTDISK, setting->IsFastDisk());
 
 	// set focus
 	list->SetFocus(id);
@@ -561,7 +589,9 @@ void Menu::EnterSystem()
 void Menu::EnterVideo()
 {
 	int id;
+#ifdef _WIN32
 	const char *quality;
+#endif // _WIN32
 
 	list->SetTitle("<< Video Options >>", MENU_VIDEO);
 
@@ -599,6 +629,11 @@ void Menu::EnterVideo()
 	// scaling quality
 	list->AddCheckButton("Scaling filter", MENU_VIDEO_SCALEFILTER);
 #endif // _WIN32
+
+#ifdef __ANDROID__
+	// force RGB565
+	list->AddCheckButton("RGB565 (for Samsung Galaxy)", MENU_VIDEO_FORCERGB565);
+#endif // __ANDROID__
 
 	// skip frame
 	switch (setting->GetSkipFrame()) {
@@ -678,6 +713,11 @@ void Menu::EnterVideo()
 		list->SetCheck(MENU_VIDEO_SCALEFILTER, true);
 	}
 #endif // _WIN32
+
+#ifdef __ANDROID__
+	// force RGB565
+	list->SetCheck(MENU_VIDEO_FORCERGB565, setting->IsForceRGB565());
+#endif // __ANDROID__
 
 	// set focus
 	list->SetFocus(id);
@@ -856,6 +896,217 @@ void Menu::EnterSoftKey()
 }
 
 //
+// EnterDip()
+// enter dip menu
+//
+void Menu::EnterDip()
+{
+	int id;
+	Uint32 dip;
+	Uint32 baudrate;
+	Uint32 parity;
+
+	list->SetTitle("<< DIP settings >>", MENU_DIP);
+
+	list->AddRadioButton("Boot as BASIC    mode", MENU_DIP_BASICMODE, MENU_DIP_BOOTMODE);
+	list->AddRadioButton("Boot as TERMINAL mode", MENU_DIP_TERMMODE, MENU_DIP_BOOTMODE);
+	list->AddRadioButton("Boot with 80 width", MENU_DIP_WIDTH80, MENU_DIP_WIDTH);
+	list->AddRadioButton("Boot with 40 width", MENU_DIP_WIDTH40, MENU_DIP_WIDTH);
+	list->AddRadioButton("Boot with 20 line", MENU_DIP_LINE20, MENU_DIP_LINE);
+	list->AddRadioButton("Boot with 25 line", MENU_DIP_LINE25, MENU_DIP_LINE);
+	list->AddRadioButton("Boot from disk", MENU_DIP_FROMDISK, MENU_DIP_BOOTFROM);
+	list->AddRadioButton("Boot from ROM", MENU_DIP_FROMROM, MENU_DIP_BOOTFROM);
+	list->AddRadioButton("Memory wait = OFF", MENU_DIP_MEMWAIT_OFF, MENU_DIP_MEMWAIT);
+	list->AddRadioButton("Memory wait = ON", MENU_DIP_MEMWAIT_ON, MENU_DIP_MEMWAIT);
+
+	list->AddRadioButton("Baud rate    75bps", MENU_DIP_BAUD75, MENU_DIP_BAUDRATE);
+	list->AddRadioButton("Baud rate   150bps", MENU_DIP_BAUD150, MENU_DIP_BAUDRATE);
+	list->AddRadioButton("Baud rate   300bps", MENU_DIP_BAUD300, MENU_DIP_BAUDRATE);
+	list->AddRadioButton("Baud rate   600bps", MENU_DIP_BAUD600, MENU_DIP_BAUDRATE);
+	list->AddRadioButton("Baud rate  1200bps", MENU_DIP_BAUD1200, MENU_DIP_BAUDRATE);
+	list->AddRadioButton("Baud rate  2400bps", MENU_DIP_BAUD2400, MENU_DIP_BAUDRATE);
+	list->AddRadioButton("Baud rate  4800bps", MENU_DIP_BAUD4800, MENU_DIP_BAUDRATE);
+	list->AddRadioButton("Baud rate  9600bps", MENU_DIP_BAUD9600, MENU_DIP_BAUDRATE);
+	list->AddRadioButton("Baud rate 19200bps", MENU_DIP_BAUD19200, MENU_DIP_BAUDRATE);
+
+	list->AddRadioButton("Half duplex", MENU_DIP_HALFDUPLEX, MENU_DIP_DUPLEX);
+	list->AddRadioButton("Full duplex", MENU_DIP_FULLDUPLEX, MENU_DIP_DUPLEX);
+	list->AddRadioButton("Data bit 8bit", MENU_DIP_DATA8BIT, MENU_DIP_DATABIT);
+	list->AddRadioButton("Data bit 7bit", MENU_DIP_DATA7BIT, MENU_DIP_DATABIT);
+	list->AddRadioButton("Stop bit 2bit", MENU_DIP_STOP2BIT, MENU_DIP_STOPBIT);
+	list->AddRadioButton("Stop bit 1bit", MENU_DIP_STOP1BIT, MENU_DIP_STOPBIT);
+	list->AddRadioButton("X parameter = ON", MENU_DIP_XON, MENU_DIP_X);
+	list->AddRadioButton("X parameter = OFF", MENU_DIP_XOFF, MENU_DIP_X);
+	list->AddRadioButton("S parameter = ON", MENU_DIP_SON, MENU_DIP_S);
+	list->AddRadioButton("S parameter = OFF", MENU_DIP_SOFF, MENU_DIP_S);
+	list->AddRadioButton("DEL code = ON", MENU_DIP_DELON, MENU_DIP_DEL);
+	list->AddRadioButton("DEL code = OFF", MENU_DIP_DELOFF, MENU_DIP_DEL);
+	list->AddRadioButton("No   parity", MENU_DIP_NOPARITY, MENU_DIP_PARITY);
+	list->AddRadioButton("Even parity", MENU_DIP_EVENPARITY, MENU_DIP_PARITY);
+	list->AddRadioButton("Odd  parity", MENU_DIP_ODDPARITY, MENU_DIP_PARITY);
+
+	list->AddButton("Restore default settings", MENU_DIP_DEFAULT);
+
+	// get dip switch
+	dip = setting->GetDip();
+
+	// boot mode
+	if ((dip & DIP_TERMINAL_MODE) != 0) {
+		list->SetRadio(MENU_DIP_TERMMODE, MENU_DIP_BOOTMODE);
+		id = MENU_DIP_TERMMODE;
+	}
+	else {
+		list->SetRadio(MENU_DIP_BASICMODE, MENU_DIP_BOOTMODE);
+		id = MENU_DIP_BASICMODE;
+	}
+
+	// boot width
+	if ((dip & DIP_WIDTH_40) != 0) {
+		list->SetRadio(MENU_DIP_WIDTH40, MENU_DIP_WIDTH);
+	}
+	else {
+		list->SetRadio(MENU_DIP_WIDTH80, MENU_DIP_WIDTH);
+	}
+
+	// boot line
+	if ((dip & DIP_LINE_25) != 0) {
+		list->SetRadio(MENU_DIP_LINE25, MENU_DIP_LINE);
+	}
+	else {
+		list->SetRadio(MENU_DIP_LINE20, MENU_DIP_LINE);
+	}
+
+	// boot from
+	if ((dip & DIP_BOOT_ROM) != 0) {
+		list->SetRadio(MENU_DIP_FROMROM, MENU_DIP_BOOTFROM);
+	}
+	else {
+		list->SetRadio(MENU_DIP_FROMDISK, MENU_DIP_BOOTFROM);
+	}
+
+	// memory wait
+	if ((dip & DIP_MEM_WAIT) != 0) {
+		list->SetRadio(MENU_DIP_MEMWAIT_ON, MENU_DIP_MEMWAIT);
+	}
+	else {
+		list->SetRadio(MENU_DIP_MEMWAIT_OFF, MENU_DIP_MEMWAIT);
+	}
+
+	// baud rate
+	baudrate = (dip & DIP_BAUDRATE) >> DIP_BAUDRATE_SHIFT;
+	switch (baudrate) {
+	// 75bps
+	case 7:
+		list->SetRadio(MENU_DIP_BAUD75, MENU_DIP_BAUDRATE);
+		break;
+	// 150bps
+	case 8:
+		list->SetRadio(MENU_DIP_BAUD150, MENU_DIP_BAUDRATE);
+		break;
+	// 300bps
+	case 9:
+		list->SetRadio(MENU_DIP_BAUD300, MENU_DIP_BAUDRATE);
+		break;
+	// 600bps
+	case 10:
+		list->SetRadio(MENU_DIP_BAUD600, MENU_DIP_BAUDRATE);
+		break;
+	// 1200bps
+	case 11:
+		list->SetRadio(MENU_DIP_BAUD1200, MENU_DIP_BAUDRATE);
+		break;
+	// 2400bps
+	case 12:
+		list->SetRadio(MENU_DIP_BAUD2400, MENU_DIP_BAUDRATE);
+		break;
+	// 4800bps
+	case 13:
+		list->SetRadio(MENU_DIP_BAUD4800, MENU_DIP_BAUDRATE);
+		break;
+	// 9600bps
+	case 14:
+		list->SetRadio(MENU_DIP_BAUD9600, MENU_DIP_BAUDRATE);
+		break;
+	// 19200bps
+	case 15:
+		list->SetRadio(MENU_DIP_BAUD19200, MENU_DIP_BAUDRATE);
+		break;
+	// default (version 1.00 - version 1.20)
+	default:
+		list->SetRadio(MENU_DIP_BAUD1200, MENU_DIP_BAUDRATE);
+		break;
+	}
+
+	// duplex
+	if ((dip & DIP_HALFDUPLEX) != 0) {
+		list->SetRadio(MENU_DIP_HALFDUPLEX, MENU_DIP_DUPLEX);
+	}
+	else {
+		list->SetRadio(MENU_DIP_FULLDUPLEX, MENU_DIP_DUPLEX);
+	}
+
+	// data bit
+	if ((dip & DIP_DATA7BIT) != 0) {
+		list->SetRadio(MENU_DIP_DATA7BIT, MENU_DIP_DATABIT);
+	}
+	else {
+		list->SetRadio(MENU_DIP_DATA8BIT, MENU_DIP_DATABIT);
+	}
+
+	// stop bit
+	if ((dip & DIP_STOP2BIT) != 0) {
+		list->SetRadio(MENU_DIP_STOP2BIT, MENU_DIP_STOPBIT);
+	}
+	else {
+		list->SetRadio(MENU_DIP_STOP1BIT, MENU_DIP_STOPBIT);
+	}
+
+	// X parameter
+	if ((dip & DIP_DISABLE_X) != 0) {
+		list->SetRadio(MENU_DIP_XOFF, MENU_DIP_X);
+	}
+	else {
+		list->SetRadio(MENU_DIP_XON, MENU_DIP_X);
+	}
+
+	// S parameter
+	if ((dip & DIP_ENABLE_S) != 0) {
+		list->SetRadio(MENU_DIP_SON, MENU_DIP_S);
+	}
+	else {
+		list->SetRadio(MENU_DIP_SOFF, MENU_DIP_S);
+	}
+
+	// DEL code
+	if ((dip & DIP_DISABLE_DEL) != 0) {
+		list->SetRadio(MENU_DIP_DELOFF, MENU_DIP_DEL);
+	}
+	else {
+		list->SetRadio(MENU_DIP_DELON, MENU_DIP_DEL);
+	}
+
+	// parity
+	parity = (dip & DIP_PARITY) >> DIP_PARITY_SHIFT;
+	switch (parity) {
+	// none
+	case 0:
+		list->SetRadio(MENU_DIP_NOPARITY, MENU_DIP_PARITY);
+		break;
+	// even
+	case 1:
+		list->SetRadio(MENU_DIP_EVENPARITY, MENU_DIP_PARITY);
+		break;
+	// odd
+	default:
+		list->SetRadio(MENU_DIP_ODDPARITY, MENU_DIP_PARITY);
+		break;
+	}
+
+	// set focus
+	list->SetFocus(id);
+}
+
+//
 // EnterFile()
 // enter file menu
 //
@@ -993,6 +1244,14 @@ void Menu::Command(bool down, int id)
 		return;
 	}
 
+	// dip menu
+	if ((id >= MENU_DIP_MIN) && (id <= MENU_DIP_MAX)) {
+		if (down == false) {
+			CmdDip(id);
+		}
+		return;
+	}
+
 	// file menu
 	if (id >= MENU_FILE_MIN) {
 		if (down == false) {
@@ -1081,6 +1340,11 @@ void Menu::CmdBack()
 		EnterInput();
 		break;
 
+	// dip menu
+	case MENU_DIP:
+		EnterSystem(MENU_SYSTEM_DIP);
+		break;
+
 	// file menu
 	case MENU_FILE:
 		switch (file_id) {
@@ -1157,7 +1421,7 @@ void Menu::CmdMain(int id)
 
 	// system options
 	case MENU_MAIN_SYSTEM:
-		EnterSystem();
+		EnterSystem(MENU_SYSTEM_V1S);
 		break;
 
 	// video options
@@ -1243,10 +1507,8 @@ void Menu::CmdDrive1(int id)
 
 	default:
 		id -= MENU_DRIVE1_BANK0;
-		if (diskmgr[0]->GetBank() != id) {
-			diskmgr[0]->SetBank(id);
-			app->LeaveMenu();
-		}
+		diskmgr[0]->SetBank(id);
+		app->LeaveMenu();
 		break;
 	}
 }
@@ -1282,10 +1544,8 @@ void Menu::CmdDrive2(int id)
 
 	default:
 		id -= MENU_DRIVE2_BANK0;
-		if (diskmgr[1]->GetBank() != id) {
-			diskmgr[1]->SetBank(id);
-			app->LeaveMenu();
-		}
+		diskmgr[1]->SetBank(id);
+		app->LeaveMenu();
 		break;
 	}
 }
@@ -1347,7 +1607,7 @@ void Menu::CmdLoad(int id)
 	if (app->Load(id) == true) {
 		// after load, save last id again
 		setting->SetStateNum(id);
-		app->LeaveMenu();
+		app->LeaveMenu(false);
 	}
 	else {
 		// load error
@@ -1393,7 +1653,12 @@ void Menu::CmdSave(int id)
 //
 void Menu::CmdSystem(int id)
 {
-	bool wait;
+	Font *font;
+	Uint8 ver;
+
+	// get ROM version
+	font = app->GetFont();
+	ver = font->GetROMVersion(1);
 
 	switch (id) {
 	// V1S
@@ -1429,29 +1694,63 @@ void Menu::CmdSystem(int id)
 
 	// 8MHz
 	case MENU_SYSTEM_8M:
-		list->SetRadio(MENU_SYSTEM_8M, MENU_SYSTEM_CLOCK);
-		setting->SetCPUClock(8);
-		setting->Set8HMode(false);
+		if (ver >= 0x38) {
+			// PC-8801FH/MH or later
+			list->SetRadio(MENU_SYSTEM_8M, MENU_SYSTEM_CLOCK);
+			setting->SetCPUClock(8);
+			setting->Set8HMode(false);
+		}
+		else {
+			// PC-8801mkIISR/TR/FR/MR
+			list->SetRadio(MENU_SYSTEM_4M, MENU_SYSTEM_CLOCK);
+			setting->SetCPUClock(4);
+			setting->Set8HMode(false);
+		}
 		break;
 
 	// 8MHzH
 	case MENU_SYSTEM_8MH:
-		list->SetRadio(MENU_SYSTEM_8MH, MENU_SYSTEM_CLOCK);
-		setting->SetCPUClock(8);
-		setting->Set8HMode(true);
-		break;
-
-	// Memory wait
-	case MENU_SYSTEM_WAIT:
-		wait = setting->HasMemoryWait();
-		if (wait == true) {
-			list->SetCheck(MENU_SYSTEM_WAIT, false);
-			setting->SetMemoryWait(false);
+		if (ver >= 0x38) {
+			// PC-8801FH/MH or later
+			list->SetRadio(MENU_SYSTEM_8MH, MENU_SYSTEM_CLOCK);
+			setting->SetCPUClock(8);
+			setting->Set8HMode(true);
 		}
 		else {
-			list->SetCheck(MENU_SYSTEM_WAIT, true);
-			setting->SetMemoryWait(true);
+			// PC-8801mkIISR/TR/FR/MR
+			list->SetRadio(MENU_SYSTEM_4M, MENU_SYSTEM_CLOCK);
+			setting->SetCPUClock(4);
+			setting->Set8HMode(false);
 		}
+		break;
+
+	// 128KB RAM
+	case MENU_SYSTEM_EXRAM:
+		if (list->GetCheck(MENU_SYSTEM_EXRAM) == true) {
+			list->SetCheck(MENU_SYSTEM_EXRAM, false);
+			setting->SetExRAM(false);
+		}
+		else {
+			list->SetCheck(MENU_SYSTEM_EXRAM, true);
+			setting->SetExRAM(true);
+		}
+		break;
+
+	// pseudo fast disk mode
+	case MENU_SYSTEM_FASTDISK:
+		if (list->GetCheck(MENU_SYSTEM_FASTDISK) == true) {
+			list->SetCheck(MENU_SYSTEM_FASTDISK, false);
+			setting->SetFastDisk(false);
+		}
+		else {
+			list->SetCheck(MENU_SYSTEM_FASTDISK, true);
+			setting->SetFastDisk(true);
+		}
+		break;
+
+	// DIP switch
+	case MENU_SYSTEM_DIP:
+		EnterDip();
 		break;
 
 	// ROM version
@@ -1473,7 +1772,9 @@ void Menu::CmdVideo(bool down, int id)
 	bool radio;
 	bool scanline;
 	bool status;
+#ifdef _WIN32
 	const char *quality;
+#endif // _WIN32
 	int width;
 
 	// initialize
@@ -1629,6 +1930,23 @@ void Menu::CmdVideo(bool down, int id)
 		}
 		break;
 #endif // _WIN32
+
+#ifdef __ANDROID__
+	// force RGB565
+	case MENU_VIDEO_FORCERGB565:
+		if (down == false) {
+			status = setting->IsForceRGB565();
+			if (status == true) {
+				setting->SetForceRGB565(false);
+				list->SetCheck(MENU_VIDEO_FORCERGB565, false);
+			}
+			else {
+				setting->SetForceRGB565(true);
+				list->SetCheck(MENU_VIDEO_FORCERGB565, true);
+			}
+		}
+		break;
+#endif // __ANDROID__
 
 	default:
 		break;
@@ -1942,6 +2260,207 @@ void Menu::CmdSoftKey(int id)
 }
 
 //
+// CmdDip()
+// command (dip)
+//
+void Menu::CmdDip(int id)
+{
+	switch (id) {
+	// boot mode
+	case MENU_DIP_BASICMODE:
+		list->SetRadio(MENU_DIP_BASICMODE, MENU_DIP_BOOTMODE);
+		setting->SetDip(setting->GetDip() & ~DIP_TERMINAL_MODE);
+		break;
+	case MENU_DIP_TERMMODE:
+		list->SetRadio(MENU_DIP_TERMMODE, MENU_DIP_BOOTMODE);
+		setting->SetDip(setting->GetDip() | DIP_TERMINAL_MODE);
+		break;
+
+	// boot width
+	case MENU_DIP_WIDTH80:
+		list->SetRadio(MENU_DIP_WIDTH80, MENU_DIP_WIDTH);
+		setting->SetDip(setting->GetDip() & ~DIP_WIDTH_40);
+		break;
+	case MENU_DIP_WIDTH40:
+		list->SetRadio(MENU_DIP_WIDTH40, MENU_DIP_WIDTH);
+		setting->SetDip(setting->GetDip() | DIP_WIDTH_40);
+		break;
+
+	// boot line
+	case MENU_DIP_LINE20:
+		list->SetRadio(MENU_DIP_LINE20, MENU_DIP_LINE);
+		setting->SetDip(setting->GetDip() & ~DIP_LINE_25);
+		break;
+	case MENU_DIP_LINE25:
+		list->SetRadio(MENU_DIP_LINE25, MENU_DIP_LINE);
+		setting->SetDip(setting->GetDip() | DIP_LINE_25);
+		break;
+
+	// boot from
+	case MENU_DIP_FROMDISK:
+		list->SetRadio(MENU_DIP_FROMDISK, MENU_DIP_BOOTFROM);
+		setting->SetDip(setting->GetDip() & ~DIP_BOOT_ROM);
+		break;
+	case MENU_DIP_FROMROM:
+		list->SetRadio(MENU_DIP_FROMROM, MENU_DIP_BOOTFROM);
+		setting->SetDip(setting->GetDip() | DIP_BOOT_ROM);
+		break;
+
+	// memory wait
+	case MENU_DIP_MEMWAIT_OFF:
+		list->SetRadio(MENU_DIP_MEMWAIT_OFF, MENU_DIP_MEMWAIT);
+		setting->SetDip(setting->GetDip() & ~DIP_MEM_WAIT);
+		break;
+	case MENU_DIP_MEMWAIT_ON:
+		list->SetRadio(MENU_DIP_MEMWAIT_ON, MENU_DIP_MEMWAIT);
+		setting->SetDip(setting->GetDip() | DIP_MEM_WAIT);
+		break;
+
+	// baud rate
+	case MENU_DIP_BAUD75:
+		list->SetRadio(MENU_DIP_BAUD75, MENU_DIP_BAUDRATE);
+		setting->SetDip((setting->GetDip() & ~DIP_BAUDRATE) | (7 << DIP_BAUDRATE_SHIFT));
+		break;
+	case MENU_DIP_BAUD150:
+		list->SetRadio(MENU_DIP_BAUD150, MENU_DIP_BAUDRATE);
+		setting->SetDip((setting->GetDip() & ~DIP_BAUDRATE) | (8 << DIP_BAUDRATE_SHIFT));
+		break;
+	case MENU_DIP_BAUD300:
+		list->SetRadio(MENU_DIP_BAUD300, MENU_DIP_BAUDRATE);
+		setting->SetDip((setting->GetDip() & ~DIP_BAUDRATE) | (9 << DIP_BAUDRATE_SHIFT));
+		break;
+	case MENU_DIP_BAUD600:
+		list->SetRadio(MENU_DIP_BAUD600, MENU_DIP_BAUDRATE);
+		setting->SetDip((setting->GetDip() & ~DIP_BAUDRATE) | (10 << DIP_BAUDRATE_SHIFT));
+		break;
+	case MENU_DIP_BAUD1200:
+		list->SetRadio(MENU_DIP_BAUD1200, MENU_DIP_BAUDRATE);
+		setting->SetDip((setting->GetDip() & ~DIP_BAUDRATE) | (11 << DIP_BAUDRATE_SHIFT));
+		break;
+	case MENU_DIP_BAUD2400:
+		list->SetRadio(MENU_DIP_BAUD2400, MENU_DIP_BAUDRATE);
+		setting->SetDip((setting->GetDip() & ~DIP_BAUDRATE) | (12 << DIP_BAUDRATE_SHIFT));
+		break;
+	case MENU_DIP_BAUD4800:
+		list->SetRadio(MENU_DIP_BAUD4800, MENU_DIP_BAUDRATE);
+		setting->SetDip((setting->GetDip() & ~DIP_BAUDRATE) | (13 << DIP_BAUDRATE_SHIFT));
+		break;
+	case MENU_DIP_BAUD9600:
+		list->SetRadio(MENU_DIP_BAUD9600, MENU_DIP_BAUDRATE);
+		setting->SetDip((setting->GetDip() & ~DIP_BAUDRATE) | (14 << DIP_BAUDRATE_SHIFT));
+		break;
+	case MENU_DIP_BAUD19200:
+		list->SetRadio(MENU_DIP_BAUD19200, MENU_DIP_BAUDRATE);
+		setting->SetDip((setting->GetDip() & ~DIP_BAUDRATE) | (15 << DIP_BAUDRATE_SHIFT));
+		break;
+
+	// duplex
+	case MENU_DIP_HALFDUPLEX:
+		list->SetRadio(MENU_DIP_HALFDUPLEX, MENU_DIP_DUPLEX);
+		setting->SetDip(setting->GetDip() | DIP_HALFDUPLEX);
+		break;
+	case MENU_DIP_FULLDUPLEX:
+		list->SetRadio(MENU_DIP_FULLDUPLEX, MENU_DIP_DUPLEX);
+		setting->SetDip(setting->GetDip() & ~DIP_HALFDUPLEX);
+		break;
+
+	// data bit
+	case MENU_DIP_DATA8BIT:
+		list->SetRadio(MENU_DIP_DATA8BIT, MENU_DIP_DATABIT);
+		setting->SetDip(setting->GetDip() & ~DIP_DATA7BIT);
+		break;
+	case MENU_DIP_DATA7BIT:
+		list->SetRadio(MENU_DIP_DATA7BIT, MENU_DIP_DATABIT);
+		setting->SetDip(setting->GetDip() | DIP_DATA7BIT);
+		break;
+
+	// stop bit
+	case MENU_DIP_STOP2BIT:
+		list->SetRadio(MENU_DIP_STOP2BIT, MENU_DIP_STOPBIT);
+		setting->SetDip(setting->GetDip() | DIP_STOP2BIT);
+		break;
+	case MENU_DIP_STOP1BIT:
+		list->SetRadio(MENU_DIP_STOP1BIT, MENU_DIP_STOPBIT);
+		setting->SetDip(setting->GetDip() & ~DIP_STOP2BIT);
+		break;
+
+	// X parameter
+	case MENU_DIP_XON:
+		list->SetRadio(MENU_DIP_XON, MENU_DIP_X);
+		setting->SetDip(setting->GetDip() & ~DIP_DISABLE_X);
+		break;
+	case MENU_DIP_XOFF:
+		list->SetRadio(MENU_DIP_XOFF, MENU_DIP_X);
+		setting->SetDip(setting->GetDip() | DIP_DISABLE_X);
+		break;
+
+	// S parameter
+	case MENU_DIP_SON:
+		list->SetRadio(MENU_DIP_SON, MENU_DIP_S);
+		setting->SetDip(setting->GetDip() | DIP_ENABLE_S);
+		break;
+	case MENU_DIP_SOFF:
+		list->SetRadio(MENU_DIP_SOFF, MENU_DIP_S);
+		setting->SetDip(setting->GetDip() & ~DIP_ENABLE_S);
+		break;
+
+	// DEL code
+	case MENU_DIP_DELON:
+		list->SetRadio(MENU_DIP_DELON, MENU_DIP_DEL);
+		setting->SetDip(setting->GetDip() & ~DIP_DISABLE_DEL);
+		break;
+	case MENU_DIP_DELOFF:
+		list->SetRadio(MENU_DIP_DELOFF, MENU_DIP_DEL);
+		setting->SetDip(setting->GetDip() | DIP_DISABLE_DEL);
+		break;
+
+	// parity
+	case MENU_DIP_NOPARITY:
+		list->SetRadio(MENU_DIP_NOPARITY, MENU_DIP_PARITY);
+		setting->SetDip((setting->GetDip() & ~DIP_PARITY) | (0 << DIP_PARITY_SHIFT));
+		break;
+	case MENU_DIP_EVENPARITY:
+		list->SetRadio(MENU_DIP_EVENPARITY, MENU_DIP_PARITY);
+		setting->SetDip((setting->GetDip() & ~DIP_PARITY) | (1 << DIP_PARITY_SHIFT));
+		break;
+	case MENU_DIP_ODDPARITY:
+		list->SetRadio(MENU_DIP_ODDPARITY, MENU_DIP_PARITY);
+		setting->SetDip((setting->GetDip() & ~DIP_PARITY) | (2 << DIP_PARITY_SHIFT));
+		break;
+
+	// restore default settings
+	case MENU_DIP_DEFAULT:
+		list->SetRadio(MENU_DIP_BASICMODE, MENU_DIP_BOOTMODE);
+		setting->SetDip(setting->GetDip() & ~DIP_TERMINAL_MODE);
+		list->SetRadio(MENU_DIP_WIDTH80, MENU_DIP_WIDTH);
+		setting->SetDip(setting->GetDip() & ~DIP_WIDTH_40);
+		list->SetRadio(MENU_DIP_LINE20, MENU_DIP_LINE);
+		setting->SetDip(setting->GetDip() & ~DIP_LINE_25);
+		list->SetRadio(MENU_DIP_FROMDISK, MENU_DIP_BOOTFROM);
+		setting->SetDip(setting->GetDip() & ~DIP_BOOT_ROM);
+		list->SetRadio(MENU_DIP_MEMWAIT_OFF, MENU_DIP_MEMWAIT);
+		setting->SetDip(setting->GetDip() & ~DIP_MEM_WAIT);
+		list->SetRadio(MENU_DIP_BAUD1200, MENU_DIP_BAUDRATE);
+		setting->SetDip((setting->GetDip() & ~DIP_BAUDRATE) | (11 << DIP_BAUDRATE_SHIFT));
+		list->SetRadio(MENU_DIP_FULLDUPLEX, MENU_DIP_DUPLEX);
+		setting->SetDip(setting->GetDip() & ~DIP_HALFDUPLEX);
+		list->SetRadio(MENU_DIP_DATA8BIT, MENU_DIP_DATABIT);
+		setting->SetDip(setting->GetDip() & ~DIP_DATA7BIT);
+		list->SetRadio(MENU_DIP_STOP1BIT, MENU_DIP_STOPBIT);
+		setting->SetDip(setting->GetDip() & ~DIP_STOP2BIT);
+		list->SetRadio(MENU_DIP_XON, MENU_DIP_X);
+		setting->SetDip(setting->GetDip() & ~DIP_DISABLE_X);
+		list->SetRadio(MENU_DIP_SOFF, MENU_DIP_S);
+		setting->SetDip(setting->GetDip() & ~DIP_ENABLE_S);
+		list->SetRadio(MENU_DIP_DELON, MENU_DIP_DEL);
+		setting->SetDip(setting->GetDip() & ~DIP_DISABLE_DEL);
+		list->SetRadio(MENU_DIP_NOPARITY, MENU_DIP_PARITY);
+		setting->SetDip((setting->GetDip() & ~DIP_PARITY) | (0 << DIP_PARITY_SHIFT));
+		break;
+	}
+}
+
+//
 // CmdFile()
 // command (file)
 //
@@ -1949,6 +2468,7 @@ void Menu::CmdFile(int id)
 {
 	const char *name;
 	bool ret;
+	bool drive2;
 
 	// get file or directory name
 	name = list->GetName(id);
@@ -1985,7 +2505,12 @@ void Menu::CmdFile(int id)
 		}
 
 		if (ret == true) {
-			app->LeaveMenu();
+			if (file_id == MENU_CMT_PLAY) {
+				EnterCmt(MENU_CMT_PLAY);
+			}
+			else {
+				EnterCmt(MENU_CMT_REC);
+			}
 		}
 		return;
 	}
@@ -1998,20 +2523,30 @@ void Menu::CmdFile(int id)
 		// drive 1
 		diskmgr[0]->Close();
 		ret = diskmgr[0]->Open(file_target, 0);
+		drive2 = false;
 
 		// drive 2
 		if (file_id != MENU_DRIVE1_OPEN) {
 			diskmgr[1]->Close();
 			if (ret == true) {
 				if (diskmgr[0]->GetBanks() > 1) {
-					diskmgr[1]->Open(file_target, 1);
+					drive2 = diskmgr[1]->Open(file_target, 1);
 				}
 			}
 		}
 
-		// leave menu
 		if (ret == true) {
-			app->LeaveMenu();
+			if (file_id == MENU_DRIVE2_BOTH) {
+				if (drive2 == true) {
+					EnterDrive2(MENU_DRIVE2_BANK0 + 1);
+				}
+				else {
+					EnterDrive2(MENU_DRIVE2_OPEN);
+				}
+			}
+			else {
+				EnterDrive1(MENU_DRIVE1_BANK0);
+			}
 		}
 		break;
 
@@ -2020,9 +2555,8 @@ void Menu::CmdFile(int id)
 		diskmgr[1]->Close();
 		ret = diskmgr[1]->Open(file_target, 0);
 
-		// leave menu
 		if (ret == true) {
-			app->LeaveMenu();
+			EnterDrive2(MENU_DRIVE2_BANK0);
 		}
 		break;
 

@@ -76,6 +76,28 @@
 	register_event(this, EVENT_PHASE, 100, false, &phase_id); \
 }
 
+#ifdef SDL
+
+#define REGISTER_PHASE_EVENT_NEW(phs, usec) { \
+	if(phase_id != -1) { \
+		cancel_event(this, phase_id); \
+	} \
+	event_phase = phs; \
+	if (config.ignore_crc) register_event(this, EVENT_PHASE, 100, false, &phase_id); else \
+	register_event(this, EVENT_PHASE, usec, false, &phase_id); \
+}
+
+#define REGISTER_DRQ_EVENT() { \
+	double usec = disk[hdu & DRIVE_MASK]->get_usec_per_bytes(1) - passed_usec(prev_drq_clock); \
+	if(usec < 4) { \
+		usec = 4; \
+	} \
+	if (config.ignore_crc) usec = 4; \
+	register_event(this, EVENT_DRQ, usec, false, &drq_id); \
+}
+
+#else
+
 #define REGISTER_PHASE_EVENT_NEW(phs, usec) { \
 	if(phase_id != -1) { \
 		cancel_event(this, phase_id); \
@@ -91,6 +113,8 @@
 	} \
 	register_event(this, EVENT_DRQ, usec, false, &drq_id); \
 }
+
+#endif // SDL
 
 #define CANCEL_EVENT() { \
 	if(phase_id != -1) { \
@@ -419,6 +443,9 @@ uint32 UPD765A::read_signal(int ch)
 
 void UPD765A::event_callback(int event_id, int err)
 {
+#ifdef SDL
+	request_single_exec();
+#endif // SDL
 	if(event_id == EVENT_PHASE) {
 		phase_id = -1;
 		phase = event_phase;
@@ -530,9 +557,6 @@ void UPD765A::set_hdu(uint8 val)
 
 void UPD765A::process_cmd(int cmd)
 {
-#ifdef SDL
-	single_exec_mode(true);
-#endif // SDL
 	switch(cmd & 0x1f) {
 	case 0x02:
 		cmd_read_diagnostic();
@@ -617,7 +641,11 @@ uint8 UPD765A::get_devstat(int drv)
 	if(drv >= MAX_DRIVE) {
 		return 0x80 | drv;
 	}
+#ifdef SDL
+	if(!disk[drv]->inserted && !force_ready) {
+#else
 	if(!disk[drv]->inserted) {
+#endif // SDL
 		return drv;
 	}
 	return 0x28 | drv | (fdc[drv].track ? 0 : 0x10) | ((fdc[drv].track & 1) ? 0x04 : 0) | (disk[drv]->write_protected ? 0x40 : 0);
@@ -670,6 +698,11 @@ void UPD765A::seek(int drv, int trk)
 		if(seek_id[drv] != -1) {
 			cancel_event(this, seek_id[drv]);
 		}
+#ifdef SDL
+		if (config.ignore_crc) {
+			seektime = 100;
+		}
+#endif // SDL
 		register_event(this, EVENT_SEEK + drv, seektime, false, &seek_id[drv]);
 		seekstat |= 1 << drv;
 #endif
@@ -710,6 +743,12 @@ void UPD765A::cmd_read_data()
 		REGISTER_PHASE_EVENT_NEW(PHASE_EXEC, get_usec_to_exec_phase());
 		break;
 	case PHASE_EXEC:
+#ifdef SDL
+		if (force_ready && !disk[hdu & DRIVE_MASK]->inserted) {
+			REGISTER_PHASE_EVENT(PHASE_EXEC, 1000000);
+			break;
+		}
+#endif // SDL
 		read_data((command & 0x1f) == 12, false);
 		break;
 	case PHASE_READ:
@@ -746,6 +785,12 @@ void UPD765A::cmd_write_data()
 		REGISTER_PHASE_EVENT_NEW(PHASE_EXEC, get_usec_to_exec_phase());
 		break;
 	case PHASE_EXEC:
+#ifdef SDL
+		if (force_ready && !disk[hdu & DRIVE_MASK]->inserted) {
+			REGISTER_PHASE_EVENT(PHASE_EXEC, 1000000);
+			break;
+		}
+#endif // SDL
 		result = check_cond(true);
 		if(result & ST1_MA) {
 			REGISTER_PHASE_EVENT(PHASE_EXEC, 1000000);	// retry
@@ -807,6 +852,12 @@ void UPD765A::cmd_scan()
 		REGISTER_PHASE_EVENT_NEW(PHASE_EXEC, get_usec_to_exec_phase());
 		break;
 	case PHASE_EXEC:
+#ifdef SDL
+		if (force_ready && !disk[hdu & DRIVE_MASK]->inserted) {
+			REGISTER_PHASE_EVENT(PHASE_EXEC, 1000000);
+			break;
+		}
+#endif // SDL
 		read_data(false, true);
 		break;
 	case PHASE_SCAN:
@@ -844,6 +895,12 @@ void UPD765A::cmd_read_diagnostic()
 		REGISTER_PHASE_EVENT_NEW(PHASE_EXEC, get_usec_to_exec_phase());
 		break;
 	case PHASE_EXEC:
+#ifdef SDL
+		if (force_ready && !disk[hdu & DRIVE_MASK]->inserted) {
+			REGISTER_PHASE_EVENT(PHASE_EXEC, 1000000);
+			break;
+		}
+#endif // SDL
 		read_diagnostic();
 		break;
 	case PHASE_READ:
@@ -1143,6 +1200,12 @@ void UPD765A::cmd_read_id()
 		set_hdu(buffer[0]);
 //		break;
 	case PHASE_EXEC:
+#ifdef SDL
+		if (force_ready && !disk[hdu & DRIVE_MASK]->inserted) {
+			REGISTER_PHASE_EVENT(PHASE_EXEC, 1000000);
+			break;
+		}
+#endif // SDL
 		if(check_cond(false) & ST1_MA) {
 //			REGISTER_PHASE_EVENT(PHASE_EXEC, 1000000);
 //			break;
@@ -1188,6 +1251,12 @@ void UPD765A::cmd_write_id()
 		REGISTER_PHASE_EVENT(PHASE_TIMER, 4000000);
 		break;
 	case PHASE_TIMER:
+#ifdef SDL
+		if (force_ready && !disk[hdu & DRIVE_MASK]->inserted) {
+			REGISTER_PHASE_EVENT(PHASE_TIMER, 1000000);
+			break;
+		}
+#endif // SDL
 		result =  write_id();
 		shift_to_result7();
 		break;

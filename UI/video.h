@@ -33,6 +33,8 @@ public:
 										// rebuild texture
 	void Draw();
 										// rendering
+	void DrawCtrl();
+										// rendering control
 
 	// virtual machine
 	uint32* GetFrameBuf(uint32 y);
@@ -74,24 +76,30 @@ private:
 		bool readonly;
 										// media is write protected
 		int access;
-										// access status
+										// access status (now)
+		int prev;
+										// access status (prev)
+		int current;
+										// current draw status
+		uint32 clock;
+										// last access clock
 		char name[16 + 1];
 										// media name
 	} drive_info;
 
-	void DrawAccess();
+	bool DrawAccess();
 										// draw access status
-	void DrawFrameRate();
+	bool DrawFrameRate();
 										// draw frame rate
-	void DrawFullSpeed();
+	bool DrawFullSpeed();
 										// draw full speed
-	void DrawSystemInfo();
+	bool DrawSystemInfo();
 										// draw system info
 	void DrawPowerDown();
 										// draw power down
-	void DrawMenu();
+	void DrawMenu(bool status);
 										// draw menu
-	void CopyFrameBuf(SDL_Texture *texture, Uint32 *src, int height);
+	void CopyFrameBuf(SDL_Texture *texture, Uint32 *src, int height, int top = 0);
 										// copy frame buffer to texture
 	void ResetStatus();
 										// reset status line
@@ -109,6 +117,8 @@ private:
 	// frame buffer
 	uint32 *frame_buf;
 										// frame buffer for ePC-8801MA
+	uint32 *backup_buf;
+										// backup buffer for ePC-8801MA (1 line)
 	uint32 *menu_buf;
 										// frame buffer for menu
 	uint32 *softkey_buf;
@@ -140,6 +150,14 @@ private:
 	Uint32 status_alpha;
 										// alpha blending color for status
 
+	// draw control
+	bool draw_ctrl;
+										// draw control
+	int draw_line;
+										// draw from line
+	bool softkey_ctrl;
+										// softkey control
+
 	// drive status
 	drive_info drive_status[MAX_DRIVE];
 										// drive status
@@ -157,8 +175,8 @@ private:
 										// full speed (now & prev)
 
 	// power down
-	bool power_down;
-										// power down
+	bool power_down[2];
+										// power down (now & prev)
 
 	// object (SDL)
 	SDL_Window *window;

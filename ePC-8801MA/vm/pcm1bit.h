@@ -42,6 +42,11 @@ public:
 	
 	// unique function
 	void init(int rate, int volume);
+
+#ifdef SDL
+	void update_timing(int new_clocks, double new_frames_per_sec, int new_lines_per_frame);
+	int cpu_clock;
+#endif // SDL
 };
 
 #endif

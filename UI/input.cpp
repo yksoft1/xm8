@@ -15,6 +15,7 @@
 #include "emu.h"
 #include "app.h"
 #include "setting.h"
+#include "platform.h"
 #include "video.h"
 #include "font.h"
 #include "menuid.h"
@@ -44,6 +45,7 @@ Input::Input(App *a)
 
 	// object
 	setting = NULL;
+	platform = NULL;
 	video = NULL;
 	font = NULL;
 	emu = NULL;
@@ -89,6 +91,7 @@ bool Input::Init()
 {
 	// get object
 	setting = app->GetSetting();
+	platform = app->GetPlatform();
 	video = app->GetVideo();
 	font = app->GetFont();
 	emu = app->GetEmu();
@@ -759,7 +762,8 @@ void Input::OnMouseMotion(SDL_Event *e)
 
 	// get button state
 	if ((e->motion.state & SDL_BUTTON_LMASK) != 0) {
-		button = true;
+		// SDL 2.0.3 returns SDL_BUTTON_LMASK after drag & drop action in Windows
+		button = platform->CheckMouseButton();
 	}
 	else {
 		button = false;
@@ -1114,7 +1118,7 @@ const Uint32 Input::key_base[0x100] = {
 	0x00000038,		// SDL_SCANCODE_8
 	0x00000039,		// SDL_SCANCODE_9
 	0x00000030,		// SDL_SCANCODE_0
-	0x0000000d,		// SDL_SCANCODE_RETURN
+	0x0000001a,		// SDL_SCANCODE_RETURN
 	0x0000001b,		// SDL_SCANCODE_ESCAPE
 	0x00000008,		// SDL_SCANCODE_BACKSPACE
 	0x00000009,		// SDL_SCANCODE_TAB
@@ -1168,7 +1172,7 @@ const Uint32 Input::key_base[0x100] = {
 	0x0000006a,		// SDL_SCANCODE_KP_MULTIPLY
 	0x000000bd,		// SDL_SCANCODE_KP_MINUS
 	0x0000006b,		// SDL_SCANCODE_KP_PLUS
-	0x0000000d,		// SDL_SCANCODE_KP_ENTER
+	0x0000005e,		// SDL_SCANCODE_KP_ENTER
 	0x00000061,		// SDL_SCANCODE_KP_1
 	0x00000062,		// SDL_SCANCODE_KP_2
 	0x00000063,		// SDL_SCANCODE_KP_3
@@ -1323,11 +1327,11 @@ const Uint32 Input::key_base[0x100] = {
 
 	// 0xe0-0xef
 	0x00000011,		// SDL_SCANCODE_LCTRL
-	0x00000010,		// SDL_SCANCODE_LSHIFT
+	0x000000a0,		// SDL_SCANCODE_LSHIFT
 	0x00000012,		// SDL_SCANCODE_LALT
 	0x00000000,
 	0x00000011,		// SDL_SCANCODE_RCTRL
-	0x00000010,		// SDL_SCANCODE_RSHIFT
+	0x000000a1,		// SDL_SCANCODE_RSHIFT
 	0x00000000,		// [Unassigned]SDL_SCANCODE_RALT
 	0x00000000,
 	0x00000000,

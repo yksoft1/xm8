@@ -48,6 +48,8 @@
 										// N88-BASIC ROM version address 1
 #define ROM_VER_ADDR3			0x79d8
 										// N88-BASIC ROM version address 2
+#define ROM_VER_ADDR4			0x07ee
+										// DISK ROM version address
 
 //
 // Font()
@@ -150,6 +152,7 @@ bool Font::CheckROM()
 		rom_version[0] = kanji_rom[ROM_VER_ADDR1 + 0x16000];
 		rom_version[1] = kanji_rom[ROM_VER_ADDR2 + 0x00000];
 		rom_version[2] = kanji_rom[ROM_VER_ADDR3 + 0x00000];
+		rom_version[3] = kanji_rom[ROM_VER_ADDR4 + 0x14000];
 
 		// PC88.ROM is OK
 		if (CheckSub(N80_FILE, false) == true) {
@@ -158,6 +161,9 @@ bool Font::CheckROM()
 		if (CheckSub(N88_FILE, false) == true) {
 			rom_version[1] = kanji_rom[ROM_VER_ADDR2];
 			rom_version[2] = kanji_rom[ROM_VER_ADDR3];
+		}
+		if (CheckSub(DISK_FILE, false) == true) {
+			rom_version[3] = kanji_rom[ROM_VER_ADDR4];
 		}
 	}
 	else {
@@ -176,6 +182,7 @@ bool Font::CheckROM()
 		if (CheckSub(DISK_FILE, true) == false) {
 			return false;
 		}
+		rom_version[3] = kanji_rom[ROM_VER_ADDR4];
 
 		if (CheckSub(N88EXT0_FILE, true) == false) {
 			return false;

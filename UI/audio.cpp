@@ -15,14 +15,6 @@
 #include "audio.h"
 
 //
-// defines
-//
-#define AUDIO_LOG				FALSE
-										// audio log
-#define AUDIO_FORMAT			AUDIO_S16SYS
-										// sample format for SDL (AUDIO_S16SYS or AUDIO_S32SYS)
-
-//
 // Audio()
 // constructor
 //
@@ -70,7 +62,6 @@ bool Audio::Init()
 	// create semaphore
 	audio_sem = SDL_CreateSemaphore(1);
 	if (audio_sem == NULL) {
-		SDL_assert(false);
 		return false;
 	}
 
@@ -144,11 +135,6 @@ bool Audio::Open(const OpenParam *param)
 	SDL_AudioSpec device_want;
 	const char *name;
 
-	SDL_assert(param != NULL);
-#if (AUDIO_FORMAT != AUDIO_S16SYS) && (AUDIO_FORMAT != AUDIO_S32SYS)
-#error audio format select error (AUDIO_S16SYS or AUDIO_S32SYS)
-#endif // AUDIO_FORMAT != AUDIO_S16SYS && AUDIO_FORMAT != AUDIO_S32SYS
-
 	// for GetRealFreq()
 	device_spec.freq = param->freq;
 
@@ -162,7 +148,7 @@ bool Audio::Open(const OpenParam *param)
 
 	// parameter
 	device_want.freq = param->freq;
-	device_want.format = AUDIO_FORMAT;
+	device_want.format = AUDIO_S16SYS;
 	device_want.channels = 2;
 	device_want.samples = (Uint16)param->samples;
 	device_want.callback = CommonCallback;
@@ -171,7 +157,6 @@ bool Audio::Open(const OpenParam *param)
 	// open device
 	name = GetDeviceName(param->device);
 	if (name == NULL) {
-		SDL_assert(false);
 		return false;
 	}
 	device_id = SDL_OpenAudioDevice(name, 0, &device_want, &device_spec, 0);
@@ -191,13 +176,8 @@ bool Audio::Open(const OpenParam *param)
 	sample_num = 0;
 	sample_read = 0;
 	sample_write = 0;
-#if AUDIO_FORMAT == AUDIO_S16SYS
 	sample_size = (device_spec.freq * device_spec.channels * sizeof(Sint16) * param->buffer) / 1000;
 	sample_per = param->per * 2 * sizeof(Sint16);
-#else
-	sample_size = (device_spec.freq * device_spec.channels * sizeof(Sint32) * param->buffer) / 1000;
-	sample_per = param->per * 2 * sizeof(Sint32);
-#endif // AUDIO_FORMAT == AUDIO_S16SYS
 
 	// allocate
 	sample_buffer = (Uint8*)SDL_malloc(sample_size);
@@ -258,7 +238,6 @@ const char* Audio::GetDeviceName(int device)
 
 	// init
 	ptr = name_of_devices;
-	SDL_assert(ptr != NULL);
 
 	// loop
 	for (loop=0; loop<num_of_devices; loop++) {
@@ -330,19 +309,11 @@ bool Audio::IsPlay()
 void Audio::Reset()
 {
 	if (sample_buffer != NULL) {
-#if AUDIO_LOG
-		SDL_Log("Audio: (%u) Reset\n", SDL_GetTicks());
-#endif // AUDIO_LOG
 		memset(sample_buffer, 0, sample_size);
 
 		// initial:50%
 		sample_num = sample_size / 2;
-#if AUDIO_FORMAT == AUDIO_S16SYS
-		// clear buffer
-		sample_num = (sample_num + 3) & 0xfffffffc;
-#else
-		sample_num = (sample_num + 7) & 0xfffffff8;
-#endif // AUDIO_FORMAT == AUDIO_S16SYS
+		sample_num = (sample_num + 3) & ~3;
 		sample_read = 0;
 		sample_write = sample_num;
 	}
@@ -361,11 +332,7 @@ int Audio::GetFreeSamples()
 
 	if (sample_buffer != NULL) {
 		samples = sample_size - sample_num;
-#if AUDIO_FORMAT == AUDIO_S16SYS
 		samples /= (device_spec.channels * sizeof(Sint16));
-#else
-		samples /= (device_spec.channels * sizeof(Sint32));
-#endif // AUDIO_FORMAT == AUDIO_S16SYS
 	}
 	else {
 		// no sound
@@ -388,11 +355,7 @@ int Audio::Write(Uint8 *stream, int len)
 	int size2;
 	int loop;
 	Sint32 *src;
-#if AUDIO_FORMAT == AUDIO_S16SYS
 	Sint16 *dest;
-#else
-	Sint32 *dest;
-#endif // AUDIO_FORMAT == AUDIO_S16SYS
 	int pct;
 
 	SDL_assert(stream != NULL);
@@ -402,11 +365,7 @@ int Audio::Write(Uint8 *stream, int len)
 		return 0x80;
 	}
 
-#if AUDIO_FORMAT == AUDIO_S16SYS
 	len *= (device_spec.channels * sizeof(Sint16));
-#else
-	len *= (device_spec.channels * sizeof(Sint32));
-#endif // AUDIO_FORMAT == AUDIO_S16SYS
 
 	// lock
 	SDL_SemWait(audio_sem);
@@ -433,72 +392,39 @@ int Audio::Write(Uint8 *stream, int len)
 
 	// copy
 	if (size1 > 0) {
-#if AUDIO_FORMAT == AUDIO_S16SYS
 		src = (Sint32*)stream;
 		dest = (Sint16*)&sample_buffer[sample_write];
 		for (loop=0; loop<(int)(size1/sizeof(Sint16)); loop++) {
-			if (src[loop] > 0x7fff) {
+			if (src[loop] > 0xbfff) {
 				dest[loop] = 0x7fff;
 			}
 			else {
-				if (src[loop] < -0x8000) {
+				if (src[loop] < -0xc000) {
 					dest[loop] = -0x8000;
 				}
 				else {
-					dest[loop] = (Sint16)src[loop];
+					dest[loop] = (Sint16)((src[loop] * 2) / 3);
 				}
 			}
 		}
-#else
-		src = (Sint32*)stream;
-		dest = (Sint32*)&sample_buffer[sample_write];
-		for (loop=0; loop<(int)(size1/sizeof(Sint32)); loop++) {
-			if (src[loop] > 0x00007fff) {
-				dest[loop] = 0x7fffffff;
-			}
-			else {
-				if (src[loop] < -0x00008000) {
-					dest[loop] = 0x80000000;
-				}
-				else {
-					dest[loop] = src[loop] << 16;
-				}
-			}
-		}
-#endif // AUDIO_FORMAT == AUDIO_S16SYS
 		sample_write += size1;
 		sample_num += size1;
 	}
+
 	if (size2 > 0) {
-#if AUDIO_FORMAT == AUDIO_S16SYS
 		src = (Sint32*)&stream[size1 * 2];
 		dest = (Sint16*)sample_buffer;
 		for (loop=0; loop<(int)(size2/sizeof(Sint16)); loop++) {
-			if (src[loop] > 0x7fff) {
+			if (src[loop] > 0xbfff) {
 				dest[loop] = 0x7fff;
 			}
-			else if (src[loop] < -0x8000) {
+			else if (src[loop] < -0xc000) {
 				dest[loop] = -0x8000;
 			}
 			else {
-				dest[loop] = (Sint16)src[loop];
+				dest[loop] = (Sint16)((src[loop] * 2) / 3);
 			}
 		}
-#else
-		src = (Sint32*)&stream[size1];
-		dest = (Sint32*)sample_buffer;
-		for (loop=0; loop<(int)(size2/sizeof(Sint32)); loop++) {
-			if (src[loop] > 0x00007fff) {
-				dest[loop] = 0x7fffffff;
-			}
-			else if (src[loop] < -0x00008000) {
-				dest[loop] = 0x80000000;
-			}
-			else {
-				dest[loop] = src[loop] << 16;
-			}
-		}
-#endif // AUDIO_FORMAT == AUDIO_S16SYS
 		sample_write = size2;
 		sample_num += size2;
 	}

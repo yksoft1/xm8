@@ -102,10 +102,18 @@ class I8251;
 class I8255;
 class PCM1BIT;
 class UPD1990A;
+#ifdef SDL
+class FMSound;
+#else
 class YM2203;
+#endif // SDL
 class Z80;
 
+#ifdef SDL
+class DiskSub;
+#else
 class PC80S31K;
+#endif // SDL
 class UPD765A;
 
 #ifdef SUPPORT_PC88_PCG8100
@@ -126,10 +134,19 @@ protected:
 	I8255* pc88pio;
 	PCM1BIT* pc88pcm;
 	UPD1990A* pc88rtc;
+#ifdef SDL
+	FMSound *pc88opn;
+	FMSound *pc88sb2;
+#else
 	YM2203* pc88opn;
+#endif // SDL
 	Z80* pc88cpu;
 	
+#ifdef SDL
+	DiskSub *pc88sub;
+#else
 	PC80S31K* pc88sub;
+#endif // SDL
 	I8255* pc88pio_sub;
 	UPD765A* pc88fdc_sub;
 	Z80* pc88cpu_sub;

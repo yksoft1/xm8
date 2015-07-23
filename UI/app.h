@@ -87,7 +87,7 @@ public:
 										// get key buffer from vm
 	void EnterMenu(int id);
 										// menu mode
-	void LeaveMenu();
+	void LeaveMenu(bool check = true);
 										// run mode
 	void ChangeAudio();
 										// change audio parameter
@@ -113,6 +113,8 @@ public:
 										// get version
 	const char* GetAppTitle();
 										// get application title
+	void* GetEvMgr();
+										// get event manager
 
 private:
 	// drawing

@@ -99,6 +99,8 @@ private:
 										// application
 	Setting *setting;
 										// setting
+	Platform *platform;
+										// platform
 	Video *video;
 										// video
 	Font *font;

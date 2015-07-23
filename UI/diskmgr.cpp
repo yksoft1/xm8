@@ -46,6 +46,7 @@ DiskManager::DiskManager()
 	state_path[0] = '\0';
 	next_bank = 0;
 	next_timer = 0;
+	nullstr[0] = '\0';
 }
 
 //
@@ -199,12 +200,21 @@ void DiskManager::Close()
 //
 bool DiskManager::IsOpen()
 {
-	// next timer
-	if (next_timer > 0) {
+	return ready;
+}
+
+//
+// IsNext
+// check next ready
+//
+bool DiskManager::IsNext()
+{
+	if ((ready == true) && (next_timer > 0)) {
+		return true;
+	}
+	else {
 		return false;
 	}
-
-	return ready;
 }
 
 //
@@ -246,12 +256,17 @@ const char* DiskManager::GetName(int bank)
 
 	// default parameter -> current_bank
 	if (bank < 0) {
-		bank = current_bank;
+		if (next_timer > 0) {
+			bank = next_bank;
+		}
+		else {
+			bank = current_bank;
+		}
 	}
 
 	// open ?
 	if (ready == false) {
-		return NULL;
+		return nullstr;
 	}
 
 	ptr = name_list;
@@ -265,47 +280,20 @@ const char* DiskManager::GetName(int bank)
 }
 
 //
-// GetSignal()
-// get access signal
-//
-void DiskManager::GetSignal(DiskManager *other)
-{
-	// this object
-	signal = (Uint32)upd765a->read_signal(0);
-
-	// other object
-	if (other != NULL) {
-		other->SetSignal(signal);
-	}
-}
-
-//
-// SetSignal()
-// set access signal
-//
-void DiskManager::SetSignal(Uint32 sig)
-{
-	signal = sig;
-}
-
-//
 // GetAccess()
 // get access status
 //
 int DiskManager::GetAccess()
 {
 	uint8 type;
-
-	// open ?
-	if (ready == false) {
-		return ACCESS_NONE;
-	}
+	int busy;
 
 	// get information from fdc
 	type = upd765a->get_drive_type(drive);
+	busy = upd765a->get_busy_drive();
 
 	// check access
-	if ((signal & (1 << drive)) == 0) {
+	if (busy != drive) {
 		return ACCESS_NONE;
 	}
 

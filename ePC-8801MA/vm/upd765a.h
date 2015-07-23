@@ -178,7 +178,7 @@ public:
 	void set_drive_mfm(int drv, bool mfm);
 	bool raise_irq_when_media_changed;
 #ifdef SDL
-	int get_fdc_phase() { return phase; }
+	int get_busy_drive() { if (phase != 0) return (hdu & 3); else return -1; }
 #endif // SDL
 };
 

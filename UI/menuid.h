@@ -54,7 +54,9 @@
 										// softkey menu 3
 #define MENU_SOFTKEY4			16
 										// softkey menu 4
-#define MENU_FILE				17
+#define MENU_DIP				17
+										// dip switch
+#define MENU_FILE				18
 										// file menu
 
 //
@@ -212,9 +214,13 @@
 										// clock 8MHz
 #define MENU_SYSTEM_8MH			706
 										// clock 8MHz (FE2/MC)
-#define MENU_SYSTEM_WAIT		707
-										// memory wait
-#define MENU_SYSTEM_ROMVER		708
+#define MENU_SYSTEM_EXRAM		707
+										// extended 128KB RAM
+#define MENU_SYSTEM_FASTDISK	708
+										// pseudo fast disk access
+#define MENU_SYSTEM_DIP			709
+										// dip switch
+#define MENU_SYSTEM_ROMVER		710
 										// rom version
 #define MENU_SYSTEM_MODE		797
 										// mode radio
@@ -260,6 +266,8 @@
 										// status alpha
 #define MENU_VIDEO_SCALEFILTER	816
 										// scaling filter
+#define MENU_VIDEO_FORCERGB565	817
+										// force RGB565
 #define MENU_VIDEO_WINDOW		896
 										// window radio
 #define MENU_VIDEO_SKIP			897
@@ -383,6 +391,110 @@
 #define MENU_SOFTKEY_11			1311
 										// softkey type 11
 #define MENU_SOFTKEY_MAX		1399
+										// maximum
+
+//
+// dipswitch menu
+//
+#define MENU_DIP_MIN			1400
+										// minimum
+#define MENU_DIP_BASICMODE		1401
+										// basic mode (default)
+#define MENU_DIP_TERMMODE		1402
+										// terminal mode
+#define MENU_DIP_WIDTH80		1403
+										// width 80 (default)
+#define MENU_DIP_WIDTH40		1404
+										// width 40
+#define MENU_DIP_LINE20			1405
+										// line 20 (default)
+#define MENU_DIP_LINE25			1406
+										// line 25
+#define MENU_DIP_FROMDISK		1407
+										// boot from disk (default)
+#define MENU_DIP_FROMROM		1408
+										// boot from rom
+#define MENU_DIP_MEMWAIT_OFF	1409
+										// memory wait off (default)
+#define MENU_DIP_MEMWAIT_ON		1410
+										// memory wait on
+#define MENU_DIP_BAUD75			1411
+										// baudrate 75bps
+#define MENU_DIP_BAUD150		1412
+										// baudrate 150bps
+#define MENU_DIP_BAUD300		1413
+										// baudrate 300bps
+#define MENU_DIP_BAUD600		1414
+										// baudrate 600bps
+#define MENU_DIP_BAUD1200		1415
+										// baudrate 1200bps
+#define MENU_DIP_BAUD2400		1416
+										// baudrate 2400bps
+#define MENU_DIP_BAUD4800		1417
+										// baudrate 4800bps
+#define MENU_DIP_BAUD9600		1418
+										// baudrate 9600bps
+#define MENU_DIP_BAUD19200		1419
+										// baudrate 19200bps
+#define MENU_DIP_HALFDUPLEX		1420
+										// half duplex
+#define MENU_DIP_FULLDUPLEX		1421
+										// full duplex (default)
+#define MENU_DIP_DATA8BIT		1422
+										// databit 8bit (default)
+#define MENU_DIP_DATA7BIT		1423
+										// databit 7bit
+#define MENU_DIP_STOP2BIT		1424
+										// stopbit 2bit
+#define MENU_DIP_STOP1BIT		1425
+										// stopbit 1bit (default)
+#define MENU_DIP_XON			1426
+										// enable X parameter (default)
+#define MENU_DIP_XOFF			1427
+										// disable X parameter
+#define MENU_DIP_SON			1428
+										// enable S parameter
+#define MENU_DIP_SOFF			1429
+										// disable S parameter (default)
+#define MENU_DIP_DELON			1430
+										// enable DEL code (default)
+#define MENU_DIP_DELOFF			1431
+										// disable DEL code (default)
+#define MENU_DIP_NOPARITY		1432
+										// no parity (default)
+#define MENU_DIP_EVENPARITY		1433
+										// even parity
+#define MENU_DIP_ODDPARITY		1434
+										// odd parity
+#define MENU_DIP_DEFAULT		1435
+										// restore default settings
+#define MENU_DIP_BOOTMODE		1486
+										// boot mode radio
+#define MENU_DIP_WIDTH			1487
+										// width radio
+#define MENU_DIP_LINE			1488
+										// line radio
+#define MENU_DIP_BOOTFROM		1489
+										// boot from radio
+#define MENU_DIP_MEMWAIT		1490
+										// memory wait radio
+#define MENU_DIP_BAUDRATE		1491
+										// baudrate radio
+#define MENU_DIP_DUPLEX			1492
+										// duplex radio
+#define MENU_DIP_DATABIT		1493
+										// databit radio
+#define MENU_DIP_STOPBIT		1494
+										// stopbit radio
+#define MENU_DIP_X				1495
+										// X parameter radio
+#define MENU_DIP_S				1496
+										// S parameter radio
+#define MENU_DIP_DEL			1497
+										// DEL code radio
+#define MENU_DIP_PARITY			1498
+										// parity radio
+#define MENU_DIP_MAX			1499
 										// maximum
 
 //

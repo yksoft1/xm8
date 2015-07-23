@@ -51,14 +51,12 @@ public:
 										// close
 	bool IsOpen();
 										// check drive ready
+	bool IsNext();
+										// check next ready
 	bool IsProtect();
 										// check write protect
 	const char* GetName(int bank = -1);
 										// get name of bank
-	void GetSignal(DiskManager *other);
-										// get access signal
-	void SetSignal(Uint32 sig);
-										// set access signal
 	int GetAccess();
 										// get access status
 	const char* GetDir();
@@ -109,6 +107,8 @@ private:
 										// next bank
 	int next_timer;
 										// next timer
+	char nullstr[1];
+										// null string
 };
 
 #endif // DISKMGR_H

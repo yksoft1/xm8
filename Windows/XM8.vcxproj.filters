@@ -69,9 +69,6 @@
     <ClCompile Include="..\ePC-8801MA\vm\upd765a.cpp">
       <Filter>ソース ファイル\ePC-8801MA\vm</Filter>
     </ClCompile>
-    <ClCompile Include="..\ePC-8801MA\vm\pc80s31k.cpp">
-      <Filter>ソース ファイル\ePC-8801MA\vm</Filter>
-    </ClCompile>
     <ClCompile Include="..\ePC-8801MA\vm\event.cpp">
       <Filter>ソース ファイル\ePC-8801MA\vm</Filter>
     </ClCompile>
@@ -82,9 +79,6 @@
       <Filter>ソース ファイル\ePC-8801MA\vm</Filter>
     </ClCompile>
     <ClCompile Include="..\ePC-8801MA\vm\pcm1bit.cpp">
-      <Filter>ソース ファイル\ePC-8801MA\vm</Filter>
-    </ClCompile>
-    <ClCompile Include="..\ePC-8801MA\vm\ym2203.cpp">
       <Filter>ソース ファイル\ePC-8801MA\vm</Filter>
     </ClCompile>
     <ClCompile Include="..\ePC-8801MA\vm\fmgen\opna.cpp">
@@ -162,6 +156,12 @@
     <ClCompile Include="..\UI\softkey.cpp">
       <Filter>ソース ファイル\UI</Filter>
     </ClCompile>
+    <ClCompile Include="..\ePC-8801MA\vm\fmsound.cpp">
+      <Filter>ソース ファイル\ePC-8801MA\vm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ePC-8801MA\vm\disksub.cpp">
+      <Filter>ソース ファイル\ePC-8801MA\vm</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\ePC-8801MA\vm\z80.h">
@@ -182,9 +182,6 @@
     <ClInclude Include="..\ePC-8801MA\vm\upd765a.h">
       <Filter>ヘッダー ファイル\ePC-8801MA\vm</Filter>
     </ClInclude>
-    <ClInclude Include="..\ePC-8801MA\vm\pc80s31k.h">
-      <Filter>ヘッダー ファイル\ePC-8801MA\vm</Filter>
-    </ClInclude>
     <ClInclude Include="..\ePC-8801MA\vm\event.h">
       <Filter>ヘッダー ファイル\ePC-8801MA\vm</Filter>
     </ClInclude>
@@ -195,9 +192,6 @@
       <Filter>ヘッダー ファイル\ePC-8801MA\vm</Filter>
     </ClInclude>
     <ClInclude Include="..\ePC-8801MA\vm\pcm1bit.h">
-      <Filter>ヘッダー ファイル\ePC-8801MA\vm</Filter>
-    </ClInclude>
-    <ClInclude Include="..\ePC-8801MA\vm\ym2203.h">
       <Filter>ヘッダー ファイル\ePC-8801MA\vm</Filter>
     </ClInclude>
     <ClInclude Include="..\ePC-8801MA\vm\fmgen\opna.h">
@@ -307,6 +301,12 @@
     </ClInclude>
     <ClInclude Include="..\UI\tapemgr.h">
       <Filter>ヘッダー ファイル\UI</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ePC-8801MA\vm\fmsound.h">
+      <Filter>ヘッダー ファイル\ePC-8801MA\vm</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ePC-8801MA\vm\disksub.h">
+      <Filter>ヘッダー ファイル\ePC-8801MA\vm</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

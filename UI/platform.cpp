@@ -721,4 +721,36 @@ void Platform::MsgBox(SDL_Window *window, const char *string)
 #endif // __linux__ && !__ANDROID__
 }
 
+//
+// CheckMouseButton
+// check mouse left button
+//
+bool Platform::CheckMouseButton()
+{
+#ifdef _WIN32
+	int  swap;
+	SHORT button;
+
+	// GetSystemMetrics
+	swap = GetSystemMetrics(SM_SWAPBUTTON);
+	if (swap == 0) {
+		// left
+		button = GetAsyncKeyState(VK_LBUTTON);
+	}
+	else {
+		// right
+		button = GetAsyncKeyState(VK_RBUTTON);
+	}
+
+	if ((button & 0x8000) != 0) {
+		return true;
+	}
+	else {
+		return false;
+	}
+#else
+	return true;
+#endif // _WIN32
+}
+
 #endif // SDL

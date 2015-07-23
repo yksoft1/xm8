@@ -44,11 +44,11 @@ LOCAL_SRC_FILES := $(SDL_PATH)/src/main/android/SDL_android_main.c \
 	../../../../ePC-8801MA/vm/i8251.cpp \
 	../../../../ePC-8801MA/vm/i8253.cpp \
 	../../../../ePC-8801MA/vm/i8255.cpp \
-	../../../../ePC-8801MA/vm/pc80s31k.cpp \
+	../../../../ePC-8801MA/vm/disksub.cpp \
 	../../../../ePC-8801MA/vm/pcm1bit.cpp \
 	../../../../ePC-8801MA/vm/upd765a.cpp \
 	../../../../ePC-8801MA/vm/upd1990a.cpp \
-	../../../../ePC-8801MA/vm/ym2203.cpp \
+	../../../../ePC-8801MA/vm/fmsound.cpp \
 	../../../../ePC-8801MA/vm/z80.cpp \
 	../../../../ePC-8801MA/vm/fmgen/opna.cpp \
 	../../../../ePC-8801MA/vm/fmgen/psg.cpp \

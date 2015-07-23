@@ -46,6 +46,9 @@ public:
 	void MsgBox(SDL_Window *window, const char *string);
 										// modal message box
 
+	bool CheckMouseButton();
+										// check mouse left button
+
 private:
 	App *app;
 										// app

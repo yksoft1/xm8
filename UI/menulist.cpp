@@ -783,12 +783,9 @@ void MenuList::OnKeyDown(SDL_Event *e)
 				item = GetItem(menu_focus);
 				item->SetFocus();
 			}
-			if (menu_items > (MENUITEM_LINES - 1)) {
-				if ((menu_focus - menu_top) > (MENUITEM_LINES - 6)) {
+			if ((menu_focus - menu_top) >= (MENUITEM_LINES - 3)) {
+				if ((menu_top + MENUITEM_LINES - 2) < (menu_items - 1)) {
 					menu_top++;
-					if ((menu_top + MENUITEM_LINES - 2) > menu_items) {
-						menu_top--;
-					}
 				}
 			}
 		}
@@ -1029,38 +1026,14 @@ void MenuList::OnMouseWheel(SDL_Event *e)
 {
 	SDL_Event evt;
 	int loop;
-	int count;
 	int x;
 	int y;
 	MenuItem *item;
+	bool inside;
 
 	// true mouse device only
 	if (e->wheel.which == SDL_TOUCH_MOUSEID) {
 		return;
-	}
-
-	// init
-	evt.key.repeat = 0;
-	evt.key.keysym.scancode = SDL_SCANCODE_UNKNOWN;
-	count = 0;
-
-	// up
-	if (e->wheel.y > 0) {
-		evt.key.keysym.sym = SDLK_UP;
-		evt.key.keysym.scancode = SDL_SCANCODE_UP;
-		count = e->wheel.y;
-	}
-
-	// down
-	if (e->wheel.y < 0) {
-		evt.key.keysym.sym = SDLK_DOWN;
-		evt.key.keysym.scancode = SDL_SCANCODE_DOWN;
-		count = -e->wheel.y;
-	}
-
-	// issue event
-	for (loop=0; loop<count; loop++) {
-		OnKeyDown(&evt);
 	}
 
 	// get current position
@@ -1069,17 +1042,69 @@ void MenuList::OnMouseWheel(SDL_Event *e)
 	SDL_GetMouseState(&x, &y);
 
 	// convert point
-	if (video->ConvertPoint(&x, &y) == false) {
-		return;
+	inside = false;
+	if (video->ConvertPoint(&x, &y) == true) {
+		if (PosToItem(&x, &y) == true) {
+			inside = true;
+		}
+	}
+
+	// init
+	evt.key.repeat = 0;
+	evt.key.keysym.scancode = SDL_SCANCODE_UNKNOWN;
+
+	// up
+	if (e->wheel.y > 0) {
+		evt.key.keysym.sym = SDLK_UP;
+		evt.key.keysym.scancode = SDL_SCANCODE_UP;
+		for (loop=0; loop<e->wheel.y; loop++) {
+			if (inside == true) {
+				if (menu_top > 0) {
+					menu_top--;
+					continue;
+				}
+			}
+			OnKeyDown(&evt);
+		}
+	}
+
+	// down
+	if (e->wheel.y < 0) {
+		evt.key.keysym.sym = SDLK_DOWN;
+		evt.key.keysym.scancode = SDL_SCANCODE_DOWN;
+		for (loop=0; loop<(-e->wheel.y); loop++) {
+			if (inside == true) {
+				if ((menu_top + MENUITEM_LINES - 2) < (menu_items - 1)) {
+					menu_top++;
+					continue;
+				}
+			}
+			OnKeyDown(&evt);
+		}
 	}
 
 	// position to item
-	if (PosToItem(&x, &y) == false) {
-		return;
+	if (inside == true) {
+		menu_focus = menu_top + y;
+		if (menu_focus >= menu_items) {
+			menu_focus = menu_items - 1;
+		}
+	}
+	else {
+		if (menu_focus < menu_top) {
+			menu_focus = menu_top;
+		}
+		else {
+			if (menu_focus > (menu_top + MENUITEM_LINES - 2)) {
+				menu_focus = menu_top + MENUITEM_LINES - 2;
+				if (menu_focus >= menu_items) {
+					menu_focus = menu_items - 1;
+				}
+			}
+		}
 	}
 
 	// set focus
-	menu_focus = menu_top + y;
 	item = GetItem(menu_focus);
 	item->SetFocus();
 }

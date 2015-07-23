@@ -604,13 +604,6 @@ public:
 		}
 		event_manager->abort_sub_cpu();
 	}
-	virtual void single_exec_mode(bool enable)
-	{
-		if(event_manager == NULL) {
-			event_manager = vm->first_device->next_device;
-		}
-		event_manager->single_exec_mode(enable);
-	}
 	virtual void mix_sound_block()
 	{
 		if(event_manager == NULL) {
@@ -625,12 +618,12 @@ public:
 		}
 		return event_manager->get_mix_rate();
 	}
-	virtual int get_main_clock()
+	virtual void request_single_exec()
 	{
 		if(event_manager == NULL) {
 			event_manager = vm->first_device->next_device;
 		}
-		return event_manager->get_main_clock();
+		event_manager->request_single_exec();
 	}
 #endif // SDL
 	virtual void update_timing(int new_clocks, double new_frames_per_sec, int new_lines_per_frame) {}
@@ -639,7 +632,11 @@ public:
 	virtual void event_callback(int event_id, int err) {}
 	virtual void event_pre_frame() {}	// this event is to update timing settings
 	virtual void event_frame() {}
+#ifdef SDL
+	virtual int event_vline(int v) { return 1; }
+#else
 	virtual void event_vline(int v, int clock) {}
+#endif // SDL
 	virtual void event_hsync(int v, int h, int clock) {}
 	
 	// sound
