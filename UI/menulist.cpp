@@ -372,6 +372,122 @@ void MenuList::AddCommon(MenuItem *item)
 }
 
 //
+// Sort()
+// sort items
+//
+void MenuList::Sort()
+{
+	MenuItem **list;
+	MenuItem *ptr;
+	int loop;
+
+	// no item ?
+	if (menu_items == 0) {
+		return;
+	}
+
+	// malloc pointer list
+	list = (MenuItem**)SDL_malloc(sizeof(MenuItem*) * menu_items);
+	if (list == NULL) {
+		return;
+	}
+
+	// set pointer
+	ptr = menu_chain;
+	for (loop=0; loop<menu_items; loop++) {
+		list[loop] = ptr;
+		ptr = ptr->GetNext();
+	}
+
+	// quick sort
+	qsort(list, menu_items, sizeof(MenuItem*), SortCallback);
+
+	// set index and pointer
+	for (loop=0; loop<menu_items; loop++) {
+		// first item ?
+		if (loop == 0) {
+			// first item
+			menu_chain = list[0];
+			menu_chain->SetNext(NULL);
+		}
+
+		// set index
+		list[loop]->SetIndex(loop);
+
+		// last item ?
+		if (loop == (menu_items - 1)) {
+			// last item
+			continue;
+		}
+
+		// first to (last - 1)
+		list[loop]->SetNext(list[loop + 1]);
+	}
+
+	// free pointer list
+	SDL_free(list);
+	list = NULL;
+}
+
+//
+// SortCallback()
+// qsort call back
+//
+int MenuList::SortCallback(const void *ptr1, const void *ptr2)
+{
+	MenuItem *item1;
+	MenuItem *item2;
+	const char *name1;
+	const char *name2;
+
+	// cast
+	item1 = *(MenuItem**)ptr1;
+	item2 = *(MenuItem**)ptr2;
+
+	// name
+	name1 = item1->GetName();
+	name2 = item2->GetName();
+
+	// period ?
+	if ((name1[0] == '.') && (name2[0] != '.')) {
+		return -1;
+	}
+	if ((name1[0] != '.') && (name2[0] == '.')) {
+		return 1;
+	}
+
+#ifdef _WIN32
+	// drive:root ?
+	if (strlen(name1) == 3) {
+		if ((name1[1] == ':') && (name1[2] == '\\')) {
+			if (strlen(name2) != 3) {
+				return 1;
+			}
+			if ((name2[1] == ':') && (name2[2] == '\\')) {
+				return strcmp(name1, name2);
+			}
+			return 1;
+		}
+	}
+
+	if (strlen(name2) == 3) {
+		if ((name2[1] == ':') && (name2[2] == '\\')) {
+			if (strlen(name1) != 3) {
+				return -1;
+			}
+			if ((name1[1] == ':') && (name1[2] == '\\')) {
+				return strcmp(name1, name2);
+			}
+			return -1;
+		}
+	}
+#endif // _WIN32
+
+	// strcmp
+	return strcmp(name1, name2);
+}
+
+//
 // GetText()
 // get item name
 //

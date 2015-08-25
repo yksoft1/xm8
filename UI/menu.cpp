@@ -457,6 +457,7 @@ void Menu::EnterSystem(int id)
 	list->AddRadioButton("Clock 8MHzH (FE2/MC,w/reset)", MENU_SYSTEM_8MH, MENU_SYSTEM_CLOCK);
 	list->AddCheckButton("128KB RAM board (Mx,w/reset)", MENU_SYSTEM_EXRAM);
 	list->AddCheckButton("Pseudo fast disk access", MENU_SYSTEM_FASTDISK);
+	list->AddCheckButton("Watch battery level", MENU_SYSTEM_BATTERY);
 	list->AddButton("DIP settings (w/reset)", MENU_SYSTEM_DIP);
 
 	// get rom version
@@ -577,6 +578,9 @@ void Menu::EnterSystem(int id)
 
 	// pseudo fast disk mode
 	list->SetCheck(MENU_SYSTEM_FASTDISK, setting->IsFastDisk());
+
+	// watch battery
+	list->SetCheck(MENU_SYSTEM_BATTERY, setting->IsWatchBattery());
 
 	// set focus
 	list->SetFocus(id);
@@ -1130,6 +1134,9 @@ void Menu::EnterFile()
 		name = platform->FindNext(&info);
 		id++;
 	}
+
+	// sort
+	list->Sort();
 }
 
 //
@@ -1745,6 +1752,18 @@ void Menu::CmdSystem(int id)
 		else {
 			list->SetCheck(MENU_SYSTEM_FASTDISK, true);
 			setting->SetFastDisk(true);
+		}
+		break;
+
+	// watch battery
+	case MENU_SYSTEM_BATTERY:
+		if (list->GetCheck(MENU_SYSTEM_BATTERY) == true) {
+			list->SetCheck(MENU_SYSTEM_BATTERY, false);
+			setting->SetWatchBattery(false);
+		}
+		else {
+			list->SetCheck(MENU_SYSTEM_BATTERY, true);
+			setting->SetWatchBattery(true);
 		}
 		break;
 

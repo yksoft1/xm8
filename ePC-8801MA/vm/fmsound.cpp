@@ -865,4 +865,5 @@ bool FMSound::load_state(FILEIO *fio)
 
 	return false;
 }
+
 #endif // SDL

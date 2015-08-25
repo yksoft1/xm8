@@ -216,6 +216,12 @@ public:
 	void SetStateNum(int num);
 										// set state number
 
+	// power
+	bool IsWatchBattery();
+										// get watch battery
+	void SetWatchBattery(bool enable);
+										// set watch battery
+
 private:
 	void Load();
 										// load setting
@@ -259,6 +265,8 @@ private:
 										// keyboard enable (version 1.10)
 	bool force_rgb565;
 										// force RGB565 (version 1.20)
+	bool watch_battery;
+										// watch battery (version 1.30)
 };
 
 #endif // SETTING_H

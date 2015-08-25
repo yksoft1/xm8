@@ -67,8 +67,12 @@ public:
 										// add next item
 	void Del(MenuItem *item);
 										// delete next item
+	void SetNext(MenuItem *item);
+										// set next item
 	MenuItem* GetNext();
 										// get next item
+	void SetIndex(int index);
+										// set menu index
 
 	// action
 	void Draw(SDL_Rect *rect, int top, int lines, int focus, bool file);

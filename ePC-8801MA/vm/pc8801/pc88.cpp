@@ -3383,7 +3383,12 @@ void PC88::draw_640x400_attrib_graph()
 				// don't update color
 			} else {
 				uint8 attrib = crtc.attrib.expand[cy][cx];
+#ifdef SDL
+				// for SORCERIAN music library
+				color = (attrib >> 5) | color_mask;
+#else
 				color = (attrib & 0xe0) ? ((attrib >> 5) | color_mask) : 8;
+#endif // SDL
 			}
 			uint8 b = gvram_b[addr];
 			addr++;
@@ -3405,7 +3410,12 @@ void PC88::draw_640x400_attrib_graph()
 				// don't update color
 			} else {
 				uint8 attrib = crtc.attrib.expand[cy][cx];
+#ifdef SDL
+				// for SORCERIAN music library
+				color = (attrib >> 5) | color_mask;
+#else
 				color = (attrib & 0xe0) ? ((attrib >> 5) | color_mask) : 8;
+#endif // SDL
 			}
 			uint8 r = gvram_r[addr];
 			addr++;

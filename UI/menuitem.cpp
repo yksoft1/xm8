@@ -139,12 +139,30 @@ void MenuItem::Del(MenuItem *item)
 }
 
 //
+// SetNext()
+// set next item (for qsort)
+//
+void MenuItem::SetNext(MenuItem *item)
+{
+	item_next = item;
+}
+
+//
 // GetNext()
 // get next item
 //
 MenuItem* MenuItem::GetNext()
 {
 	return item_next;
+}
+
+//
+// SetIndex()
+// set menu index
+//
+void MenuItem::SetIndex(int index)
+{
+	item_index = index;
 }
 
 //

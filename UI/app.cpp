@@ -38,7 +38,7 @@
 //
 #define APP_NAME				"XM8 (based on ePC-8801MA)";
 										// application name
-#define APP_VER					0x0120
+#define APP_VER					0x0130
 										// version (BCD)
 #define APP_WIDTH				SCREEN_WIDTH
 										// window width
@@ -931,6 +931,22 @@ void App::PowerMng()
 	int loop;
 	int avg;
 	SDL_PowerState state;
+
+	// setting (watch battery)
+	if (setting->IsWatchBattery() == false) {
+		// reset battery level
+		for (loop=0; loop<SDL_arraysize(power_level); loop++) {
+			power_level[loop] = 100;
+		}
+		power_counter = 0;
+
+		if (app_powerdown == true) {
+			app_powerdown = false;
+			video->SetPowerDown(false);
+			CtrlAudio();
+		}
+		return;
+	}
 
 	// power counter
 	power_counter++;

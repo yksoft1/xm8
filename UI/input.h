@@ -131,9 +131,9 @@ private:
 										// key status for EMU::key_status
 	Uint8 key_buf[0x100];
 										// key buffer from PC88::key_status
-	Uint32 key_table[0x100];
+	Uint32 key_table[0x120];
 										// key map (current)
-	static const Uint32 key_base[0x100];
+	static const Uint32 key_base[0x120];
 										// key map (base)
 	static const Uint32 joystick_button[15 * 2];
 										// joystick button bit map

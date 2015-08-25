@@ -45,6 +45,8 @@ public:
 										// add check button
 	void AddSlider(const char *name, int id, int minimum, int maximum, int unit);
 										// add slider
+	void Sort();
+										// sort items
 	const char* GetText(int id);
 										// get item name
 	void SetText(int id, const char *name);
@@ -97,6 +99,8 @@ public:
 private:
 	void AddCommon(MenuItem *item);
 										// add common routine
+	static int SortCallback(const void *ptr1, const void *ptr2);
+										// sort callback routine
 	MenuItem* GetItem(int index);
 										// get menu item from index
 	MenuItem* FindItem(int id);

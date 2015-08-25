@@ -50,6 +50,8 @@
 										// version 1.10
 #define SETTING_VERSION_120		20150710
 										// version 1.20
+#define SETTING_VERSION_130		20150822
+										// version 1.30
 
 // video
 #define DEFAULT_WINDOW_WIDTH	640
@@ -150,6 +152,9 @@ Setting::Setting()
 	joystick_key = true;
 	mouse_time = DEFAULT_MOUSE_TIME;
 	keyboard_enable = DEFAULT_KEYBOARD_ENABLE;
+
+	// setting (power)
+	watch_battery = true;
 
 	// save state
 	state_num = 0;
@@ -313,6 +318,11 @@ bool Setting::LoadSetting(FILEIO *fio)
 			force_rgb565 = fio->FgetBool();
 		}
 
+		// version 1.30
+		if (version >= SETTING_VERSION_130) {
+			watch_battery = fio->FgetBool();
+		}
+
 		return true;
 	}
 
@@ -346,7 +356,7 @@ void Setting::SaveSetting(FILEIO *fio)
 	int loop;
 
 	// version
-	fio->FputUint32(SETTING_VERSION_120);
+	fio->FputUint32(SETTING_VERSION_130);
 
 	// system
 	fio->FputInt32(config.boot_mode);
@@ -391,6 +401,9 @@ void Setting::SaveSetting(FILEIO *fio)
 	// version 1.20
 	fio->FputBool(config.ignore_crc);
 	fio->FputBool(force_rgb565);
+
+	// verison 1.30
+	fio->FputBool(watch_battery);
 }
 
 //
@@ -1071,6 +1084,24 @@ bool Setting::IsKeyEnable()
 void Setting::SetKeyEnable(bool enable)
 {
 	keyboard_enable = enable;
+}
+
+//
+// IsWatchBattery()
+// get watch battery
+//
+bool Setting::IsWatchBattery()
+{
+	return watch_battery;
+}
+
+//
+// SetWatchBattery()
+// set watch battery
+//
+void Setting::SetWatchBattery(bool enable)
+{
+	watch_battery = enable;
 }
 
 //

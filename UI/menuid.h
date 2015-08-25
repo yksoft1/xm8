@@ -218,9 +218,11 @@
 										// extended 128KB RAM
 #define MENU_SYSTEM_FASTDISK	708
 										// pseudo fast disk access
-#define MENU_SYSTEM_DIP			709
+#define MENU_SYSTEM_BATTERY		709
+										// watch battery level
+#define MENU_SYSTEM_DIP			710
 										// dip switch
-#define MENU_SYSTEM_ROMVER		710
+#define MENU_SYSTEM_ROMVER		711
 										// rom version
 #define MENU_SYSTEM_MODE		797
 										// mode radio
