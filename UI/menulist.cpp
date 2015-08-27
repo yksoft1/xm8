@@ -27,60 +27,60 @@
 //
 // defines
 //
-#define MENU_MOTION_TICK_MASK	0xffffff80
-										// OnMouseMotion() tick mask
-#define FINGER_POS_THRES		8
-										// OnFingerDown() vs OnFingerUp() threshold (position)
-#define FINGER_TIME_THRES		200
-										// OnFingerDownn() vs OnFingerUp() threshold (ms)
-#define MENU_ENTER_THRES		250
-										// OnMouseUp() threshold (ms)
-#define MENU_JOY_FIRST			400
-										// joystick first wait (ms)
-#define MENU_JOY_REPEAT			140
-										// joystick repeat wait (ms)
+#define MENU_MOTION_TICK_MASK 0xffffff80
+// OnMouseMotion() tick mask
+#define FINGER_POS_THRES 8
+// OnFingerDown() vs OnFingerUp() threshold (position)
+#define FINGER_TIME_THRES 200
+// OnFingerDownn() vs OnFingerUp() threshold (ms)
+#define MENU_ENTER_THRES 250
+// OnMouseUp() threshold (ms)
+#define MENU_JOY_FIRST 400
+// joystick first wait (ms)
+#define MENU_JOY_REPEAT 140
+// joystick repeat wait (ms)
 
 //
 // MenuList()
 // constructor
 //
-MenuList::MenuList(App *a)
+MenuList::MenuList(App* a)
 {
-	// save parameter
-	app = a;
+    // save parameter
+    app = a;
 
-	// object
-	setting = NULL;
-	video = NULL;
-	font = NULL;
-	input = NULL;
-	menu = NULL;
-	converter = NULL;
-	frame_buf = NULL;
+    // object
+    setting = NULL;
+    video = NULL;
+    font = NULL;
+    input = NULL;
+    menu = NULL;
+    converter = NULL;
+    frame_buf = NULL;
 
-	// property
-	menu_chain = NULL;
-	menu_title = NULL;
-	menu_id = -1;
-	menu_items = 0;
-	menu_top = 0;
-	menu_focus = 0;
-	menu_tick = 0;
-	menu_file = false;
+    // property
+    menu_chain = NULL;
+    menu_title = NULL;
+    menu_id = -1;
+    menu_items = 0;
+    menu_top = 0;
+    menu_focus = 0;
+    menu_tick = 0;
+    menu_file = false;
 
-	// finger
-	finger_x = -1;
-	finger_y = -1;
-	finger_tick = 0;
+    // finger
+    finger_x = -1;
+    finger_y = -1;
+    finger_tick = 0;
 
-	// mouse
-	mouse_down = false;
-	mouse_tick = 0;
+    // mouse
+    mouse_down = false;
+    mouse_tick = 0;
 
-	// joystick
-	joy_prev = 0x30;
-	joy_tick = 0;
-	joy_diff = 0;
+    // joystick
+    joy_prev = 0x30;
+    joy_tick = 0;
+    joy_diff = 0;
 }
 
 //
@@ -89,7 +89,7 @@ MenuList::MenuList(App *a)
 //
 MenuList::~MenuList()
 {
-	Deinit();
+    Deinit();
 }
 
 //
@@ -98,16 +98,16 @@ MenuList::~MenuList()
 //
 bool MenuList::Init()
 {
-	// get object and frame buffer
-	setting = app->GetSetting();
-	video = app->GetVideo();
-	font = app->GetFont();
-	input = app->GetInput();
-	menu = app->GetMenu();
-	converter = app->GetConverter();
-	frame_buf = video->GetMenuFrame();
+    // get object and frame buffer
+    setting = app->GetSetting();
+    video = app->GetVideo();
+    font = app->GetFont();
+    input = app->GetInput();
+    menu = app->GetMenu();
+    converter = app->GetConverter();
+    frame_buf = video->GetMenuFrame();
 
-	return true;
+    return true;
 }
 
 //
@@ -116,8 +116,8 @@ bool MenuList::Init()
 //
 void MenuList::Deinit()
 {
-	// clear all elements
-	Clear();
+    // clear all elements
+    Clear();
 }
 
 //
@@ -126,19 +126,19 @@ void MenuList::Deinit()
 //
 void MenuList::EnterMenu()
 {
-	// finger
-	finger_x = -1;
-	finger_y = -1;
-	finger_tick = 0;
+    // finger
+    finger_x = -1;
+    finger_y = -1;
+    finger_tick = 0;
 
-	// mouse
-	mouse_down = false;
-	mouse_tick = SDL_GetTicks();
+    // mouse
+    mouse_down = false;
+    mouse_tick = SDL_GetTicks();
 
-	// joystick
-	joy_prev = 0x30;
-	joy_tick = SDL_GetTicks();
-	joy_diff = 0;
+    // joystick
+    joy_prev = 0x30;
+    joy_tick = SDL_GetTicks();
+    joy_diff = 0;
 }
 
 //
@@ -147,27 +147,27 @@ void MenuList::EnterMenu()
 //
 void MenuList::ProcessMenu()
 {
-	int x;
-	int y;
-	Uint32 button;
-	SDL_Event evt;
+    int x;
+    int y;
+    Uint32 button;
+    SDL_Event evt;
 
-	// OnJoystick
-	OnJoystick();
+    // OnJoystick
+    OnJoystick();
 
-	// get mouse state
-	button = SDL_GetMouseState(&x, &y);
-	if (((button & SDL_BUTTON_LMASK) == 0) || (mouse_down == false)) {
-		return;
-	}
+    // get mouse state
+    button = SDL_GetMouseState(&x, &y);
+    if (((button & SDL_BUTTON_LMASK) == 0) || (mouse_down == false)) {
+        return;
+    }
 
-	// make event
-	evt.motion.which = 0;
-	evt.motion.x = x;
-	evt.motion.y = y;
+    // make event
+    evt.motion.which = 0;
+    evt.motion.x = x;
+    evt.motion.y = y;
 
-	// OnMouseMotion
-	OnMouseMotion(&evt);
+    // OnMouseMotion
+    OnMouseMotion(&evt);
 }
 
 //
@@ -176,199 +176,196 @@ void MenuList::ProcessMenu()
 //
 void MenuList::Clear()
 {
-	MenuItem *last;
-	MenuItem *prev;
+    MenuItem* last;
+    MenuItem* prev;
 
-	// chain
-	while (menu_items > 1) {
-		prev = GetItem(menu_items - 2);
-		last = prev->GetNext();
-		prev->Del(last);
-		delete last;
-		menu_items--;
-	}
-	if (menu_items > 0) {
-		delete menu_chain;
-		menu_chain = NULL;
-		menu_items--;
-	}
+    // chain
+    while (menu_items > 1) {
+        prev = GetItem(menu_items - 2);
+        last = prev->GetNext();
+        prev->Del(last);
+        delete last;
+        menu_items--;
+    }
+    if (menu_items > 0) {
+        delete menu_chain;
+        menu_chain = NULL;
+        menu_items--;
+    }
 
-	// title
-	if (menu_title != NULL) {
-		SDL_free(menu_title);
-		menu_title = NULL;
-	}
+    // title
+    if (menu_title != NULL) {
+        SDL_free(menu_title);
+        menu_title = NULL;
+    }
 
-	// id
-	menu_id = -1;
+    // id
+    menu_id = -1;
 }
 
 //
 // SetTitle()
 // clear and set title
 //
-bool MenuList::SetTitle(const char *title, int id, bool file)
+bool MenuList::SetTitle(const char* title, int id, bool file)
 {
-	char *sjis;
-	char *ptr;
-	Uint16 high;
+    char* sjis;
+    char* ptr;
+    Uint16 high;
 
-	SDL_assert(title != NULL);
-	SDL_assert(id > 0);
+    SDL_assert(title != NULL);
+    SDL_assert(id > 0);
 
-	// all clear
-	Clear();
+    // all clear
+    Clear();
 
-	// convert to shift-jis
-	sjis = (char*)SDL_malloc(strlen(title) * 3 + 1);
-	if (sjis == NULL) {
-		return false;
-	}
-	converter->UtfToSjis(title, sjis);
+    // convert to shift-jis
+    sjis = (char*)SDL_malloc(strlen(title) * 3 + 1);
+    if (sjis == NULL) {
+        return false;
+    }
+    converter->UtfToSjis(title, sjis);
 
-	// check length
-	ptr = sjis;
-	while (strlen(ptr) > ((MENUITEM_WIDTH / 8) - 1)) {
-		high = (Uint16)*ptr;
-		high &= 0x00ff;
-		if ((high >= 0x80) && (high <= 0xa0)) {
-			ptr += 2;
-		}
-		else {
-			if (high >= 0xe0) {
-				ptr += 2;
-			}
-			else {
-				ptr++;
-			}
-		}
-	}
+    // check length
+    ptr = sjis;
+    while (strlen(ptr) > ((MENUITEM_WIDTH / 8) - 1)) {
+        high = (Uint16)*ptr;
+        high &= 0x00ff;
+        if ((high >= 0x80) && (high <= 0xa0)) {
+            ptr += 2;
+        } else {
+            if (high >= 0xe0) {
+                ptr += 2;
+            } else {
+                ptr++;
+            }
+        }
+    }
 
-	// copy and free
-	menu_title = (char*)SDL_malloc(strlen(ptr) + 1);
-	if (menu_title == NULL) {
-		SDL_free(sjis);
-		return false;
-	}
-	strcpy(menu_title, ptr);
-	SDL_free(sjis);
+    // copy and free
+    menu_title = (char*)SDL_malloc(strlen(ptr) + 1);
+    if (menu_title == NULL) {
+        SDL_free(sjis);
+        return false;
+    }
+    strcpy(menu_title, ptr);
+    SDL_free(sjis);
 
-	// id
-	menu_id = id;
+    // id
+    menu_id = id;
 
-	// file
-	menu_file = file;
+    // file
+    menu_file = file;
 
-	// top and focus
-	menu_top = 0;
-	menu_focus = 0;
+    // top and focus
+    menu_top = 0;
+    menu_focus = 0;
 
-	return true;
+    return true;
 }
 
 //
 // AddButton()
 // add push button
 //
-void MenuList::AddButton(const char *name, int id)
+void MenuList::AddButton(const char* name, int id)
 {
-	MenuItem *item;
+    MenuItem* item;
 
-	SDL_assert(name != NULL);
-	SDL_assert(id > 0);
-	SDL_assert(menu_id > 0);
+    SDL_assert(name != NULL);
+    SDL_assert(id > 0);
+    SDL_assert(menu_id > 0);
 
-	// create item;
-	item = new MenuItem(app);
-	item->Init(menu_items, MenuItem::ButtonItem, name, id, -1);
+    // create item;
+    item = new MenuItem(app);
+    item->Init(menu_items, MenuItem::ButtonItem, name, id, -1);
 
-	// common
-	AddCommon(item);
+    // common
+    AddCommon(item);
 }
 
 //
 // AddRadioButton()
 // add radio button
 //
-void MenuList::AddRadioButton(const char *name, int id, int group)
+void MenuList::AddRadioButton(const char* name, int id, int group)
 {
-	MenuItem *item;
+    MenuItem* item;
 
-	SDL_assert(name != NULL);
-	SDL_assert(id > 0);
-	SDL_assert(menu_id > 0);
+    SDL_assert(name != NULL);
+    SDL_assert(id > 0);
+    SDL_assert(menu_id > 0);
 
-	// create item;
-	item = new MenuItem(app);
-	item->Init(menu_items, MenuItem::RadioItem, name, id, group);
+    // create item;
+    item = new MenuItem(app);
+    item->Init(menu_items, MenuItem::RadioItem, name, id, group);
 
-	// common
-	AddCommon(item);
+    // common
+    AddCommon(item);
 }
 
 //
 // AddCheckButton()
 // add check button
 //
-void MenuList::AddCheckButton(const char *name, int id)
+void MenuList::AddCheckButton(const char* name, int id)
 {
-	MenuItem *item;
+    MenuItem* item;
 
-	SDL_assert(name != NULL);
-	SDL_assert(id > 0);
-	SDL_assert(menu_id > 0);
+    SDL_assert(name != NULL);
+    SDL_assert(id > 0);
+    SDL_assert(menu_id > 0);
 
-	// create item;
-	item = new MenuItem(app);
-	item->Init(menu_items, MenuItem::CheckItem, name, id, -1);
+    // create item;
+    item = new MenuItem(app);
+    item->Init(menu_items, MenuItem::CheckItem, name, id, -1);
 
-	// common
-	AddCommon(item);
+    // common
+    AddCommon(item);
 }
 
 //
 // AddSlider()
 // add slider
 //
-void MenuList::AddSlider(const char *name, int id, int minimum, int maximum, int unit)
+void MenuList::AddSlider(const char* name, int id, int minimum, int maximum, int unit)
 {
-	MenuItem *item;
+    MenuItem* item;
 
-	SDL_assert(name != NULL);
-	SDL_assert(id > 0);
-	SDL_assert(menu_id > 0);
+    SDL_assert(name != NULL);
+    SDL_assert(id > 0);
+    SDL_assert(menu_id > 0);
 
-	// create item;
-	item = new MenuItem(app);
-	item->Init(menu_items, MenuItem::SliderItem, name, id, -1);
-	item->SetMinMax(minimum, maximum, unit);
+    // create item;
+    item = new MenuItem(app);
+    item->Init(menu_items, MenuItem::SliderItem, name, id, -1);
+    item->SetMinMax(minimum, maximum, unit);
 
-	// common
-	AddCommon(item);
+    // common
+    AddCommon(item);
 }
 
 //
 // AddCommon()
 // add common routine
 //
-void MenuList::AddCommon(MenuItem *item)
+void MenuList::AddCommon(MenuItem* item)
 {
-	MenuItem *last;
+    MenuItem* last;
 
-	// link list
-	if (menu_chain == NULL) {
-		menu_chain = item;
-	}
-	else {
-		last = menu_chain;
-		while (last->GetNext() != NULL) {
-			last = last->GetNext();
-		}
-		last->Add(item);
-	}
+    // link list
+    if (menu_chain == NULL) {
+        menu_chain = item;
+    } else {
+        last = menu_chain;
+        while (last->GetNext() != NULL) {
+            last = last->GetNext();
+        }
+        last->Add(item);
+    }
 
-	// items
-	menu_items++;
+    // items
+    menu_items++;
 }
 
 //
@@ -377,114 +374,114 @@ void MenuList::AddCommon(MenuItem *item)
 //
 void MenuList::Sort()
 {
-	MenuItem **list;
-	MenuItem *ptr;
-	int loop;
+    MenuItem** list;
+    MenuItem* ptr;
+    int loop;
 
-	// no item ?
-	if (menu_items == 0) {
-		return;
-	}
+    // no item ?
+    if (menu_items == 0) {
+        return;
+    }
 
-	// malloc pointer list
-	list = (MenuItem**)SDL_malloc(sizeof(MenuItem*) * menu_items);
-	if (list == NULL) {
-		return;
-	}
+    // malloc pointer list
+    list = (MenuItem**)SDL_malloc(sizeof(MenuItem*) * menu_items);
+    if (list == NULL) {
+        return;
+    }
 
-	// set pointer
-	ptr = menu_chain;
-	for (loop=0; loop<menu_items; loop++) {
-		list[loop] = ptr;
-		ptr = ptr->GetNext();
-	}
+    // set pointer
+    ptr = menu_chain;
+    for (loop = 0; loop < menu_items; loop++) {
+        list[loop] = ptr;
+        ptr = ptr->GetNext();
+    }
 
-	// quick sort
-	qsort(list, menu_items, sizeof(MenuItem*), SortCallback);
+    // quick sort
+    qsort(list, menu_items, sizeof(MenuItem*), SortCallback);
 
-	// set index and pointer
-	for (loop=0; loop<menu_items; loop++) {
-		// first item ?
-		if (loop == 0) {
-			// first item
-			menu_chain = list[0];
-			menu_chain->SetNext(NULL);
-		}
+    // set index and pointer
+    for (loop = 0; loop < menu_items; loop++) {
+        // first item ?
+        if (loop == 0) {
+            // first item
+            menu_chain = list[0];
+            menu_chain->SetNext(NULL);
+        }
 
-		// set index
-		list[loop]->SetIndex(loop);
+        // set index
+        list[loop]->SetIndex(loop);
 
-		// last item ?
-		if (loop == (menu_items - 1)) {
-			// last item
-			continue;
-		}
+        // last item ?
+        if (loop == (menu_items - 1)) {
+            // last item
+            continue;
+        }
 
-		// first to (last - 1)
-		list[loop]->SetNext(list[loop + 1]);
-	}
+        // first to (last - 1)
+        list[loop]->SetNext(list[loop + 1]);
+    }
 
-	// free pointer list
-	SDL_free(list);
-	list = NULL;
+    // free pointer list
+    SDL_free(list);
+    list = NULL;
 }
 
 //
 // SortCallback()
 // qsort call back
 //
-int MenuList::SortCallback(const void *ptr1, const void *ptr2)
+int MenuList::SortCallback(const void* ptr1, const void* ptr2)
 {
-	MenuItem *item1;
-	MenuItem *item2;
-	const char *name1;
-	const char *name2;
+    MenuItem* item1;
+    MenuItem* item2;
+    const char* name1;
+    const char* name2;
 
-	// cast
-	item1 = *(MenuItem**)ptr1;
-	item2 = *(MenuItem**)ptr2;
+    // cast
+    item1 = *(MenuItem**)ptr1;
+    item2 = *(MenuItem**)ptr2;
 
-	// name
-	name1 = item1->GetName();
-	name2 = item2->GetName();
+    // name
+    name1 = item1->GetName();
+    name2 = item2->GetName();
 
-	// period ?
-	if ((name1[0] == '.') && (name2[0] != '.')) {
-		return -1;
-	}
-	if ((name1[0] != '.') && (name2[0] == '.')) {
-		return 1;
-	}
+    // period ?
+    if ((name1[0] == '.') && (name2[0] != '.')) {
+        return -1;
+    }
+    if ((name1[0] != '.') && (name2[0] == '.')) {
+        return 1;
+    }
 
 #ifdef _WIN32
-	// drive:root ?
-	if (strlen(name1) == 3) {
-		if ((name1[1] == ':') && (name1[2] == '\\')) {
-			if (strlen(name2) != 3) {
-				return 1;
-			}
-			if ((name2[1] == ':') && (name2[2] == '\\')) {
-				return strcmp(name1, name2);
-			}
-			return 1;
-		}
-	}
+    // drive:root ?
+    if (strlen(name1) == 3) {
+        if ((name1[1] == ':') && (name1[2] == '\\')) {
+            if (strlen(name2) != 3) {
+                return 1;
+            }
+            if ((name2[1] == ':') && (name2[2] == '\\')) {
+                return strcmp(name1, name2);
+            }
+            return 1;
+        }
+    }
 
-	if (strlen(name2) == 3) {
-		if ((name2[1] == ':') && (name2[2] == '\\')) {
-			if (strlen(name1) != 3) {
-				return -1;
-			}
-			if ((name1[1] == ':') && (name1[2] == '\\')) {
-				return strcmp(name1, name2);
-			}
-			return -1;
-		}
-	}
+    if (strlen(name2) == 3) {
+        if ((name2[1] == ':') && (name2[2] == '\\')) {
+            if (strlen(name1) != 3) {
+                return -1;
+            }
+            if ((name1[1] == ':') && (name1[2] == '\\')) {
+                return strcmp(name1, name2);
+            }
+            return -1;
+        }
+    }
 #endif // _WIN32
 
-	// strcmp
-	return strcmp(name1, name2);
+    // strcmp
+    return strcmp(name1, name2);
 }
 
 //
@@ -493,26 +490,26 @@ int MenuList::SortCallback(const void *ptr1, const void *ptr2)
 //
 const char* MenuList::GetText(int id)
 {
-	MenuItem *item;
+    MenuItem* item;
 
-	item = FindItem(id);
-	SDL_assert(item != NULL);
+    item = FindItem(id);
+    SDL_assert(item != NULL);
 
-	return item->GetName();
+    return item->GetName();
 }
 
 //
 // SetText()
 // set item name
 //
-void MenuList::SetText(int id, const char *name)
+void MenuList::SetText(int id, const char* name)
 {
-	MenuItem *item;
+    MenuItem* item;
 
-	item = FindItem(id);
-	SDL_assert(item != NULL);
+    item = FindItem(id);
+    SDL_assert(item != NULL);
 
-	item->SetName(name);
+    item->SetName(name);
 }
 
 //
@@ -521,12 +518,12 @@ void MenuList::SetText(int id, const char *name)
 //
 bool MenuList::GetRadio(int id)
 {
-	MenuItem *item;
+    MenuItem* item;
 
-	item = FindItem(id);
-	SDL_assert(item != NULL);
+    item = FindItem(id);
+    SDL_assert(item != NULL);
 
-	return item->GetRadio();
+    return item->GetRadio();
 }
 
 //
@@ -535,25 +532,24 @@ bool MenuList::GetRadio(int id)
 //
 void MenuList::SetRadio(int id, int group)
 {
-	int loop;
-	MenuItem *item;
-	
-	item = menu_chain;
-	for (loop=0; loop<menu_items; loop++) {
-		// get group
-		if (item->GetGroup() == group) {
-			// id
-			if (item->GetID() == id) {
-				item->SetRadio(true);
-			}
-			else {
-				item->SetRadio(false);
-			}
-		}
+    int loop;
+    MenuItem* item;
 
-		// next
-		item = item->GetNext();
-	}
+    item = menu_chain;
+    for (loop = 0; loop < menu_items; loop++) {
+        // get group
+        if (item->GetGroup() == group) {
+            // id
+            if (item->GetID() == id) {
+                item->SetRadio(true);
+            } else {
+                item->SetRadio(false);
+            }
+        }
+
+        // next
+        item = item->GetNext();
+    }
 }
 
 //
@@ -562,12 +558,12 @@ void MenuList::SetRadio(int id, int group)
 //
 bool MenuList::GetCheck(int id)
 {
-	MenuItem *item;
+    MenuItem* item;
 
-	item = FindItem(id);
-	SDL_assert(item != NULL);
+    item = FindItem(id);
+    SDL_assert(item != NULL);
 
-	return item->GetCheck();
+    return item->GetCheck();
 }
 
 //
@@ -576,12 +572,12 @@ bool MenuList::GetCheck(int id)
 //
 void MenuList::SetCheck(int id, bool check)
 {
-	MenuItem *item;
+    MenuItem* item;
 
-	item = FindItem(id);
-	SDL_assert(item != NULL);
+    item = FindItem(id);
+    SDL_assert(item != NULL);
 
-	item->SetCheck(check);
+    item->SetCheck(check);
 }
 
 //
@@ -590,12 +586,12 @@ void MenuList::SetCheck(int id, bool check)
 //
 int MenuList::GetSlider(int id)
 {
-	MenuItem *item;
+    MenuItem* item;
 
-	item = FindItem(id);
-	SDL_assert(item != NULL);
+    item = FindItem(id);
+    SDL_assert(item != NULL);
 
-	return item->GetSlider();
+    return item->GetSlider();
 }
 
 //
@@ -604,12 +600,12 @@ int MenuList::GetSlider(int id)
 //
 void MenuList::SetSlider(int id, int current)
 {
-	MenuItem *item;
+    MenuItem* item;
 
-	item = FindItem(id);
-	SDL_assert(item != NULL);
+    item = FindItem(id);
+    SDL_assert(item != NULL);
 
-	item->SetSlider(current);
+    item->SetSlider(current);
 }
 
 //
@@ -618,12 +614,12 @@ void MenuList::SetSlider(int id, int current)
 //
 Uint32 MenuList::GetUser(int id)
 {
-	MenuItem *item;
+    MenuItem* item;
 
-	item = FindItem(id);
-	SDL_assert(item != NULL);
+    item = FindItem(id);
+    SDL_assert(item != NULL);
 
-	return item->GetUser();
+    return item->GetUser();
 }
 
 //
@@ -632,12 +628,12 @@ Uint32 MenuList::GetUser(int id)
 //
 void MenuList::SetUser(int id, Uint32 user)
 {
-	MenuItem *item;
+    MenuItem* item;
 
-	item = FindItem(id);
-	SDL_assert(item != NULL);
+    item = FindItem(id);
+    SDL_assert(item != NULL);
 
-	item->SetUser(user);
+    item->SetUser(user);
 }
 
 //
@@ -646,7 +642,7 @@ void MenuList::SetUser(int id, Uint32 user)
 //
 int MenuList::GetID()
 {
-	return menu_id;
+    return menu_id;
 }
 
 //
@@ -655,15 +651,14 @@ int MenuList::GetID()
 //
 const char* MenuList::GetName(int id)
 {
-	MenuItem *item;
+    MenuItem* item;
 
-	item = FindItem(id);
-	if (item != NULL) {
-		return item->GetName();
-	}
-	else {
-		return NULL;
-	}
+    item = FindItem(id);
+    if (item != NULL) {
+        return item->GetName();
+    } else {
+        return NULL;
+    }
 }
 
 //
@@ -672,38 +667,38 @@ const char* MenuList::GetName(int id)
 //
 void MenuList::SetFocus(int id)
 {
-	int loop;
-	int num;
-	MenuItem *item;
-	SDL_Event evt;
+    int loop;
+    int num;
+    MenuItem* item;
+    SDL_Event evt;
 
-	// initialize
-	menu_focus = 0;
+    // initialize
+    menu_focus = 0;
 
-	// get number from id
-	num = 0;
-	for (loop=0; loop<menu_items; loop++) {
-		item = GetItem(loop);
-		if (item->GetID() == id) {
-			num = loop;
-			break;
-		}
-	}
+    // get number from id
+    num = 0;
+    for (loop = 0; loop < menu_items; loop++) {
+        item = GetItem(loop);
+        if (item->GetID() == id) {
+            num = loop;
+            break;
+        }
+    }
 
-	// event
-	evt.key.repeat = 0;
-	evt.key.keysym.sym = SDLK_DOWN;
-	evt.key.keysym.scancode = SDL_SCANCODE_DOWN;
+    // event
+    evt.key.repeat = 0;
+    evt.key.keysym.sym = SDLK_DOWN;
+    evt.key.keysym.scancode = SDL_SCANCODE_DOWN;
 
-	// loop
-	for (loop=0; loop<menu_items; loop++) {
-		if (menu_focus == num) {
-			break;
-		}
+    // loop
+    for (loop = 0; loop < menu_items; loop++) {
+        if (menu_focus == num) {
+            break;
+        }
 
-		// key down
-		OnKeyDown(&evt);
-	}
+        // key down
+        OnKeyDown(&evt);
+    }
 }
 
 //
@@ -712,18 +707,18 @@ void MenuList::SetFocus(int id)
 //
 MenuItem* MenuList::GetItem(int index)
 {
-	int loop;
-	MenuItem *item;
+    int loop;
+    MenuItem* item;
 
-	// initialize
-	item = menu_chain;
+    // initialize
+    item = menu_chain;
 
-	for (loop=0; loop<index; loop++) {
-		item = item->GetNext();
-		SDL_assert(item != NULL);
-	}
+    for (loop = 0; loop < index; loop++) {
+        item = item->GetNext();
+        SDL_assert(item != NULL);
+    }
 
-	return item;
+    return item;
 }
 
 //
@@ -732,23 +727,23 @@ MenuItem* MenuList::GetItem(int index)
 //
 MenuItem* MenuList::FindItem(int id)
 {
-	int loop;
-	MenuItem *item;
+    int loop;
+    MenuItem* item;
 
-	item = menu_chain;
+    item = menu_chain;
 
-	for (loop=0; loop<menu_items; loop++) {
-		// id
-		if (item->GetID() == id) {
-			return item;
-		}
+    for (loop = 0; loop < menu_items; loop++) {
+        // id
+        if (item->GetID() == id) {
+            return item;
+        }
 
-		// next
-		item = item->GetNext();
-		SDL_assert(item != NULL);
-	}
+        // next
+        item = item->GetNext();
+        SDL_assert(item != NULL);
+    }
 
-	return NULL;
+    return NULL;
 }
 
 //
@@ -757,472 +752,470 @@ MenuItem* MenuList::FindItem(int id)
 //
 void MenuList::Draw()
 {
-	Uint32 alpha;
-	Uint32 fore;
-	Uint32 back;
-	int lines;
-	int loop;
-	SDL_Rect rect;
-	SDL_Rect title_rect;
-	MenuItem *item;
+    Uint32 alpha;
+    Uint32 fore;
+    Uint32 back;
+    int lines;
+    int loop;
+    SDL_Rect rect;
+    SDL_Rect title_rect;
+    MenuItem* item;
 
-	// check
-	if ((menu_title == NULL) || (menu_chain == NULL)) {
-		return;
-	}
+    // check
+    if ((menu_title == NULL) || (menu_chain == NULL)) {
+        return;
+    }
 
-	// get color
-	alpha = (Uint32)setting->GetMenuAlpha();
-	alpha <<= 24;
-	fore = MENUITEM_FORE | alpha;
-	back = MENUITEM_BACK | alpha;
+    // get color
+    alpha = (Uint32)setting->GetMenuAlpha();
+    alpha <<= 24;
+    fore = MENUITEM_FORE | alpha;
+    back = MENUITEM_BACK | alpha;
 
-	// get lines
-	lines = menu_items + 1;
-	if (MENUITEM_LINES < lines) {
-		lines = MENUITEM_LINES;
-	}
+    // get lines
+    lines = menu_items + 1;
+    if (MENUITEM_LINES < lines) {
+        lines = MENUITEM_LINES;
+    }
 
-	// get rect
-	rect.x = (SCREEN_WIDTH / 2) - (MENUITEM_WIDTH / 2);
-	rect.y = (SCREEN_HEIGHT / 2) - ((MENUITEM_HEIGHT * MENUITEM_LINES) / 2);
-	rect.w = MENUITEM_WIDTH;
-	rect.h = MENUITEM_HEIGHT * lines;
+    // get rect
+    rect.x = (SCREEN_WIDTH / 2) - (MENUITEM_WIDTH / 2);
+    rect.y = (SCREEN_HEIGHT / 2) - ((MENUITEM_HEIGHT * MENUITEM_LINES) / 2);
+    rect.w = MENUITEM_WIDTH;
+    rect.h = MENUITEM_HEIGHT * lines;
 
-	// all clear
-	title_rect.x = rect.x;
-	title_rect.y = rect.y;
-	title_rect.w = rect.w;
-	title_rect.h = MENUITEM_HEIGHT * MENUITEM_LINES;
-	font->DrawFillRect(frame_buf, &title_rect, MENUITEM_BACK | 0x00000000);
+    // all clear
+    title_rect.x = rect.x;
+    title_rect.y = rect.y;
+    title_rect.w = rect.w;
+    title_rect.h = MENUITEM_HEIGHT * MENUITEM_LINES;
+    font->DrawFillRect(frame_buf, &title_rect, MENUITEM_BACK | 0x00000000);
 
-	// title (outside)
-	title_rect.x = rect.x;
-	title_rect.y = rect.y;
-	title_rect.w = rect.w;
-	title_rect.h = MENUITEM_HEIGHT;
-	font->DrawFillRect(frame_buf, &title_rect, fore);
+    // title (outside)
+    title_rect.x = rect.x;
+    title_rect.y = rect.y;
+    title_rect.w = rect.w;
+    title_rect.h = MENUITEM_HEIGHT;
+    font->DrawFillRect(frame_buf, &title_rect, fore);
 
-	// title (inside)
-	back = MENUITEM_TITLE | alpha;
-	title_rect.x++;
-	title_rect.y++;
-	title_rect.w -= 2;
-	title_rect.h -= 2;
-	font->DrawFillRect(frame_buf, &title_rect, back);
-	font->DrawSjisCenterOr(frame_buf, &title_rect, menu_title, fore);
+    // title (inside)
+    back = MENUITEM_TITLE | alpha;
+    title_rect.x++;
+    title_rect.y++;
+    title_rect.w -= 2;
+    title_rect.h -= 2;
+    font->DrawFillRect(frame_buf, &title_rect, back);
+    font->DrawSjisCenterOr(frame_buf, &title_rect, menu_title, fore);
 
-	// all items
-	for (loop=0; loop<menu_items; loop++) {
-		item = GetItem(loop);
-		item->Draw(&rect, menu_top, menu_items, menu_focus, menu_file);
-	}
+    // all items
+    for (loop = 0; loop < menu_items; loop++) {
+        item = GetItem(loop);
+        item->Draw(&rect, menu_top, menu_items, menu_focus, menu_file);
+    }
 }
 
 //
 // OnKeyDown()
 // key down event
 //
-void MenuList::OnKeyDown(SDL_Event *e)
+void MenuList::OnKeyDown(SDL_Event* e)
 {
-	SDL_Scancode code;
-	MenuItem *item;
-	int count;
-	int loop;
+    SDL_Scancode code;
+    MenuItem* item;
+    int count;
+    int loop;
 
-	// scancode
-	code = e->key.keysym.scancode;
+    // scancode
+    code = e->key.keysym.scancode;
 
-	// count
-	count = 1;
+    // count
+    count = 1;
 
-	switch (code) {
-	case SDL_SCANCODE_F11:
-	case SDL_SCANCODE_F12:
-		app->LeaveMenu();
-		break;
+    switch (code) {
+    case SDL_SCANCODE_F11:
+    case SDL_SCANCODE_F12:
+        app->LeaveMenu();
+        break;
 
 #ifdef __ANDROID__
-	case SDL_SCANCODE_AC_BACK:
+    case SDL_SCANCODE_AC_BACK:
 #endif // __ANDROID__
-	case SDL_SCANCODE_ESCAPE:
-		if (e->key.repeat == 0) {
-			menu->Command(false, MENU_BACK);
-		}
-		break;
+    case SDL_SCANCODE_ESCAPE:
+        if (e->key.repeat == 0) {
+            menu->Command(false, MENU_BACK);
+        }
+        break;
 
-	case SDL_SCANCODE_HOME:
-		if (count == 1) {
-			count = menu_items;
-		}
-		// fall through
+    case SDL_SCANCODE_HOME:
+        if (count == 1) {
+            count = menu_items;
+        }
+    // fall through
 
-	case SDL_SCANCODE_PAGEUP:
-		if (count == 1) {
-			count = MENUITEM_LINES - 1;
-		}
-		// fall through
+    case SDL_SCANCODE_PAGEUP:
+        if (count == 1) {
+            count = MENUITEM_LINES - 1;
+        }
+    // fall through
 
-	case SDL_SCANCODE_UP:
-	case SDL_SCANCODE_KP_8:
-		for (loop=0; loop<count; loop++) {
-			if (menu_focus > 0) {
-				menu_focus--;
-				item = GetItem(menu_focus);
-				item->SetFocus();
-			}
-			if ((menu_focus - menu_top) < (MENUITEM_LINES - 6)) {
-				if (menu_top > 0) {
-					menu_top--;
-				}
-			}
-		}
-		break;
+    case SDL_SCANCODE_UP:
+    case SDL_SCANCODE_KP_8:
+        for (loop = 0; loop < count; loop++) {
+            if (menu_focus > 0) {
+                menu_focus--;
+                item = GetItem(menu_focus);
+                item->SetFocus();
+            }
+            if ((menu_focus - menu_top) < (MENUITEM_LINES - 6)) {
+                if (menu_top > 0) {
+                    menu_top--;
+                }
+            }
+        }
+        break;
 
-	case SDL_SCANCODE_END:
-		if (count == 1) {
-			count = menu_items;
-		}
-		// fall through
+    case SDL_SCANCODE_END:
+        if (count == 1) {
+            count = menu_items;
+        }
+    // fall through
 
-	case SDL_SCANCODE_PAGEDOWN:
-		if (count == 1) {
-			count = MENUITEM_LINES - 1;
-		}
-		// fall through
+    case SDL_SCANCODE_PAGEDOWN:
+        if (count == 1) {
+            count = MENUITEM_LINES - 1;
+        }
+    // fall through
 
-	case SDL_SCANCODE_DOWN:
-	case SDL_SCANCODE_KP_2:
-		for (loop=0; loop<count; loop++) {
-			if (menu_focus < (menu_items - 1)) {
-				menu_focus++;
-				item = GetItem(menu_focus);
-				item->SetFocus();
-			}
-			if ((menu_focus - menu_top) >= (MENUITEM_LINES - 3)) {
-				if ((menu_top + MENUITEM_LINES - 2) < (menu_items - 1)) {
-					menu_top++;
-				}
-			}
-		}
-		break;
+    case SDL_SCANCODE_DOWN:
+    case SDL_SCANCODE_KP_2:
+        for (loop = 0; loop < count; loop++) {
+            if (menu_focus < (menu_items - 1)) {
+                menu_focus++;
+                item = GetItem(menu_focus);
+                item->SetFocus();
+            }
+            if ((menu_focus - menu_top) >= (MENUITEM_LINES - 3)) {
+                if ((menu_top + MENUITEM_LINES - 2) < (menu_items - 1)) {
+                    menu_top++;
+                }
+            }
+        }
+        break;
 
-	case SDL_SCANCODE_RIGHT:
-	case SDL_SCANCODE_KP_6:
-		item = GetItem(menu_focus);
-		if (item->GetType() == MenuItem::SliderItem) {
-			item->UpDownSlider(true);
-			item = GetItem(menu_focus);
-			menu->Command(false, item->GetID());
-		}
-		break;
+    case SDL_SCANCODE_RIGHT:
+    case SDL_SCANCODE_KP_6:
+        item = GetItem(menu_focus);
+        if (item->GetType() == MenuItem::SliderItem) {
+            item->UpDownSlider(true);
+            item = GetItem(menu_focus);
+            menu->Command(false, item->GetID());
+        }
+        break;
 
-	case SDL_SCANCODE_LEFT:
-	case SDL_SCANCODE_KP_4:
-		item = GetItem(menu_focus);
-		if (item->GetType() == MenuItem::SliderItem) {
-			item->UpDownSlider(false);
-			item = GetItem(menu_focus);
-			menu->Command(false, item->GetID());
-		}
-		break;
+    case SDL_SCANCODE_LEFT:
+    case SDL_SCANCODE_KP_4:
+        item = GetItem(menu_focus);
+        if (item->GetType() == MenuItem::SliderItem) {
+            item->UpDownSlider(false);
+            item = GetItem(menu_focus);
+            menu->Command(false, item->GetID());
+        }
+        break;
 
-	case SDL_SCANCODE_RETURN:
-	case SDL_SCANCODE_KP_ENTER:
-		if (e->key.repeat == 0) {
-			item = GetItem(menu_focus);
-			menu->Command(false, item->GetID());
-		}
-		break;
+    case SDL_SCANCODE_RETURN:
+    case SDL_SCANCODE_KP_ENTER:
+        if (e->key.repeat == 0) {
+            item = GetItem(menu_focus);
+            menu->Command(false, item->GetID());
+        }
+        break;
 
-	default:
-		break;
-	}
+    default:
+        break;
+    }
 }
 
 //
 // OnMouseMotion()
 // mouse motion event
 //
-void MenuList::OnMouseMotion(SDL_Event *e)
+void MenuList::OnMouseMotion(SDL_Event* e)
 {
-	int x;
-	int y;
-	int sy;
-	MenuItem *item;
-	SDL_Event evt;
-	Uint32 button;
-	Uint32 tick;
+    int x;
+    int y;
+    int sy;
+    MenuItem* item;
+    SDL_Event evt;
+    Uint32 button;
+    Uint32 tick;
 
-	// true mouse device only
-	if (e->motion.which == SDL_TOUCH_MOUSEID) {
-		return;
-	}
+    // true mouse device only
+    if (e->motion.which == SDL_TOUCH_MOUSEID) {
+        return;
+    }
 
-	// convert point
-	x = e->motion.x;
-	y = e->motion.y;
-	if (video->ConvertPoint(&x, &y) == false) {
-		return;
-	}
+    // convert point
+    x = e->motion.x;
+    y = e->motion.y;
+    if (video->ConvertPoint(&x, &y) == false) {
+        return;
+    }
 
-	// save screen  y
-	sy = y;
+    // save screen  y
+    sy = y;
 
-	// get button state
-	button = SDL_GetMouseState(NULL, NULL);
+    // get button state
+    button = SDL_GetMouseState(NULL, NULL);
 
-	// position to item
-	if (PosToItem(&x, &y) == false) {
-		// check button
-		if ((button & SDL_BUTTON_LMASK) == 0) {
-			return;
-		}
+    // position to item
+    if (PosToItem(&x, &y) == false) {
+        // check button
+        if ((button & SDL_BUTTON_LMASK) == 0) {
+            return;
+        }
 
-		// interval (repeat)
-		tick = SDL_GetTicks();
-		if ((tick & MENU_MOTION_TICK_MASK) == (menu_tick & MENU_MOTION_TICK_MASK)) {
-			return;
-		}
-		menu_tick = tick;
+        // interval (repeat)
+        tick = SDL_GetTicks();
+        if ((tick & MENU_MOTION_TICK_MASK) == (menu_tick & MENU_MOTION_TICK_MASK)) {
+            return;
+        }
+        menu_tick = tick;
 
-		if (IsUp(sy) == true) {
-			evt.key.repeat = 0;
-			evt.key.keysym.sym = SDLK_UP;
-			evt.key.keysym.scancode = SDL_SCANCODE_UP;
-			OnKeyDown(&evt);
-		}
-		if (IsDown(sy) == true) {
-			evt.key.repeat = 0;
-			evt.key.keysym.sym = SDLK_DOWN;
-			evt.key.keysym.scancode = SDL_SCANCODE_DOWN;
-			OnKeyDown(&evt);
-		}
-		return;
-	}
+        if (IsUp(sy) == true) {
+            evt.key.repeat = 0;
+            evt.key.keysym.sym = SDLK_UP;
+            evt.key.keysym.scancode = SDL_SCANCODE_UP;
+            OnKeyDown(&evt);
+        }
+        if (IsDown(sy) == true) {
+            evt.key.repeat = 0;
+            evt.key.keysym.sym = SDLK_DOWN;
+            evt.key.keysym.scancode = SDL_SCANCODE_DOWN;
+            OnKeyDown(&evt);
+        }
+        return;
+    }
 
-	// set focus
-	menu_focus = menu_top + y;
-	item = GetItem(menu_focus);
-	item->SetFocus();
+    // set focus
+    menu_focus = menu_top + y;
+    item = GetItem(menu_focus);
+    item->SetFocus();
 
-	// slider
-	if ((button & SDL_BUTTON_LMASK) != 0) {
-		if (item->GetType() == MenuItem::SliderItem) {
-			item->SetSlider(x, MENUITEM_WIDTH);
-			menu->Command(true, item->GetID());
-		}
-	}
+    // slider
+    if ((button & SDL_BUTTON_LMASK) != 0) {
+        if (item->GetType() == MenuItem::SliderItem) {
+            item->SetSlider(x, MENUITEM_WIDTH);
+            menu->Command(true, item->GetID());
+        }
+    }
 }
 
 //
 // OnMouseButtonDown()
 // mouse button down event
 //
-void MenuList::OnMouseButtonDown(SDL_Event *e)
+void MenuList::OnMouseButtonDown(SDL_Event* e)
 {
-	int x;
-	int y;
-	int sy;
-	MenuItem *item;
-	SDL_Event evt;
+    int x;
+    int y;
+    int sy;
+    MenuItem* item;
+    SDL_Event evt;
 
-	// true mouse device only
-	if (e->motion.which == SDL_TOUCH_MOUSEID) {
-		return;
-	}
+    // true mouse device only
+    if (e->motion.which == SDL_TOUCH_MOUSEID) {
+        return;
+    }
 
-	// right button ?
-	if ((e->button.button == SDL_BUTTON_RIGHT) && (e->button.state == SDL_PRESSED)) {
-		// right button
-		return;
-	}
+    // right button ?
+    if ((e->button.button == SDL_BUTTON_RIGHT) && (e->button.state == SDL_PRESSED)) {
+        // right button
+        return;
+    }
 
-	// left button ?
-	if ((e->button.button == SDL_BUTTON_LEFT) && (e->button.state == SDL_PRESSED)) {
-		// left button -> save for ProcessMenu()
-		mouse_down = true;
-	}
+    // left button ?
+    if ((e->button.button == SDL_BUTTON_LEFT) && (e->button.state == SDL_PRESSED)) {
+        // left button -> save for ProcessMenu()
+        mouse_down = true;
+    }
 
-	// convert point
-	x = e->button.x;
-	y = e->button.y;
-	if (video->ConvertPoint(&x, &y) == false) {
-		return;
-	}
+    // convert point
+    x = e->button.x;
+    y = e->button.y;
+    if (video->ConvertPoint(&x, &y) == false) {
+        return;
+    }
 
-	// save screen y
-	sy = y;
+    // save screen y
+    sy = y;
 
-	// position to item
-	if (PosToItem(&x, &y) == false) {
-		if (IsUp(sy) == true) {
-			evt.key.repeat = 0;
-			evt.key.keysym.sym = SDLK_UP;
-			evt.key.keysym.scancode = SDL_SCANCODE_UP;
-			OnKeyDown(&evt);
-		}
-		if (IsDown(sy) == true) {
-			evt.key.repeat = 0;
-			evt.key.keysym.sym = SDLK_DOWN;
-			evt.key.keysym.scancode = SDL_SCANCODE_DOWN;
-			OnKeyDown(&evt);
-		}
-		return;
-	}
+    // position to item
+    if (PosToItem(&x, &y) == false) {
+        if (IsUp(sy) == true) {
+            evt.key.repeat = 0;
+            evt.key.keysym.sym = SDLK_UP;
+            evt.key.keysym.scancode = SDL_SCANCODE_UP;
+            OnKeyDown(&evt);
+        }
+        if (IsDown(sy) == true) {
+            evt.key.repeat = 0;
+            evt.key.keysym.sym = SDLK_DOWN;
+            evt.key.keysym.scancode = SDL_SCANCODE_DOWN;
+            OnKeyDown(&evt);
+        }
+        return;
+    }
 
-	// get item
-	menu_focus = menu_top + y;
-	item = GetItem(menu_focus);
-	item->SetFocus();
+    // get item
+    menu_focus = menu_top + y;
+    item = GetItem(menu_focus);
+    item->SetFocus();
 
-	// slider
-	if (item->GetType() == MenuItem::SliderItem) {
-		item->SetSlider(x, MENUITEM_WIDTH);
-	}
+    // slider
+    if (item->GetType() == MenuItem::SliderItem) {
+        item->SetSlider(x, MENUITEM_WIDTH);
+    }
 
-	// command
-	menu->Command(true, item->GetID());
+    // command
+    menu->Command(true, item->GetID());
 }
 
 //
 // OnMouseButtonUp()
 // mouse button up event
 //
-void MenuList::OnMouseButtonUp(SDL_Event *e)
+void MenuList::OnMouseButtonUp(SDL_Event* e)
 {
-	int x;
-	int y;
-	int focus;
-	MenuItem *item;
+    int x;
+    int y;
+    int focus;
+    MenuItem* item;
 
-	// true mouse device only
-	if (e->motion.which == SDL_TOUCH_MOUSEID) {
-		return;
-	}
+    // true mouse device only
+    if (e->motion.which == SDL_TOUCH_MOUSEID) {
+        return;
+    }
 
-	// MENU_ENTER_THRES ? (release mouse after entering menu immediately)
-	if ((Uint32)(SDL_GetTicks() - mouse_tick) < MENU_ENTER_THRES) {
-		return;
-	}
+    // MENU_ENTER_THRES ? (release mouse after entering menu immediately)
+    if ((Uint32)(SDL_GetTicks() - mouse_tick) < MENU_ENTER_THRES) {
+        return;
+    }
 
-	// right button ?
-	if ((e->button.button == SDL_BUTTON_RIGHT) && (e->button.state == SDL_RELEASED)) {
-		// right button -> back
-		menu->Command(false, MENU_BACK);
-		return;
-	}
+    // right button ?
+    if ((e->button.button == SDL_BUTTON_RIGHT) && (e->button.state == SDL_RELEASED)) {
+        // right button -> back
+        menu->Command(false, MENU_BACK);
+        return;
+    }
 
-	// convert point
-	x = e->button.x;
-	y = e->button.y;
-	if (video->ConvertPoint(&x, &y) == false) {
-		return;
-	}
+    // convert point
+    x = e->button.x;
+    y = e->button.y;
+    if (video->ConvertPoint(&x, &y) == false) {
+        return;
+    }
 
-	// position to item
-	if (PosToItem(&x, &y) == false) {
-		return;
-	}
+    // position to item
+    if (PosToItem(&x, &y) == false) {
+        return;
+    }
 
-	// compare focus item
-	focus = menu_top + y;
-	if (focus == menu_focus) {
-		// get item and command
-		item = GetItem(menu_focus);
-		menu->Command(false, item->GetID());
-	}
+    // compare focus item
+    focus = menu_top + y;
+    if (focus == menu_focus) {
+        // get item and command
+        item = GetItem(menu_focus);
+        menu->Command(false, item->GetID());
+    }
 }
 
 //
 // OnMouseWheel()
 // mouse wheel event
 //
-void MenuList::OnMouseWheel(SDL_Event *e)
+void MenuList::OnMouseWheel(SDL_Event* e)
 {
-	SDL_Event evt;
-	int loop;
-	int x;
-	int y;
-	MenuItem *item;
-	bool inside;
+    SDL_Event evt;
+    int loop;
+    int x;
+    int y;
+    MenuItem* item;
+    bool inside;
 
-	// true mouse device only
-	if (e->wheel.which == SDL_TOUCH_MOUSEID) {
-		return;
-	}
+    // true mouse device only
+    if (e->wheel.which == SDL_TOUCH_MOUSEID) {
+        return;
+    }
 
-	// get current position
-	x = 0;
-	y = 0;
-	SDL_GetMouseState(&x, &y);
+    // get current position
+    x = 0;
+    y = 0;
+    SDL_GetMouseState(&x, &y);
 
-	// convert point
-	inside = false;
-	if (video->ConvertPoint(&x, &y) == true) {
-		if (PosToItem(&x, &y) == true) {
-			inside = true;
-		}
-	}
+    // convert point
+    inside = false;
+    if (video->ConvertPoint(&x, &y) == true) {
+        if (PosToItem(&x, &y) == true) {
+            inside = true;
+        }
+    }
 
-	// init
-	evt.key.repeat = 0;
-	evt.key.keysym.scancode = SDL_SCANCODE_UNKNOWN;
+    // init
+    evt.key.repeat = 0;
+    evt.key.keysym.scancode = SDL_SCANCODE_UNKNOWN;
 
-	// up
-	if (e->wheel.y > 0) {
-		evt.key.keysym.sym = SDLK_UP;
-		evt.key.keysym.scancode = SDL_SCANCODE_UP;
-		for (loop=0; loop<e->wheel.y; loop++) {
-			if (inside == true) {
-				if (menu_top > 0) {
-					menu_top--;
-					continue;
-				}
-			}
-			OnKeyDown(&evt);
-		}
-	}
+    // up
+    if (e->wheel.y > 0) {
+        evt.key.keysym.sym = SDLK_UP;
+        evt.key.keysym.scancode = SDL_SCANCODE_UP;
+        for (loop = 0; loop < e->wheel.y; loop++) {
+            if (inside == true) {
+                if (menu_top > 0) {
+                    menu_top--;
+                    continue;
+                }
+            }
+            OnKeyDown(&evt);
+        }
+    }
 
-	// down
-	if (e->wheel.y < 0) {
-		evt.key.keysym.sym = SDLK_DOWN;
-		evt.key.keysym.scancode = SDL_SCANCODE_DOWN;
-		for (loop=0; loop<(-e->wheel.y); loop++) {
-			if (inside == true) {
-				if ((menu_top + MENUITEM_LINES - 2) < (menu_items - 1)) {
-					menu_top++;
-					continue;
-				}
-			}
-			OnKeyDown(&evt);
-		}
-	}
+    // down
+    if (e->wheel.y < 0) {
+        evt.key.keysym.sym = SDLK_DOWN;
+        evt.key.keysym.scancode = SDL_SCANCODE_DOWN;
+        for (loop = 0; loop < (-e->wheel.y); loop++) {
+            if (inside == true) {
+                if ((menu_top + MENUITEM_LINES - 2) < (menu_items - 1)) {
+                    menu_top++;
+                    continue;
+                }
+            }
+            OnKeyDown(&evt);
+        }
+    }
 
-	// position to item
-	if (inside == true) {
-		menu_focus = menu_top + y;
-		if (menu_focus >= menu_items) {
-			menu_focus = menu_items - 1;
-		}
-	}
-	else {
-		if (menu_focus < menu_top) {
-			menu_focus = menu_top;
-		}
-		else {
-			if (menu_focus > (menu_top + MENUITEM_LINES - 2)) {
-				menu_focus = menu_top + MENUITEM_LINES - 2;
-				if (menu_focus >= menu_items) {
-					menu_focus = menu_items - 1;
-				}
-			}
-		}
-	}
+    // position to item
+    if (inside == true) {
+        menu_focus = menu_top + y;
+        if (menu_focus >= menu_items) {
+            menu_focus = menu_items - 1;
+        }
+    } else {
+        if (menu_focus < menu_top) {
+            menu_focus = menu_top;
+        } else {
+            if (menu_focus > (menu_top + MENUITEM_LINES - 2)) {
+                menu_focus = menu_top + MENUITEM_LINES - 2;
+                if (menu_focus >= menu_items) {
+                    menu_focus = menu_items - 1;
+                }
+            }
+        }
+    }
 
-	// set focus
-	item = GetItem(menu_focus);
-	item->SetFocus();
+    // set focus
+    item = GetItem(menu_focus);
+    item->SetFocus();
 }
 
 //
@@ -1231,275 +1224,274 @@ void MenuList::OnMouseWheel(SDL_Event *e)
 //
 void MenuList::OnJoystick()
 {
-	Uint32 status[2];
-	SDL_Event evt;
+    Uint32 status[2];
+    SDL_Event evt;
 
-	// get axis and button
-	input->GetJoystick(status);
+    // get axis and button
+    input->GetJoystick(status);
 
-	// disable repeat if button is down
-	if ((status[0] & 0x30) != 0) {
-		// not repeat for button
-		if ((joy_prev & 0x30) != 0) {
-			return;
-		}
-	}
+    // disable repeat if button is down
+    if ((status[0] & 0x30) != 0) {
+        // not repeat for button
+        if ((joy_prev & 0x30) != 0) {
+            return;
+        }
+    }
 
-	// init
-	evt.key.repeat = 0;
-	evt.key.keysym.scancode = SDL_SCANCODE_UNKNOWN;
+    // init
+    evt.key.repeat = 0;
+    evt.key.keysym.scancode = SDL_SCANCODE_UNKNOWN;
 
-	// up
-	if ((status[0] & 0x01) != 0) {
-		evt.key.keysym.sym = SDLK_UP;
-		evt.key.keysym.scancode = SDL_SCANCODE_UP;
-	}
+    // up
+    if ((status[0] & 0x01) != 0) {
+        evt.key.keysym.sym = SDLK_UP;
+        evt.key.keysym.scancode = SDL_SCANCODE_UP;
+    }
 
-	// down
-	if ((status[0] & 0x02) != 0) {
-		evt.key.keysym.sym = SDLK_DOWN;
-		evt.key.keysym.scancode = SDL_SCANCODE_DOWN;
-	}
+    // down
+    if ((status[0] & 0x02) != 0) {
+        evt.key.keysym.sym = SDLK_DOWN;
+        evt.key.keysym.scancode = SDL_SCANCODE_DOWN;
+    }
 
-	// left
-	if ((status[0] & 0x04) != 0) {
-		evt.key.keysym.sym = SDLK_LEFT;
-		evt.key.keysym.scancode = SDL_SCANCODE_LEFT;
-	}
+    // left
+    if ((status[0] & 0x04) != 0) {
+        evt.key.keysym.sym = SDLK_LEFT;
+        evt.key.keysym.scancode = SDL_SCANCODE_LEFT;
+    }
 
-	// right
-	if ((status[0] & 0x08) != 0) {
-		evt.key.keysym.sym = SDLK_RIGHT;
-		evt.key.keysym.scancode = SDL_SCANCODE_RIGHT;
-	}
+    // right
+    if ((status[0] & 0x08) != 0) {
+        evt.key.keysym.sym = SDLK_RIGHT;
+        evt.key.keysym.scancode = SDL_SCANCODE_RIGHT;
+    }
 
-	// button 0
-	if ((status[0] & 0x10) != 0) {
-		evt.key.keysym.sym = SDLK_RETURN;
-		evt.key.keysym.scancode = SDL_SCANCODE_RETURN;
-	}
+    // button 0
+    if ((status[0] & 0x10) != 0) {
+        evt.key.keysym.sym = SDLK_RETURN;
+        evt.key.keysym.scancode = SDL_SCANCODE_RETURN;
+    }
 
-	// button 1
-	if ((status[0] & 0x20) != 0) {
-		evt.key.keysym.sym = SDLK_ESCAPE;
-		evt.key.keysym.scancode = SDL_SCANCODE_ESCAPE;
-	}
+    // button 1
+    if ((status[0] & 0x20) != 0) {
+        evt.key.keysym.sym = SDLK_ESCAPE;
+        evt.key.keysym.scancode = SDL_SCANCODE_ESCAPE;
+    }
 
-	// emulate key down
-	if (evt.key.keysym.scancode != SDL_SCANCODE_UNKNOWN) {
-		if ((joy_prev & 0x0f) == 0) {
-			// first key down
-			OnKeyDown(&evt);
+    // emulate key down
+    if (evt.key.keysym.scancode != SDL_SCANCODE_UNKNOWN) {
+        if ((joy_prev & 0x0f) == 0) {
+            // first key down
+            OnKeyDown(&evt);
 
-			joy_tick = SDL_GetTicks();
-			joy_diff = MENU_JOY_FIRST;
-		}
-		else {
-			// repeat
-			if ((Uint32)(SDL_GetTicks() - joy_tick) >= joy_diff) {
-				// repeat key down
-				OnKeyDown(&evt);
+            joy_tick = SDL_GetTicks();
+            joy_diff = MENU_JOY_FIRST;
+        } else {
+            // repeat
+            if ((Uint32)(SDL_GetTicks() - joy_tick) >= joy_diff) {
+                // repeat key down
+                OnKeyDown(&evt);
 
-				joy_diff += MENU_JOY_REPEAT;
-			}
-		}
-	}
+                joy_diff += MENU_JOY_REPEAT;
+            }
+        }
+    }
 
-	// save joy_prev
-	joy_prev = (status[0] & 0x3f);
+    // save joy_prev
+    joy_prev = (status[0] & 0x3f);
 }
 
 //
 // OnFingerDown()
 // finger down
 //
-void MenuList::OnFingerDown(SDL_Event *e)
+void MenuList::OnFingerDown(SDL_Event* e)
 {
-	int x;
-	int y;
-	MenuItem *item;
-	bool result;
+    int x;
+    int y;
+    MenuItem* item;
+    bool result;
 
-	// finger position to item
-	x = 0;
-	y = 0;
-	result = FingerToItem(e->tfinger.x, e->tfinger.y, &x, &y);
+    // finger position to item
+    x = 0;
+    y = 0;
+    result = FingerToItem(e->tfinger.x, e->tfinger.y, &x, &y);
 
-	// save x, y, tick
-	finger_x = x;
-	finger_y = y;
-	finger_tick = SDL_GetTicks();
+    // save x, y, tick
+    finger_x = x;
+    finger_y = y;
+    finger_tick = SDL_GetTicks();
 
-	// check result
-	if (result == false) {
-		return;
-	}
+    // check result
+    if (result == false) {
+        return;
+    }
 
-	// get item
-	menu_focus = menu_top + y;
-	item = GetItem(menu_focus);
-	item->SetFocus();
+    // get item
+    menu_focus = menu_top + y;
+    item = GetItem(menu_focus);
+    item->SetFocus();
 
-	// slider
-	if (item->GetType() == MenuItem::SliderItem) {
-		item->SetSlider(x, MENUITEM_WIDTH);
-	}
+    // slider
+    if (item->GetType() == MenuItem::SliderItem) {
+        item->SetSlider(x, MENUITEM_WIDTH);
+    }
 
-	// command
-	menu->Command(true, item->GetID());
+    // command
+    menu->Command(true, item->GetID());
 }
 
 //
 // OnFingerUp()
 // finger up
 //
-void MenuList::OnFingerUp(SDL_Event *e)
+void MenuList::OnFingerUp(SDL_Event* e)
 {
-	int x;
-	int y;
-	int focus;
-	MenuItem *item;
-	bool result;
+    int x;
+    int y;
+    int focus;
+    MenuItem* item;
+    bool result;
 
-	// finger position to item
-	x = 0;
-	y = 0;
-	result = FingerToItem(e->tfinger.x, e->tfinger.y, &x, &y);
+    // finger position to item
+    x = 0;
+    y = 0;
+    result = FingerToItem(e->tfinger.x, e->tfinger.y, &x, &y);
 
-	// check finger_x,finger_y, finger_tick
-	if ((x < (finger_x - FINGER_POS_THRES)) || (x > (finger_x + FINGER_POS_THRES))) {
-		return;
-	}
-	if ((y < (finger_y - FINGER_POS_THRES)) || (y > (finger_y + FINGER_POS_THRES))) {
-		return;
-	}
-	if ((Uint32)(SDL_GetTicks() - finger_tick) > FINGER_TIME_THRES) {
-		return;
-	}
+    // check finger_x,finger_y, finger_tick
+    if ((x < (finger_x - FINGER_POS_THRES)) || (x > (finger_x + FINGER_POS_THRES))) {
+        return;
+    }
+    if ((y < (finger_y - FINGER_POS_THRES)) || (y > (finger_y + FINGER_POS_THRES))) {
+        return;
+    }
+    if ((Uint32)(SDL_GetTicks() - finger_tick) > FINGER_TIME_THRES) {
+        return;
+    }
 
-	// outside area -> back
-	if (result == false) {
-		menu->CmdBack();
-		return;
-	}
+    // outside area -> back
+    if (result == false) {
+        menu->CmdBack();
+        return;
+    }
 
-	// compare focus item
-	focus = menu_top + y;
-	if (focus == menu_focus) {
-		// get item and command
-		item = GetItem(menu_focus);
-		menu->Command(false, item->GetID());
-	}
+    // compare focus item
+    focus = menu_top + y;
+    if (focus == menu_focus) {
+        // get item and command
+        item = GetItem(menu_focus);
+        menu->Command(false, item->GetID());
+    }
 }
 
 //
 // OnFingerMotion()
 // finger motion
 //
-void MenuList::OnFingerMotion(SDL_Event *e)
+void MenuList::OnFingerMotion(SDL_Event* e)
 {
-	int x;
-	int y;
-	MenuItem *item;
+    int x;
+    int y;
+    MenuItem* item;
 
-	// finger position to item
-	x = 0;
-	y = 0;
-	if (FingerToItem(e->tfinger.x, e->tfinger.y, &x, &y) == false) {
-		if (menu_focus == (menu_items - 1)) {
-			// spread if only one item is shown
-			if (IsLow(x, y) == true) {
-				if (menu_top > 0) {
-					menu_top--;
-				}
+    // finger position to item
+    x = 0;
+    y = 0;
+    if (FingerToItem(e->tfinger.x, e->tfinger.y, &x, &y) == false) {
+        if (menu_focus == (menu_items - 1)) {
+            // spread if only one item is shown
+            if (IsLow(x, y) == true) {
+                if (menu_top > 0) {
+                    menu_top--;
+                }
 
-				item = GetItem(menu_focus);
-				item->SetFocus();
-			}
-		}
-		return;
-	}
+                item = GetItem(menu_focus);
+                item->SetFocus();
+            }
+        }
+        return;
+    }
 
-	menu_top = (menu_focus - y);
-	if (menu_top < 0) {
-		menu_top = 0;
-	}
+    menu_top = (menu_focus - y);
+    if (menu_top < 0) {
+        menu_top = 0;
+    }
 
-	item = GetItem(menu_focus);
-	item->SetFocus();
+    item = GetItem(menu_focus);
+    item->SetFocus();
 
-	// slider
-	if (item->GetType() == MenuItem::SliderItem) {
-		item->SetSlider(x, MENUITEM_WIDTH);
-		menu->Command(true, item->GetID());
-	}
+    // slider
+    if (item->GetType() == MenuItem::SliderItem) {
+        item->SetSlider(x, MENUITEM_WIDTH);
+        menu->Command(true, item->GetID());
+    }
 }
 
 //
 // FingerToItem()
 // finger position to item
 //
-bool MenuList::FingerToItem(float tx, float ty, int *x, int *y)
+bool MenuList::FingerToItem(float tx, float ty, int* x, int* y)
 {
-	// convert x, y
-	if (video->ConvertFinger(tx, ty, x, y) == false) {
-		return false;
-	}
+    // convert x, y
+    if (video->ConvertFinger(tx, ty, x, y) == false) {
+        return false;
+    }
 
-	return PosToItem(x, y);
+    return PosToItem(x, y);
 }
 
 //
 // PosToItem()
 // mouse position to item
 //
-bool MenuList::PosToItem(int *x, int *y)
+bool MenuList::PosToItem(int* x, int* y)
 {
-	int xx;
-	int yy;
+    int xx;
+    int yy;
 
-	// get
-	xx = *x;
-	yy = *y;
+    // get
+    xx = *x;
+    yy = *y;
 
-	// check x
-	if (xx < ((SCREEN_WIDTH / 2)- (MENUITEM_WIDTH / 2))) {
-		return false;
-	}
-	if (xx > ((SCREEN_WIDTH / 2) + (MENUITEM_WIDTH / 2))) {
-		return false;
-	}
+    // check x
+    if (xx < ((SCREEN_WIDTH / 2) - (MENUITEM_WIDTH / 2))) {
+        return false;
+    }
+    if (xx > ((SCREEN_WIDTH / 2) + (MENUITEM_WIDTH / 2))) {
+        return false;
+    }
 
-	// xx
-	xx -= ((SCREEN_WIDTH / 2) - (MENUITEM_WIDTH / 2));
+    // xx
+    xx -= ((SCREEN_WIDTH / 2) - (MENUITEM_WIDTH / 2));
 
-	// check y
-	yy -= ((SCREEN_HEIGHT / 2) - ((MENUITEM_HEIGHT * MENUITEM_LINES) / 2));
-	if (yy < 0) {
-		return false;
-	}
+    // check y
+    yy -= ((SCREEN_HEIGHT / 2) - ((MENUITEM_HEIGHT * MENUITEM_LINES) / 2));
+    if (yy < 0) {
+        return false;
+    }
 
-	// divide
-	yy /= MENUITEM_HEIGHT;
+    // divide
+    yy /= MENUITEM_HEIGHT;
 
-	// title ?
-	if (yy == 0) {
-		return false;
-	}
-	if (yy >= MENUITEM_LINES) {
-		return false;
-	}
-	yy--;
+    // title ?
+    if (yy == 0) {
+        return false;
+    }
+    if (yy >= MENUITEM_LINES) {
+        return false;
+    }
+    yy--;
 
-	// over ?
-	if ((menu_top + yy) >= menu_items) {
-		return false;
-	}
+    // over ?
+    if ((menu_top + yy) >= menu_items) {
+        return false;
+    }
 
-	// ok
-	*x = xx;
-	*y = yy;
-	return true;
+    // ok
+    *x = xx;
+    *y = yy;
+    return true;
 }
 
 //
@@ -1508,14 +1500,14 @@ bool MenuList::PosToItem(int *x, int *y)
 //
 bool MenuList::IsUp(int y)
 {
-	// check y
-	if (y <= (SCREEN_HEIGHT / 2)) {
-		if (menu_focus > 0) {
-			return true;
-		}
-	}
+    // check y
+    if (y <= (SCREEN_HEIGHT / 2)) {
+        if (menu_focus > 0) {
+            return true;
+        }
+    }
 
-	return false;
+    return false;
 }
 
 //
@@ -1524,14 +1516,14 @@ bool MenuList::IsUp(int y)
 //
 bool MenuList::IsDown(int y)
 {
-	// check y
-	if (y > (SCREEN_HEIGHT / 2)) {
-		if (menu_focus < (menu_items - 1)) {
-			return true;
-		}
-	}
+    // check y
+    if (y > (SCREEN_HEIGHT / 2)) {
+        if (menu_focus < (menu_items - 1)) {
+            return true;
+        }
+    }
 
-	return false;
+    return false;
 }
 
 //
@@ -1540,36 +1532,36 @@ bool MenuList::IsDown(int y)
 //
 bool MenuList::IsLow(int x, int y)
 {
-	// check x
-	if (x < ((SCREEN_WIDTH / 2)- (MENUITEM_WIDTH / 2))) {
-		return false;
-	}
-	if (x >= ((SCREEN_WIDTH / 2) + (MENUITEM_WIDTH / 2))) {
-		return false;
-	}
+    // check x
+    if (x < ((SCREEN_WIDTH / 2) - (MENUITEM_WIDTH / 2))) {
+        return false;
+    }
+    if (x >= ((SCREEN_WIDTH / 2) + (MENUITEM_WIDTH / 2))) {
+        return false;
+    }
 
-	// x
-	x -= ((SCREEN_WIDTH / 2) - (MENUITEM_WIDTH / 2));
+    // x
+    x -= ((SCREEN_WIDTH / 2) - (MENUITEM_WIDTH / 2));
 
-	// check y
-	y -= ((SCREEN_HEIGHT / 2) - ((MENUITEM_HEIGHT * MENUITEM_LINES) / 2));
-	if (y < 0) {
-		return false;
-	}
+    // check y
+    y -= ((SCREEN_HEIGHT / 2) - ((MENUITEM_HEIGHT * MENUITEM_LINES) / 2));
+    if (y < 0) {
+        return false;
+    }
 
-	// divide
-	y /= MENUITEM_HEIGHT;
+    // divide
+    y /= MENUITEM_HEIGHT;
 
-	// title ?
-	if (y == 0) {
-		return false;
-	}
-	if (y >= MENUITEM_LINES) {
-		return false;
-	}
+    // title ?
+    if (y == 0) {
+        return false;
+    }
+    if (y >= MENUITEM_LINES) {
+        return false;
+    }
 
-	// ok
-	return true;
+    // ok
+    return true;
 }
 
 #endif // SDL

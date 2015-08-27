@@ -21,8 +21,8 @@
 //
 // defines
 //
-#define DISK_NEXT_FRAME			32
-										// frames to set next bank
+#define DISK_NEXT_FRAME 32
+// frames to set next bank
 
 //
 // DiskManager()
@@ -30,23 +30,23 @@
 //
 DiskManager::DiskManager()
 {
-	// object
-	vm = NULL;
-	upd765a = NULL;
+    // object
+    vm = NULL;
+    upd765a = NULL;
 
-	// others
-	drive = 0;
-	ready = false;
-	readonly = false;
-	name_list = NULL;
-	wp_list = NULL;
-	signal = 0;
-	path[0] = '\0';
-	dir[0] = '\0';
-	state_path[0] = '\0';
-	next_bank = 0;
-	next_timer = 0;
-	nullstr[0] = '\0';
+    // others
+    drive = 0;
+    ready = false;
+    readonly = false;
+    name_list = NULL;
+    wp_list = NULL;
+    signal = 0;
+    path[0] = '\0';
+    dir[0] = '\0';
+    state_path[0] = '\0';
+    next_bank = 0;
+    next_timer = 0;
+    nullstr[0] = '\0';
 }
 
 //
@@ -55,26 +55,26 @@ DiskManager::DiskManager()
 //
 DiskManager::~DiskManager()
 {
-	Deinit();
+    Deinit();
 }
 
 //
 // Init()
 // initialize
 //
-bool DiskManager::Init(VM *v, int drv)
+bool DiskManager::Init(VM* v, int drv)
 {
-	// get and save object
-	vm = v;
-	upd765a = (UPD765A*)vm->get_device(11);
+    // get and save object
+    vm = v;
+    upd765a = (UPD765A*)vm->get_device(11);
 
-	// record drive
-	drive = drv;
+    // record drive
+    drive = drv;
 
-	// not ready
-	ready = false;
+    // not ready
+    ready = false;
 
-	return true;
+    return true;
 }
 
 //
@@ -83,53 +83,53 @@ bool DiskManager::Init(VM *v, int drv)
 //
 void DiskManager::Deinit()
 {
-	// close current disk
-	Close();
+    // close current disk
+    Close();
 }
 
 //
 // SetVM()
 // re-set vm
 //
-void DiskManager::SetVM(VM *v)
+void DiskManager::SetVM(VM* v)
 {
-	// get and save object
-	vm = v;
-	upd765a = (UPD765A*)vm->get_device(11);
+    // get and save object
+    vm = v;
+    upd765a = (UPD765A*)vm->get_device(11);
 }
 
 //
 // Open()
 // open disk
 //
-bool DiskManager::Open(const char *filename, int bank)
+bool DiskManager::Open(const char* filename, int bank)
 {
-	char *ptr;
-	char *last;
+    char* ptr;
+    char* last;
 
-	// save path
-	if (strlen(filename) >= sizeof(path)) {
-		return false;
-	}
-	strcpy(path, filename);
+    // save path
+    if (strlen(filename) >= sizeof(path)) {
+        return false;
+    }
+    strcpy(path, filename);
 
-	// save directory
-	strcpy(dir, path);
-	ptr = dir;
-	last = dir;
+    // save directory
+    strcpy(dir, path);
+    ptr = dir;
+    last = dir;
 
-	// search last '\\' or '/'
-	while (*ptr != '\0') {
-		if ((*ptr == '\\') || (*ptr == '/')) {
-			last = ptr;
-		}
-		ptr++;
-	}
+    // search last '\\' or '/'
+    while (*ptr != '\0') {
+        if ((*ptr == '\\') || (*ptr == '/')) {
+            last = ptr;
+        }
+        ptr++;
+    }
 
-	// end mark
-	last[1] = '\0';
+    // end mark
+    last[1] = '\0';
 
-	return Open(bank);
+    return Open(bank);
 }
 
 //
@@ -138,29 +138,28 @@ bool DiskManager::Open(const char *filename, int bank)
 //
 bool DiskManager::Open(int bank)
 {
-	// close
-	Close();
+    // close
+    Close();
 
-	// analyze
-	if (Analyze() == false) {
-		return false;
-	}
+    // analyze
+    if (Analyze() == false) {
+        return false;
+    }
 
-	// set bank
-	if (bank >= num_of_banks) {
-		current_bank = num_of_banks - 1;
-	}
-	else {
-		current_bank = bank;
-	}
+    // set bank
+    if (bank >= num_of_banks) {
+        current_bank = num_of_banks - 1;
+    } else {
+        current_bank = bank;
+    }
 
-	// open
-	vm->open_disk(drive, (_TCHAR*)path, current_bank);
+    // open
+    vm->open_disk(drive, (_TCHAR*)path, current_bank);
 
-	// ready
-	ready = true;
+    // ready
+    ready = true;
 
-	return true;
+    return true;
 }
 
 //
@@ -169,29 +168,29 @@ bool DiskManager::Open(int bank)
 //
 void DiskManager::Close()
 {
-	// close
-	if (ready == true) {
-		vm->close_disk(drive);
-		ready = false;
-	}
+    // close
+    if (ready == true) {
+        vm->close_disk(drive);
+        ready = false;
+    }
 
-	// delete name list
-	if (name_list != NULL) {
-		SDL_free(name_list);
-		name_list = NULL;
-	}
+    // delete name list
+    if (name_list != NULL) {
+        SDL_free(name_list);
+        name_list = NULL;
+    }
 
-	// delete write protect list
-	if (wp_list != NULL) {
-		SDL_free(wp_list);
-		wp_list = NULL;
-	}
+    // delete write protect list
+    if (wp_list != NULL) {
+        SDL_free(wp_list);
+        wp_list = NULL;
+    }
 
-	// parameters
-	readonly = false;
-	num_of_banks = 0;
-	current_bank = 0;
-	next_timer = 0;
+    // parameters
+    readonly = false;
+    num_of_banks = 0;
+    current_bank = 0;
+    next_timer = 0;
 }
 
 //
@@ -200,7 +199,7 @@ void DiskManager::Close()
 //
 bool DiskManager::IsOpen()
 {
-	return ready;
+    return ready;
 }
 
 //
@@ -209,12 +208,11 @@ bool DiskManager::IsOpen()
 //
 bool DiskManager::IsNext()
 {
-	if ((ready == true) && (next_timer > 0)) {
-		return true;
-	}
-	else {
-		return false;
-	}
+    if ((ready == true) && (next_timer > 0)) {
+        return true;
+    } else {
+        return false;
+    }
 }
 
 //
@@ -223,25 +221,25 @@ bool DiskManager::IsNext()
 //
 bool DiskManager::IsProtect()
 {
-	// open ?
-	if (ready == true) {
-		// next timer
-		if (next_timer > 0) {
-			return false;
-		}
+    // open ?
+    if (ready == true) {
+        // next timer
+        if (next_timer > 0) {
+            return false;
+        }
 
-		// file
-		if (readonly == true) {
-			return true;
-		}
+        // file
+        if (readonly == true) {
+            return true;
+        }
 
-		// bank
-		if (wp_list[current_bank] != 0x00) {
-			return true;
-		}
-	}
+        // bank
+        if (wp_list[current_bank] != 0x00) {
+            return true;
+        }
+    }
 
-	return false;
+    return false;
 }
 
 //
@@ -250,33 +248,32 @@ bool DiskManager::IsProtect()
 //
 const char* DiskManager::GetName(int bank)
 {
-	const char *ptr;
-	int loop;
-	size_t len;
+    const char* ptr;
+    int loop;
+    size_t len;
 
-	// default parameter -> current_bank
-	if (bank < 0) {
-		if (next_timer > 0) {
-			bank = next_bank;
-		}
-		else {
-			bank = current_bank;
-		}
-	}
+    // default parameter -> current_bank
+    if (bank < 0) {
+        if (next_timer > 0) {
+            bank = next_bank;
+        } else {
+            bank = current_bank;
+        }
+    }
 
-	// open ?
-	if (ready == false) {
-		return nullstr;
-	}
+    // open ?
+    if (ready == false) {
+        return nullstr;
+    }
 
-	ptr = name_list;
-	for (loop=0; loop<bank; loop++) {
-		len = strlen(ptr);
-		ptr += len;
-		ptr++;
-	}
+    ptr = name_list;
+    for (loop = 0; loop < bank; loop++) {
+        len = strlen(ptr);
+        ptr += len;
+        ptr++;
+    }
 
-	return ptr;
+    return ptr;
 }
 
 //
@@ -285,25 +282,24 @@ const char* DiskManager::GetName(int bank)
 //
 int DiskManager::GetAccess()
 {
-	uint8 type;
-	int busy;
+    uint8 type;
+    int busy;
 
-	// get information from fdc
-	type = upd765a->get_drive_type(drive);
-	busy = upd765a->get_busy_drive();
+    // get information from fdc
+    type = upd765a->get_drive_type(drive);
+    busy = upd765a->get_busy_drive();
 
-	// check access
-	if (busy != drive) {
-		return ACCESS_NONE;
-	}
+    // check access
+    if (busy != drive) {
+        return ACCESS_NONE;
+    }
 
-	// check 2D or 2HD
-	if (type == DRIVE_TYPE_2HD) {
-		return ACCESS_2HD;
-	}
-	else {
-		return ACCESS_2D;
-	}
+    // check 2D or 2HD
+    if (type == DRIVE_TYPE_2HD) {
+        return ACCESS_2HD;
+    } else {
+        return ACCESS_2D;
+    }
 }
 
 //
@@ -312,7 +308,7 @@ int DiskManager::GetAccess()
 //
 const char* DiskManager::GetDir()
 {
-	return dir;
+    return dir;
 }
 
 //
@@ -321,7 +317,7 @@ const char* DiskManager::GetDir()
 //
 int DiskManager::GetBank()
 {
-	return current_bank;
+    return current_bank;
 }
 
 //
@@ -330,7 +326,7 @@ int DiskManager::GetBank()
 //
 int DiskManager::GetBanks()
 {
-	return num_of_banks;
+    return num_of_banks;
 }
 
 //
@@ -339,21 +335,21 @@ int DiskManager::GetBanks()
 //
 bool DiskManager::SetBank(int bank)
 {
-	if ((bank >= 0) && (bank < num_of_banks)) {
-		// open (dummy to access file)
-		vm->close_disk(drive);
-		vm->open_disk(drive, (_TCHAR*)path, bank);
+    if ((bank >= 0) && (bank < num_of_banks)) {
+        // open (dummy to access file)
+        vm->close_disk(drive);
+        vm->open_disk(drive, (_TCHAR*)path, bank);
 
-		// close
-		vm->close_disk(drive);
+        // close
+        vm->close_disk(drive);
 
-		// set timer
-		next_bank = bank;
-		next_timer = DISK_NEXT_FRAME;
-		return true;
-	}
+        // set timer
+        next_bank = bank;
+        next_timer = DISK_NEXT_FRAME;
+        return true;
+    }
 
-	return false;
+    return false;
 }
 
 //
@@ -362,56 +358,56 @@ bool DiskManager::SetBank(int bank)
 //
 void DiskManager::ProcessMgr()
 {
-	if (next_timer > 0) {
-		next_timer--;
-		if (next_timer == 0) {
-			current_bank = next_bank;
-			vm->open_disk(drive, (_TCHAR*)path, current_bank);
-		}
-	}
+    if (next_timer > 0) {
+        next_timer--;
+        if (next_timer == 0) {
+            current_bank = next_bank;
+            vm->open_disk(drive, (_TCHAR*)path, current_bank);
+        }
+    }
 }
 
 //
 // Load()
 // load state
 //
-void DiskManager::Load(FILEIO *fio)
+void DiskManager::Load(FILEIO* fio)
 {
-	bool rdy;
-	int bank;
+    bool rdy;
+    int bank;
 
-	// close
-	Close();
+    // close
+    Close();
 
-	// load parameter
-	fio->Fread(state_path, 1, sizeof(state_path));
-	rdy = fio->FgetBool();
-	bank = fio->FgetInt32();
-	next_bank = fio->FgetInt32();
-	next_timer = fio->FgetInt32();
+    // load parameter
+    fio->Fread(state_path, 1, sizeof(state_path));
+    rdy = fio->FgetBool();
+    bank = fio->FgetInt32();
+    next_bank = fio->FgetInt32();
+    next_timer = fio->FgetInt32();
 
-	// open
-	if (rdy == true) {
-		Open(state_path, bank);
-	}
+    // open
+    if (rdy == true) {
+        Open(state_path, bank);
+    }
 
-	// next bank
-	if (next_timer > 0) {
-		vm->close_disk(drive);
-	}
+    // next bank
+    if (next_timer > 0) {
+        vm->close_disk(drive);
+    }
 }
 
 //
 // Save()
 // save state
 //
-void DiskManager::Save(FILEIO *fio)
+void DiskManager::Save(FILEIO* fio)
 {
-	fio->Fwrite(path, 1, sizeof(path));
-	fio->FputBool(ready);
-	fio->FputInt32(current_bank);
-	fio->FputInt32(next_bank);
-	fio->FputInt32(next_timer);
+    fio->Fwrite(path, 1, sizeof(path));
+    fio->FputBool(ready);
+    fio->FputInt32(current_bank);
+    fio->FputInt32(next_bank);
+    fio->FputInt32(next_timer);
 }
 
 //
@@ -420,151 +416,148 @@ void DiskManager::Save(FILEIO *fio)
 //
 bool DiskManager::Analyze()
 {
-	FILEIO fio;
-	Uint8 header[0x2b0];
-	Uint32 offset;
-	Uint32 add;
-	size_t len;
-	int bank;
-	char *ptr;
-	int track;
-	Uint32 trkofs;
+    FILEIO fio;
+    Uint8 header[0x2b0];
+    Uint32 offset;
+    Uint32 add;
+    size_t len;
+    int bank;
+    char* ptr;
+    int track;
+    Uint32 trkofs;
 
-	// open
-	if (fio.Fopen(path, FILEIO_READ_BINARY) == false) {
-		return false;
-	}
+    // open
+    if (fio.Fopen(path, FILEIO_READ_BINARY) == false) {
+        return false;
+    }
 
-	// clear
-	num_of_banks = 0;
-	offset = 0;
-	len = 0;
+    // clear
+    num_of_banks = 0;
+    offset = 0;
+    len = 0;
 
-	// bank loop (1)
-	for (;;) {
-		// read D88 header
-		if (fio.Fread(header, 1, sizeof(header)) != sizeof(header)) {
-			// EOF
-			break;
-		}
+    // bank loop (1)
+    for (;;) {
+        // read D88 header
+        if (fio.Fread(header, 1, sizeof(header)) != sizeof(header)) {
+            // EOF
+            break;
+        }
 
-		// track0 offset in header must be 0x000002x0
-		if ((header[0x23] != 0x00) ||
-			(header[0x22] != 0x00) ||
-			(header[0x21] != 0x02) ||
-			((header[0x20] & 0x0f) != 0x00)) {
-			// illegal format
-			if (header[0x21] != 0x00) {
-				num_of_banks = 0;
-				break;
-			}
-		}
+        // track0 offset in header must be 0x000002x0
+        if ((header[0x23] != 0x00) || (header[0x22] != 0x00) || (header[0x21] != 0x02) || ((header[0x20] & 0x0f) != 0x00)) {
+            // illegal format
+            if (header[0x21] != 0x00) {
+                num_of_banks = 0;
+                break;
+            }
+        }
 
-		// bank++
-		num_of_banks++;
+        // bank++
+        num_of_banks++;
 
-		// add length of disk name
-		header[0x10] = 0x00;
-		len += strlen((const char*)header);
-		len++;
+        // add length of disk name
+        header[0x10] = 0x00;
+        len += strlen((const char*)header);
+        len++;
 
-		// size
-		add = (Uint32)header[0x1f];
-		add <<= 8;
-		add |= (Uint32)header[0x1e];
-		add <<= 8;
-		add |= (Uint32)header[0x1d];
-		add <<= 8;
-		add |= (Uint32)header[0x1c];
+        // size
+        add = (Uint32)header[0x1f];
+        add <<= 8;
+        add |= (Uint32)header[0x1e];
+        add <<= 8;
+        add |= (Uint32)header[0x1d];
+        add <<= 8;
+        add |= (Uint32)header[0x1c];
 
-		// check track offset
-		for (track=0; track<160; track++) {
-			trkofs = (Uint32)(header[0x20 + track * 4 + 3]);
-			trkofs <<= 8;
-			trkofs |= (Uint32)(header[0x20 + track * 4 + 2]);
-			trkofs <<= 8;
-			trkofs |= (Uint32)(header[0x20 + track * 4 + 1]);
-			trkofs <<= 8;
-			trkofs |= (Uint32)(header[0x20 + track * 4 + 0]);
+        // check track offset
+        for (track = 0; track < 160; track++) {
+            trkofs = (Uint32)(header[0x20 + track * 4 + 3]);
+            trkofs <<= 8;
+            trkofs |= (Uint32)(header[0x20 + track * 4 + 2]);
+            trkofs <<= 8;
+            trkofs |= (Uint32)(header[0x20 + track * 4 + 1]);
+            trkofs <<= 8;
+            trkofs |= (Uint32)(header[0x20 + track * 4 + 0]);
 
-			// track offset must be 0x10 alignment
-			if ((trkofs & 0xf) != 0) {
-				num_of_banks = 0;
-				break;
-			}
+            // track offset must be 0x10 alignment
+            if ((trkofs & 0xf) != 0) {
+                num_of_banks = 0;
+                break;
+            }
 
-			// track offset < add
-			if (trkofs > add) {
-				if ((header[0x1b] != 0x00) || (track < 80)) {
-					num_of_banks = 0;
-					break;
-				}
-			}
-		}
-		if (num_of_banks == 0) {
-			break;
-		}
+            // track offset < add
+            if (trkofs > add) {
+                if ((header[0x1b] != 0x00) || (track < 80)) {
+                    num_of_banks = 0;
+                    break;
+                }
+            }
+        }
+        if (num_of_banks == 0) {
+            break;
+        }
 
-		// seek
-		offset += add;
-		fio.Fseek((long)offset, FILEIO_SEEK_SET);
-	}
+        // seek
+        offset += add;
+        fio.Fseek((long)offset, FILEIO_SEEK_SET);
+    }
 
-	// num_of_banks > 0 ?
-	if (num_of_banks == 0) {
-		fio.Fclose();
-		return false;
-	}
+    // num_of_banks > 0 ?
+    if (num_of_banks == 0) {
+        fio.Fclose();
+        return false;
+    }
 
-	// malloc
-	name_list = (char*)SDL_malloc(len);
-	if (name_list == NULL) {
-		fio.Fclose();
-		return false;
-	}
-	wp_list = (Uint8*)SDL_malloc(num_of_banks);
-	if (wp_list == NULL) {
-		SDL_free(name_list);
-		name_list = NULL;
-		fio.Fclose();
-		return false;
-	}
+    // malloc
+    name_list = (char*)SDL_malloc(len);
+    if (name_list == NULL) {
+        fio.Fclose();
+        return false;
+    }
+    wp_list = (Uint8*)SDL_malloc(num_of_banks);
+    if (wp_list == NULL) {
+        SDL_free(name_list);
+        name_list = NULL;
+        fio.Fclose();
+        return false;
+    }
 
-	// bank loop (2)
-	offset = 0;
-	ptr = name_list;
-	for (bank=0; bank<num_of_banks; bank++) {
-		// seek
-		fio.Fseek((long)offset, FILEIO_SEEK_SET);
+    // bank loop (2)
+    offset = 0;
+    ptr = name_list;
+    for (bank = 0; bank < num_of_banks; bank++) {
+        // seek
+        fio.Fseek((long)offset, FILEIO_SEEK_SET);
 
-		// read D88 header
-		fio.Fread(header, 1, sizeof(header));
+        // read D88 header
+        fio.Fread(header, 1, sizeof(header));
 
-		// copy name
-		header[0x10] = 0x00;
-		len = strlen((const char*)header);
-		strcpy(ptr, (const char*)header);
-		ptr += len;
-		ptr++;
+        // copy name
+        header[0x10] = 0x00;
+        len = strlen((const char*)header);
+        strcpy(ptr, (const char*)header);
+        ptr += len;
+        ptr++;
 
-		// record write protect flag
-		wp_list[bank] = header[0x1a];
+        // record write protect flag
+        wp_list[bank] = header[0x1a];
 
-		// size
-		add = (Uint32)header[0x1f];
-		add <<= 8;
-		add |= (Uint32)header[0x1e];
-		add <<= 8;
-		add |= (Uint32)header[0x1d];
-		add <<= 8;
-		add |= (Uint32)header[0x1c];
-		offset += add;
-	}
+        // size
+        add = (Uint32)header[0x1f];
+        add <<= 8;
+        add |= (Uint32)header[0x1e];
+        add <<= 8;
+        add |= (Uint32)header[0x1d];
+        add <<= 8;
+        add |= (Uint32)header[0x1c];
+        offset += add;
+    }
 
-	// close
-	fio.Fclose();
+    // close
+    fio.Fclose();
 
-	return true;
+    return true;
 }
 
 #endif // SDL

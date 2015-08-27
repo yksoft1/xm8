@@ -20,23 +20,23 @@
 //
 Audio::Audio()
 {
-	// object and device
-	audio_sem = NULL;
-	num_of_devices = 0;
-	name_of_devices = NULL;
-	device_id = 0;
+    // object and device
+    audio_sem = NULL;
+    num_of_devices = 0;
+    name_of_devices = NULL;
+    device_id = 0;
 
-	// control flag
-	device_pause = true;
-	play_pause = true;
+    // control flag
+    device_pause = true;
+    play_pause = true;
 
-	// buffer
-	sample_buffer = NULL;
-	sample_num = 0;
-	sample_size = 0;
-	sample_read = 0;
-	sample_write = 0;
-	sample_per = 0;
+    // buffer
+    sample_buffer = NULL;
+    sample_num = 0;
+    sample_size = 0;
+    sample_read = 0;
+    sample_write = 0;
+    sample_per = 0;
 }
 
 //
@@ -45,7 +45,7 @@ Audio::Audio()
 //
 Audio::~Audio()
 {
-	Deinit();
+    Deinit();
 }
 
 //
@@ -54,52 +54,52 @@ Audio::~Audio()
 //
 bool Audio::Init()
 {
-	size_t single_len;
-	size_t total_len;
-	int loop;
-	char *ptr;
+    size_t single_len;
+    size_t total_len;
+    int loop;
+    char* ptr;
 
-	// create semaphore
-	audio_sem = SDL_CreateSemaphore(1);
-	if (audio_sem == NULL) {
-		return false;
-	}
+    // create semaphore
+    audio_sem = SDL_CreateSemaphore(1);
+    if (audio_sem == NULL) {
+        return false;
+    }
 
-	// get the number of devices
-	num_of_devices = SDL_GetNumAudioDevices(0);
+    // get the number of devices
+    num_of_devices = SDL_GetNumAudioDevices(0);
 
-	// no device ?
-	if (num_of_devices == 0) {
-		return true;
-	}
+    // no device ?
+    if (num_of_devices == 0) {
+        return true;
+    }
 
-	// get total length of device names (includes null terminator)
-	total_len = 0;
-	for (loop=0; loop<num_of_devices; loop++) {
-		single_len = strlen(SDL_GetAudioDeviceName(loop, 0));
-		single_len++;
-		total_len += single_len;
-	}
+    // get total length of device names (includes null terminator)
+    total_len = 0;
+    for (loop = 0; loop < num_of_devices; loop++) {
+        single_len = strlen(SDL_GetAudioDeviceName(loop, 0));
+        single_len++;
+        total_len += single_len;
+    }
 
-	// get devices names
-	name_of_devices = (char *)SDL_malloc(total_len);
-	if (name_of_devices == NULL) {
-		SDL_assert(false);
-		return false;
-	}
-	ptr = name_of_devices;
-	for (loop=0; loop<num_of_devices; loop++) {
-		single_len = strlen(SDL_GetAudioDeviceName(loop, 0));
-		strcpy(ptr, SDL_GetAudioDeviceName(loop, 0));
-		ptr += single_len;
-		ptr++;
-	}
+    // get devices names
+    name_of_devices = (char*)SDL_malloc(total_len);
+    if (name_of_devices == NULL) {
+        SDL_assert(false);
+        return false;
+    }
+    ptr = name_of_devices;
+    for (loop = 0; loop < num_of_devices; loop++) {
+        single_len = strlen(SDL_GetAudioDeviceName(loop, 0));
+        strcpy(ptr, SDL_GetAudioDeviceName(loop, 0));
+        ptr += single_len;
+        ptr++;
+    }
 
-	// initialize
-	device_id = 0;
-	play_pause = true;
+    // initialize
+    device_id = 0;
+    play_pause = true;
 
-	return true;
+    return true;
 }
 
 //
@@ -108,88 +108,88 @@ bool Audio::Init()
 //
 void Audio::Deinit()
 {
-	Close();
+    Close();
 
-	// name of devices
-	if (name_of_devices != NULL) {
-		SDL_free(name_of_devices);
-		name_of_devices = NULL;
-	}
+    // name of devices
+    if (name_of_devices != NULL) {
+        SDL_free(name_of_devices);
+        name_of_devices = NULL;
+    }
 
-	// number of devices
-	num_of_devices = 0;
+    // number of devices
+    num_of_devices = 0;
 
-	// semaphore
-	if (audio_sem != NULL) {
-		SDL_DestroySemaphore(audio_sem);
-		audio_sem = NULL;
-	}
+    // semaphore
+    if (audio_sem != NULL) {
+        SDL_DestroySemaphore(audio_sem);
+        audio_sem = NULL;
+    }
 }
 
 //
 // Open()
 // open audio device
 //
-bool Audio::Open(const OpenParam *param)
+bool Audio::Open(const OpenParam* param)
 {
-	SDL_AudioSpec device_want;
-	const char *name;
+    SDL_AudioSpec device_want;
+    const char* name;
 
-	// for GetRealFreq()
-	device_spec.freq = param->freq;
+    // for GetRealFreq()
+    device_spec.freq = param->freq;
 
-	// check parameter
-	if (param->device >= num_of_devices) {
-		return false;
-	}
+    // check parameter
+    if (param->device >= num_of_devices) {
+        return false;
+    }
 
-	// init
-	SDL_zero(device_want);
+    // init
+    SDL_zero(device_want);
 
-	// parameter
-	device_want.freq = param->freq;
-	device_want.format = AUDIO_S16SYS;
-	device_want.channels = 2;
-	device_want.samples = (Uint16)param->samples;
-	device_want.callback = CommonCallback;
-	device_want.userdata = (void*)this;
+    // parameter
+    device_want.freq = param->freq;
+    device_want.format = AUDIO_S16SYS;
+    device_want.channels = 2;
+    device_want.samples = (Uint16)param->samples;
+    device_want.callback = CommonCallback;
+    device_want.userdata = (void*)this;
 
-	// open device
-	name = GetDeviceName(param->device);
-	if (name == NULL) {
-		return false;
-	}
-	device_id = SDL_OpenAudioDevice(name, 0, &device_want, &device_spec, 0);
+    // open device
+    name = GetDeviceName(param->device);
+    if (name == NULL) {
+        return false;
+    }
+    device_id = SDL_OpenAudioDevice(name, 0, &device_want, &device_spec, 0);
 
-	// result
-	if (device_id == 0) {
-		// device is already used -> no sound
-		return true;
-	}
-	if (device_spec.channels != 2) {
-		// mono device
-		Close();
-		return true;
-	}
+    // result
+    if (device_id == 0) {
+        // device is already used -> no sound
+        return true;
+    }
+    if (device_spec.channels != 2) {
+        // mono device
+        Close();
+        return true;
+    }
 
-	// sample buffer
-	sample_num = 0;
-	sample_read = 0;
-	sample_write = 0;
-	sample_size = (device_spec.freq * device_spec.channels * sizeof(Sint16) * param->buffer) / 1000;
-	sample_per = param->per * 2 * sizeof(Sint16);
+    // sample buffer
+    sample_num = 0;
+    sample_read = 0;
+    sample_write = 0;
+    sample_size = (device_spec.freq * device_spec.channels * sizeof(Sint16) * param->buffer) / 1000;
+    sample_per = param->per * 2 * sizeof(Sint16);
 
-	// allocate
-	sample_buffer = (Uint8*)SDL_malloc(sample_size);
-	if (sample_buffer == NULL) {
-		Close();
-		return false;
-	}
+    // allocate
+    sample_buffer = (Uint8*)SDL_malloc(sample_size);
+    if (sample_buffer == NULL) {
+        Close();
+        return false;
+    }
 
-	// once opened, the device starts with pause
-	device_pause = true;
+    // once opened, the device starts with pause
+    device_pause = true;
 
-	return true;
+    return true;
 }
 
 //
@@ -198,19 +198,19 @@ bool Audio::Open(const OpenParam *param)
 //
 void Audio::Close()
 {
-	// free buffer
-	if (sample_buffer != NULL) {
-		SDL_free(sample_buffer);
-		sample_buffer = NULL;
-	}
+    // free buffer
+    if (sample_buffer != NULL) {
+        SDL_free(sample_buffer);
+        sample_buffer = NULL;
+    }
 
-	// close device
-	if (device_id > 0) {
-		SDL_CloseAudioDevice(device_id);
-		device_id = 0;
+    // close device
+    if (device_id > 0) {
+        SDL_CloseAudioDevice(device_id);
+        device_id = 0;
 
-		device_pause = true;
-	}
+        device_pause = true;
+    }
 }
 
 //
@@ -219,7 +219,7 @@ void Audio::Close()
 //
 int Audio::GetDeviceNum()
 {
-	return num_of_devices;
+    return num_of_devices;
 }
 
 // GetDeviceName()
@@ -227,30 +227,30 @@ int Audio::GetDeviceNum()
 //
 const char* Audio::GetDeviceName(int device)
 {
-	int loop;
-	char *ptr;
-	size_t single_len;
+    int loop;
+    char* ptr;
+    size_t single_len;
 
-	// check num
-	if (device >= num_of_devices) {
-		return NULL;
-	}
+    // check num
+    if (device >= num_of_devices) {
+        return NULL;
+    }
 
-	// init
-	ptr = name_of_devices;
+    // init
+    ptr = name_of_devices;
 
-	// loop
-	for (loop=0; loop<num_of_devices; loop++) {
-		if (loop == device) {
-			break;
-		}
+    // loop
+    for (loop = 0; loop < num_of_devices; loop++) {
+        if (loop == device) {
+            break;
+        }
 
-		single_len = strlen(ptr);
-		ptr += single_len;
-		ptr++;
-	}
+        single_len = strlen(ptr);
+        ptr += single_len;
+        ptr++;
+    }
 
-	return ptr;
+    return ptr;
 }
 
 //
@@ -259,17 +259,17 @@ const char* Audio::GetDeviceName(int device)
 //
 void Audio::Play()
 {
-	if (play_pause == true) {
-		Reset();
-		play_pause = false;
-	}
+    if (play_pause == true) {
+        Reset();
+        play_pause = false;
+    }
 
-	if (device_id > 0) {
-		if (device_pause == true) {
-			SDL_PauseAudioDevice(device_id, 0);
-			device_pause = false;
-		}
-	}
+    if (device_id > 0) {
+        if (device_pause == true) {
+            SDL_PauseAudioDevice(device_id, 0);
+            device_pause = false;
+        }
+    }
 }
 
 //
@@ -278,14 +278,14 @@ void Audio::Play()
 //
 void Audio::Stop()
 {
-	play_pause = true;
+    play_pause = true;
 
-	if (device_id > 0) {
-		if (device_pause == false) {
-			SDL_PauseAudioDevice(device_id, 1);
-			device_pause = true;
-		}
-	}
+    if (device_id > 0) {
+        if (device_pause == false) {
+            SDL_PauseAudioDevice(device_id, 1);
+            device_pause = true;
+        }
+    }
 }
 
 //
@@ -294,12 +294,11 @@ void Audio::Stop()
 //
 bool Audio::IsPlay()
 {
-	if (play_pause == true) {
-		return false;
-	}
-	else {
-		return true;
-	}
+    if (play_pause == true) {
+        return false;
+    } else {
+        return true;
+    }
 }
 
 //
@@ -308,15 +307,15 @@ bool Audio::IsPlay()
 //
 void Audio::Reset()
 {
-	if (sample_buffer != NULL) {
-		memset(sample_buffer, 0, sample_size);
+    if (sample_buffer != NULL) {
+        memset(sample_buffer, 0, sample_size);
 
-		// initial:50%
-		sample_num = sample_size / 2;
-		sample_num = (sample_num + 3) & ~3;
-		sample_read = 0;
-		sample_write = sample_num;
-	}
+        // initial:50%
+        sample_num = sample_size / 2;
+        sample_num = (sample_num + 3) & ~3;
+        sample_read = 0;
+        sample_write = sample_num;
+    }
 }
 
 //
@@ -325,171 +324,165 @@ void Audio::Reset()
 //
 int Audio::GetFreeSamples()
 {
-	int samples;
+    int samples;
 
-	// lock
-	SDL_SemWait(audio_sem);
+    // lock
+    SDL_SemWait(audio_sem);
 
-	if (sample_buffer != NULL) {
-		samples = sample_size - sample_num;
-		samples /= (device_spec.channels * sizeof(Sint16));
-	}
-	else {
-		// no sound
-		samples = 0xffff;
-	}
+    if (sample_buffer != NULL) {
+        samples = sample_size - sample_num;
+        samples /= (device_spec.channels * sizeof(Sint16));
+    } else {
+        // no sound
+        samples = 0xffff;
+    }
 
-	// unlock
-	SDL_SemPost(audio_sem);
+    // unlock
+    SDL_SemPost(audio_sem);
 
-	return samples;;
+    return samples;
+    ;
 }
 
 //
 // Write()
 // write to sample buffer
 //
-int Audio::Write(Uint8 *stream, int len)
+int Audio::Write(Uint8* stream, int len)
 {
-	int size1;
-	int size2;
-	int loop;
-	Sint32 *src;
-	Sint16 *dest;
-	int pct;
+    int size1;
+    int size2;
+    int loop;
+    Sint32* src;
+    Sint16* dest;
+    int pct;
 
-	SDL_assert(stream != NULL);
+    SDL_assert(stream != NULL);
 
-	// is audio device opened ?
-	if (sample_buffer == NULL) {
-		return 0x80;
-	}
+    // is audio device opened ?
+    if (sample_buffer == NULL) {
+        return 0x80;
+    }
 
-	len *= (device_spec.channels * sizeof(Sint16));
+    len *= (device_spec.channels * sizeof(Sint16));
 
-	// lock
-	SDL_SemWait(audio_sem);
+    // lock
+    SDL_SemWait(audio_sem);
 
-	// percent of current buffer before writting (256:100%)
-	pct = (sample_num << 8) / sample_size;
-	if (pct >= 0x100) {
-		pct = 0xff;
-	}
+    // percent of current buffer before writting (256:100%)
+    pct = (sample_num << 8) / sample_size;
+    if (pct >= 0x100) {
+        pct = 0xff;
+    }
 
-	// check overflow
-	if ((sample_num + len) >= sample_size) {
-		len = sample_size - sample_num;
-	}
+    // check overflow
+    if ((sample_num + len) >= sample_size) {
+        len = sample_size - sample_num;
+    }
 
-	// ring buffer
-	size2 = (sample_write + len) - sample_size;
-	if (size2 > 0) {
-		size1 = len - size2;
-	}
-	else {
-		size1 = len;
-	}
+    // ring buffer
+    size2 = (sample_write + len) - sample_size;
+    if (size2 > 0) {
+        size1 = len - size2;
+    } else {
+        size1 = len;
+    }
 
-	// copy
-	if (size1 > 0) {
-		src = (Sint32*)stream;
-		dest = (Sint16*)&sample_buffer[sample_write];
-		for (loop=0; loop<(int)(size1/sizeof(Sint16)); loop++) {
-			if (src[loop] > 0xbfff) {
-				dest[loop] = 0x7fff;
-			}
-			else {
-				if (src[loop] < -0xc000) {
-					dest[loop] = -0x8000;
-				}
-				else {
-					dest[loop] = (Sint16)((src[loop] * 2) / 3);
-				}
-			}
-		}
-		sample_write += size1;
-		sample_num += size1;
-	}
+    // copy
+    if (size1 > 0) {
+        src = (Sint32*)stream;
+        dest = (Sint16*)&sample_buffer[sample_write];
+        for (loop = 0; loop < (int)(size1 / sizeof(Sint16)); loop++) {
+            if (src[loop] > 0xbfff) {
+                dest[loop] = 0x7fff;
+            } else {
+                if (src[loop] < -0xc000) {
+                    dest[loop] = -0x8000;
+                } else {
+                    dest[loop] = (Sint16)((src[loop] * 2) / 3);
+                }
+            }
+        }
+        sample_write += size1;
+        sample_num += size1;
+    }
 
-	if (size2 > 0) {
-		src = (Sint32*)&stream[size1 * 2];
-		dest = (Sint16*)sample_buffer;
-		for (loop=0; loop<(int)(size2/sizeof(Sint16)); loop++) {
-			if (src[loop] > 0xbfff) {
-				dest[loop] = 0x7fff;
-			}
-			else if (src[loop] < -0xc000) {
-				dest[loop] = -0x8000;
-			}
-			else {
-				dest[loop] = (Sint16)((src[loop] * 2) / 3);
-			}
-		}
-		sample_write = size2;
-		sample_num += size2;
-	}
+    if (size2 > 0) {
+        src = (Sint32*)&stream[size1 * 2];
+        dest = (Sint16*)sample_buffer;
+        for (loop = 0; loop < (int)(size2 / sizeof(Sint16)); loop++) {
+            if (src[loop] > 0xbfff) {
+                dest[loop] = 0x7fff;
+            } else if (src[loop] < -0xc000) {
+                dest[loop] = -0x8000;
+            } else {
+                dest[loop] = (Sint16)((src[loop] * 2) / 3);
+            }
+        }
+        sample_write = size2;
+        sample_num += size2;
+    }
 
-	// unlock
-	SDL_SemPost(audio_sem);
+    // unlock
+    SDL_SemPost(audio_sem);
 
-	return pct;
+    return pct;
 }
 
 //
 // CommonCallback()
 // common callback from SDL
 //
-void Audio::CommonCallback(void *userdata, Uint8 *stream, int len)
+void Audio::CommonCallback(void* userdata, Uint8* stream, int len)
 {
-	Audio *audio;
+    Audio* audio;
 
-	audio = (Audio*)userdata;
+    audio = (Audio*)userdata;
 
-	if ((stream != NULL) && (len > 0)) {
-		audio->Callback(stream, len);
-	}
+    if ((stream != NULL) && (len > 0)) {
+        audio->Callback(stream, len);
+    }
 }
 
 //
 // Callback()
 // callback to fill buffer
 //
-void Audio::Callback(Uint8 *stream, int len)
+void Audio::Callback(Uint8* stream, int len)
 {
-	int size1;
-	int size2;
+    int size1;
+    int size2;
 
-	// lock
-	SDL_SemWait(audio_sem);
+    // lock
+    SDL_SemWait(audio_sem);
 
-	if (len > sample_num) {
-		// buffer underrun (ex: move window)
-		Reset();
-	}
+    if (len > sample_num) {
+        // buffer underrun (ex: move window)
+        Reset();
+    }
 
-	// ring buffer
-	size2 = (sample_read + len) - sample_size;
-	if (size2 > 0) {
-		size1 = len - size2;
-	}
-	else {
-		size1 = len;
-	}
+    // ring buffer
+    size2 = (sample_read + len) - sample_size;
+    if (size2 > 0) {
+        size1 = len - size2;
+    } else {
+        size1 = len;
+    }
 
-	// copy
-	if (size1 > 0) {
-		memcpy(stream, &sample_buffer[sample_read], size1);
-		sample_read += size1;
-		sample_num -= size1;
-	}
-	if (size2 > 0) {
-		memcpy(&stream[size1], sample_buffer, size2);
-		sample_read = size2;
-		sample_num -= size2;
-	}
+    // copy
+    if (size1 > 0) {
+        memcpy(stream, &sample_buffer[sample_read], size1);
+        sample_read += size1;
+        sample_num -= size1;
+    }
+    if (size2 > 0) {
+        memcpy(&stream[size1], sample_buffer, size2);
+        sample_read = size2;
+        sample_num -= size2;
+    }
 
-	// unlock
-	SDL_SemPost(audio_sem);
+    // unlock
+    SDL_SemPost(audio_sem);
 }
 
 #endif // SDL

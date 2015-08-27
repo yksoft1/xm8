@@ -20,99 +20,99 @@
 //
 // defines
 //
-#define SETTING_CPU_8MHZ		0
-										// uPD70008AC CPU (Z80H compatible, clock 8MHz)
-#define SETTING_CPU_4MHZ		1
-										// uPD780C-1 CPU (Z80A compatible, clock 4MHz)
-#define SETTING_USE_JOYSTICK	0
-										// Joystick for ATARI port
-#define SETTING_MONITOR_24K		0
-										// 24KHz analog monitor
-#define SETTING_MONITOR_15K		1
-										// 15kHz analog monitor
-#define SETTING_SOUND_OPNA		0
-										// YM2608 (PC-8801FA/MA/MA2/MC/VA2/VA3/DO+)
-#define SETTING_SOUND_OPN		1
-										// YM2203 (PC-8801mkIISR/TR/FR/MR/FH/MH/FE/FE2/VA/DO)
-#define SETTING_ORG				"retro_pc_pi"
-										// organization name
-#define SETTING_APP				"xm8"
-										// application name
-#define SETTING_FILENAME		"setting.bin"
-										// setting file name
+#define SETTING_CPU_8MHZ 0
+// uPD70008AC CPU (Z80H compatible, clock 8MHz)
+#define SETTING_CPU_4MHZ 1
+// uPD780C-1 CPU (Z80A compatible, clock 4MHz)
+#define SETTING_USE_JOYSTICK 0
+// Joystick for ATARI port
+#define SETTING_MONITOR_24K 0
+// 24KHz analog monitor
+#define SETTING_MONITOR_15K 1
+// 15kHz analog monitor
+#define SETTING_SOUND_OPNA 0
+// YM2608 (PC-8801FA/MA/MA2/MC/VA2/VA3/DO+)
+#define SETTING_SOUND_OPN 1
+// YM2203 (PC-8801mkIISR/TR/FR/MR/FH/MH/FE/FE2/VA/DO)
+#define SETTING_ORG "retro_pc_pi"
+// organization name
+#define SETTING_APP "xm8"
+// application name
+#define SETTING_FILENAME "setting.bin"
+// setting file name
 
 // version
-#define SETTING_VERSION_100		20150621
-										// version 1.00
-#define SETTING_VERSION_105		20150624
-										// version 1.05
-#define SETTING_VERSION_110		20150626
-										// version 1.10
-#define SETTING_VERSION_120		20150710
-										// version 1.20
-#define SETTING_VERSION_130		20150822
-										// version 1.30
+#define SETTING_VERSION_100 20150621
+// version 1.00
+#define SETTING_VERSION_105 20150624
+// version 1.05
+#define SETTING_VERSION_110 20150626
+// version 1.10
+#define SETTING_VERSION_120 20150710
+// version 1.20
+#define SETTING_VERSION_130 20150822
+// version 1.30
 
 // video
-#define DEFAULT_WINDOW_WIDTH	640
-										// window width
-#define DEFAULT_SKIP_FRAME		0
-										// skip frame
+#define DEFAULT_WINDOW_WIDTH 640
+// window width
+#define DEFAULT_SKIP_FRAME 0
+// skip frame
 #ifdef __ANDROID__
-#define DEFAULT_SCAN_LINE		(false)
-										// scan line
-#define DEFAULT_BRIGHTNESS		0xE8
-										// brightness for vm
+#define DEFAULT_SCAN_LINE (false)
+// scan line
+#define DEFAULT_BRIGHTNESS 0xE8
+// brightness for vm
 #else
-#define DEFAULT_SCAN_LINE		(true)
-										// scan line
-#define DEFAULT_BRIGHTNESS		0xFF
-										// brightness for vm
+#define DEFAULT_SCAN_LINE (true)
+// scan line
+#define DEFAULT_BRIGHTNESS 0xFF
+// brightness for vm
 #endif // __ANDROID__
-#define DEFAULT_MENU_ALPHA		0xD0
-										// alpha blending level for menu
-#define DEFAULT_STATUS_LINE		(true)
-										// status line
-#define DEFAULT_STATUS_ALPHA	0x60
-										// alpha blending level for status
-#define DEFAULT_SCALE_QUALITY	2
-										// render scale quality
-#define DEFAULT_FORCE_RGB565	(true)
-										// force RGB565
+#define DEFAULT_MENU_ALPHA 0xD0
+// alpha blending level for menu
+#define DEFAULT_STATUS_LINE (true)
+// status line
+#define DEFAULT_STATUS_ALPHA 0x60
+// alpha blending level for status
+#define DEFAULT_SCALE_QUALITY 2
+// render scale quality
+#define DEFAULT_FORCE_RGB565 (true)
+// force RGB565
 
 // audio
 #ifdef __ANDROID__
-#define DEFAULT_AUDIO_FREQ		48000
-										// audio freqency (Hz)
+#define DEFAULT_AUDIO_FREQ 48000
+// audio freqency (Hz)
 #else
-#define DEFAULT_AUDIO_FREQ		55467
-										// audio freqency (Hz)
+#define DEFAULT_AUDIO_FREQ 55467
+// audio freqency (Hz)
 #endif // __ANDROID__
-#define DEFAULT_AUDIO_POWER		11
-										// audio power (2^n)
-#define DEFAULT_AUDIO_UNIT		15
-										// audio unit (ms)
+#define DEFAULT_AUDIO_POWER 11
+// audio power (2^n)
+#define DEFAULT_AUDIO_UNIT 15
+// audio unit (ms)
 #ifdef __ANDROID__
-#define DEFAULT_AUDIO_BUFFER	140
-										// audio buffer (ms)
+#define DEFAULT_AUDIO_BUFFER 140
+// audio buffer (ms)
 #else
-#define DEFAULT_AUDIO_BUFFER	120
-										// audio buffer (ms)
+#define DEFAULT_AUDIO_BUFFER 120
+// audio buffer (ms)
 #endif // __ANDROID__
 
 // input
-#define DEFAULT_SOFTKEY_ALPHA	0x80
-										// alpha blending level for softkey
-#define DEFAULT_SOFTKEY_TIME	4000
-										// softkey timeout (ms)
-#define DEFAULT_MOUSE_TIME		3000
-										// mouse timeout (ms)
+#define DEFAULT_SOFTKEY_ALPHA 0x80
+// alpha blending level for softkey
+#define DEFAULT_SOFTKEY_TIME 4000
+// softkey timeout (ms)
+#define DEFAULT_MOUSE_TIME 3000
+// mouse timeout (ms)
 #ifdef __ANDROID__
-#define DEFAULT_KEYBOARD_ENABLE	(false)
-										// keyboard enable
+#define DEFAULT_KEYBOARD_ENABLE (false)
+// keyboard enable
 #else
-#define DEFAULT_KEYBOARD_ENABLE	(true)
-										// keyboard enable
+#define DEFAULT_KEYBOARD_ENABLE (true)
+// keyboard enable
 #endif // __ANDROID__
 
 //
@@ -121,43 +121,43 @@
 //
 Setting::Setting()
 {
-	int loop;
+    int loop;
 
-	// virtual machine
-	SDL_zero(config);
+    // virtual machine
+    SDL_zero(config);
 
-	// directory and path
-	setting_dir[0] = '\0';
-	setting_path[0] = '\0';
+    // directory and path
+    setting_dir[0] = '\0';
+    setting_path[0] = '\0';
 
-	// setting (video)
-	window_width = DEFAULT_WINDOW_WIDTH;
-	skip_frame = DEFAULT_SKIP_FRAME;
-	brightness = DEFAULT_BRIGHTNESS;
-	status_line = DEFAULT_STATUS_LINE;
-	status_alpha = DEFAULT_STATUS_ALPHA;
-	scale_quality[0] = (char)('0' + DEFAULT_SCALE_QUALITY);
-	scale_quality[1] = '\0';
-	force_rgb565 = DEFAULT_FORCE_RGB565;
+    // setting (video)
+    window_width = DEFAULT_WINDOW_WIDTH;
+    skip_frame = DEFAULT_SKIP_FRAME;
+    brightness = DEFAULT_BRIGHTNESS;
+    status_line = DEFAULT_STATUS_LINE;
+    status_alpha = DEFAULT_STATUS_ALPHA;
+    scale_quality[0] = (char)('0' + DEFAULT_SCALE_QUALITY);
+    scale_quality[1] = '\0';
+    force_rgb565 = DEFAULT_FORCE_RGB565;
 
-	// setting (input)
-	softkey_index = 0;
-	for (loop=0; loop<SDL_arraysize(softkey_set); loop++) {
-		softkey_set[loop] = loop;
-	}
-	softkey_alpha = DEFAULT_SOFTKEY_ALPHA;
-	softkey_time = DEFAULT_SOFTKEY_TIME;
-	joystick_enable = true;
-	joystick_swap = false;
-	joystick_key = true;
-	mouse_time = DEFAULT_MOUSE_TIME;
-	keyboard_enable = DEFAULT_KEYBOARD_ENABLE;
+    // setting (input)
+    softkey_index = 0;
+    for (loop = 0; loop < SDL_arraysize(softkey_set); loop++) {
+        softkey_set[loop] = loop;
+    }
+    softkey_alpha = DEFAULT_SOFTKEY_ALPHA;
+    softkey_time = DEFAULT_SOFTKEY_TIME;
+    joystick_enable = true;
+    joystick_swap = false;
+    joystick_key = true;
+    mouse_time = DEFAULT_MOUSE_TIME;
+    keyboard_enable = DEFAULT_KEYBOARD_ENABLE;
 
-	// setting (power)
-	watch_battery = true;
+    // setting (power)
+    watch_battery = true;
 
-	// save state
-	state_num = 0;
+    // save state
+    state_num = 0;
 }
 
 //
@@ -174,59 +174,59 @@ Setting::~Setting()
 //
 bool Setting::Init()
 {
-	// directory
+// directory
 #ifdef __ANDROID__
-	strcpy(setting_dir, SDL_AndroidGetExternalStoragePath());
-	strcat(setting_dir, "/");
+    strcpy(setting_dir, SDL_AndroidGetExternalStoragePath());
+    strcat(setting_dir, "/");
 #else
-	strcpy(setting_dir, SDL_GetPrefPath(SETTING_ORG, SETTING_APP));
+    strcpy(setting_dir, SDL_GetPrefPath(SETTING_ORG, SETTING_APP));
 #endif // __ANDROID__
-	strcpy(setting_path, setting_dir);
-	strcat(setting_path, SETTING_FILENAME);
+    strcpy(setting_path, setting_dir);
+    strcat(setting_path, SETTING_FILENAME);
 
-	// default settings (misc)
-	config.use_direct_input = false;
-	config.disable_dwm = false;
+    // default settings (misc)
+    config.use_direct_input = false;
+    config.disable_dwm = false;
 
-	// default settings (system)
-	config.boot_mode = SETTING_V2_MODE;
-	config.cpu_type = SETTING_CPU_4MHZ;
-	config.dipswitch = 0;
-	config.device_type = SETTING_USE_JOYSTICK;
+    // default settings (system)
+    config.boot_mode = SETTING_V2_MODE;
+    config.cpu_type = SETTING_CPU_4MHZ;
+    config.dipswitch = 0;
+    config.device_type = SETTING_USE_JOYSTICK;
 
-	// defult settings (floppy disk)
-	config.ignore_crc = false;
+    // defult settings (floppy disk)
+    config.ignore_crc = false;
 
-	// default settings (tape)
-	config.tape_sound = false;
-	config.wave_shaper = false;
-	config.direct_load_mzt = false;
-	config.baud_high = false;
+    // default settings (tape)
+    config.tape_sound = false;
+    config.wave_shaper = false;
+    config.direct_load_mzt = false;
+    config.baud_high = false;
 
-	// default settings (directory and path)
-	config.initial_disk_dir[0] = '\0';
-	memset(config.recent_disk_path, 0, sizeof(config.recent_disk_path));
-	config.initial_tape_dir[0] = '\0';
-	memset(config.recent_tape_path, 0, sizeof(config.recent_tape_path));
+    // default settings (directory and path)
+    config.initial_disk_dir[0] = '\0';
+    memset(config.recent_disk_path, 0, sizeof(config.recent_disk_path));
+    config.initial_tape_dir[0] = '\0';
+    memset(config.recent_tape_path, 0, sizeof(config.recent_tape_path));
 
-	// default settings (screen)
-	config.window_mode = 0;
-	config.use_d3d9 = false;
-	config.wait_vsync = false;
-	config.stretch_type = 0;
-	config.monitor_type = SETTING_MONITOR_24K;
-	config.crt_filter = false;
-	config.scan_line = DEFAULT_SCAN_LINE;
+    // default settings (screen)
+    config.window_mode = 0;
+    config.use_d3d9 = false;
+    config.wait_vsync = false;
+    config.stretch_type = 0;
+    config.monitor_type = SETTING_MONITOR_24K;
+    config.crt_filter = false;
+    config.scan_line = DEFAULT_SCAN_LINE;
 
-	// default settings (sound)
-	config.sound_frequency = DEFAULT_AUDIO_FREQ;
-	config.sound_latency = DEFAULT_AUDIO_BUFFER;
-	config.sound_device_type = SETTING_SOUND_OPN;
-	config.fmgen_dll_path[0] = '\0';
+    // default settings (sound)
+    config.sound_frequency = DEFAULT_AUDIO_FREQ;
+    config.sound_latency = DEFAULT_AUDIO_BUFFER;
+    config.sound_device_type = SETTING_SOUND_OPN;
+    config.fmgen_dll_path[0] = '\0';
 
-	// load
-	Load();
-	return true;
+    // load
+    Load();
+    return true;
 }
 
 //
@@ -235,7 +235,7 @@ bool Setting::Init()
 //
 void Setting::Deinit()
 {
-	Save();
+    Save();
 }
 
 //
@@ -244,89 +244,89 @@ void Setting::Deinit()
 //
 void Setting::Load()
 {
-	FILEIO fileio;
+    FILEIO fileio;
 
-	// open
-	if (fileio.Fopen(setting_path, FILEIO_READ_BINARY) == true) {
-		// common
-		LoadSetting(&fileio);
+    // open
+    if (fileio.Fopen(setting_path, FILEIO_READ_BINARY) == true) {
+        // common
+        LoadSetting(&fileio);
 
-		// close
-		fileio.Fclose();
-	}
+        // close
+        fileio.Fclose();
+    }
 }
 
 //
 // LoadSetting()
 // load common
 //
-bool Setting::LoadSetting(FILEIO *fio)
+bool Setting::LoadSetting(FILEIO* fio)
 {
-	Uint32 version;
-	int loop;
+    Uint32 version;
+    int loop;
 
-	// check version
-	version = fio->FgetUint32();
-	if (version >= SETTING_VERSION_100) {
-		// system
-		config.boot_mode = fio->FgetInt32();
-		config.cpu_type = fio->FgetInt32();
-		config.dipswitch = fio->FgetUint32();
+    // check version
+    version = fio->FgetUint32();
+    if (version >= SETTING_VERSION_100) {
+        // system
+        config.boot_mode = fio->FgetInt32();
+        config.cpu_type = fio->FgetInt32();
+        config.dipswitch = fio->FgetUint32();
 
-		// video
-		window_width = fio->FgetInt32();
-		skip_frame = fio->FgetInt32();
-		config.monitor_type = fio->FgetInt32();
-		config.scan_line = fio->FgetBool();
-		brightness = fio->FgetUint8();
+        // video
+        window_width = fio->FgetInt32();
+        skip_frame = fio->FgetInt32();
+        config.monitor_type = fio->FgetInt32();
+        config.scan_line = fio->FgetBool();
+        brightness = fio->FgetUint8();
 
-		// audio
-		config.sound_frequency = fio->FgetInt32();
-		config.sound_latency = fio->FgetInt32();
-		config.sound_device_type = fio->FgetInt32();
+        // audio
+        config.sound_frequency = fio->FgetInt32();
+        config.sound_latency = fio->FgetInt32();
+        config.sound_device_type = fio->FgetInt32();
 
-		// input
-		softkey_index = fio->FgetInt32();
-		for (loop=0; loop<SDL_arraysize(softkey_set); loop++) {
-			softkey_set[loop] = fio->FgetInt32();
-		}
-		softkey_alpha = fio->FgetUint8();
-		softkey_time = fio->FgetUint32();
-		joystick_enable = fio->FgetBool();
-		joystick_swap = fio->FgetBool();
-		joystick_key = fio->FgetBool();
-		mouse_time = fio->FgetUint32();
+        // input
+        softkey_index = fio->FgetInt32();
+        for (loop = 0; loop < SDL_arraysize(softkey_set); loop++) {
+            softkey_set[loop] = fio->FgetInt32();
+        }
+        softkey_alpha = fio->FgetUint8();
+        softkey_time = fio->FgetUint32();
+        joystick_enable = fio->FgetBool();
+        joystick_swap = fio->FgetBool();
+        joystick_key = fio->FgetBool();
+        mouse_time = fio->FgetUint32();
 
-		// load and save state
-		state_num = fio->FgetInt32();
+        // load and save state
+        state_num = fio->FgetInt32();
 
-		// version 1.05
-		if (version >= SETTING_VERSION_105) {
-			status_line = fio->FgetBool();
-			status_alpha = fio->FgetUint8();
-			scale_quality[0] = (char)('0' + fio->FgetInt32());
-		}
+        // version 1.05
+        if (version >= SETTING_VERSION_105) {
+            status_line = fio->FgetBool();
+            status_alpha = fio->FgetUint8();
+            scale_quality[0] = (char)('0' + fio->FgetInt32());
+        }
 
-		// version 1.10
-		if (version >= SETTING_VERSION_110) {
-			keyboard_enable = fio->FgetBool();
-		}
+        // version 1.10
+        if (version >= SETTING_VERSION_110) {
+            keyboard_enable = fio->FgetBool();
+        }
 
-		// version 1.20
-		if (version >= SETTING_VERSION_120) {
-			config.ignore_crc = fio->FgetBool();
-			force_rgb565 = fio->FgetBool();
-		}
+        // version 1.20
+        if (version >= SETTING_VERSION_120) {
+            config.ignore_crc = fio->FgetBool();
+            force_rgb565 = fio->FgetBool();
+        }
 
-		// version 1.30
-		if (version >= SETTING_VERSION_130) {
-			watch_battery = fio->FgetBool();
-		}
+        // version 1.30
+        if (version >= SETTING_VERSION_130) {
+            watch_battery = fio->FgetBool();
+        }
 
-		return true;
-	}
+        return true;
+    }
 
-	return false;
+    return false;
 }
 
 //
@@ -335,75 +335,75 @@ bool Setting::LoadSetting(FILEIO *fio)
 //
 void Setting::Save()
 {
-	FILEIO fileio;
+    FILEIO fileio;
 
-	// open
-	if (fileio.Fopen(setting_path, FILEIO_WRITE_BINARY) == true) {
-		// common
-		SaveSetting(&fileio);
+    // open
+    if (fileio.Fopen(setting_path, FILEIO_WRITE_BINARY) == true) {
+        // common
+        SaveSetting(&fileio);
 
-		// close
-		fileio.Fclose();
-	}
+        // close
+        fileio.Fclose();
+    }
 }
 
 //
 // SaveSetting()
 // save common
 //
-void Setting::SaveSetting(FILEIO *fio)
+void Setting::SaveSetting(FILEIO* fio)
 {
-	int loop;
+    int loop;
 
-	// version
-	fio->FputUint32(SETTING_VERSION_130);
+    // version
+    fio->FputUint32(SETTING_VERSION_130);
 
-	// system
-	fio->FputInt32(config.boot_mode);
-	fio->FputInt32(config.cpu_type);
-	fio->FputUint32(config.dipswitch);
+    // system
+    fio->FputInt32(config.boot_mode);
+    fio->FputInt32(config.cpu_type);
+    fio->FputUint32(config.dipswitch);
 
-	// video
-	fio->FputInt32(window_width);
-	fio->FputInt32(skip_frame);
-	fio->FputInt32(config.monitor_type);
-	fio->FputBool(config.scan_line);
-	fio->FputUint8(brightness);
+    // video
+    fio->FputInt32(window_width);
+    fio->FputInt32(skip_frame);
+    fio->FputInt32(config.monitor_type);
+    fio->FputBool(config.scan_line);
+    fio->FputUint8(brightness);
 
-	// audio
-	fio->FputInt32(config.sound_frequency);
-	fio->FputInt32(config.sound_latency);
-	fio->FputInt32(config.sound_device_type);
+    // audio
+    fio->FputInt32(config.sound_frequency);
+    fio->FputInt32(config.sound_latency);
+    fio->FputInt32(config.sound_device_type);
 
-	// input
-	fio->FputInt32(softkey_index);
-	for (loop=0; loop<SDL_arraysize(softkey_set); loop++) {
-		fio->FputInt32(softkey_set[loop]);
-	}
-	fio->FputUint8(softkey_alpha);
-	fio->FputUint32(softkey_time);
-	fio->FputBool(joystick_enable);
-	fio->FputBool(joystick_swap);
-	fio->FputBool(joystick_key);
-	fio->FputUint32(mouse_time);
+    // input
+    fio->FputInt32(softkey_index);
+    for (loop = 0; loop < SDL_arraysize(softkey_set); loop++) {
+        fio->FputInt32(softkey_set[loop]);
+    }
+    fio->FputUint8(softkey_alpha);
+    fio->FputUint32(softkey_time);
+    fio->FputBool(joystick_enable);
+    fio->FputBool(joystick_swap);
+    fio->FputBool(joystick_key);
+    fio->FputUint32(mouse_time);
 
-	// load and save state
-	fio->FputInt32(state_num);
+    // load and save state
+    fio->FputInt32(state_num);
 
-	// version 1.05
-	fio->FputBool(status_line);
-	fio->FputUint8(status_alpha);
-	fio->FputInt32((int)(scale_quality[0] - '0'));
+    // version 1.05
+    fio->FputBool(status_line);
+    fio->FputUint8(status_alpha);
+    fio->FputInt32((int)(scale_quality[0] - '0'));
 
-	// version 1.10
-	fio->FputBool(keyboard_enable);
+    // version 1.10
+    fio->FputBool(keyboard_enable);
 
-	// version 1.20
-	fio->FputBool(config.ignore_crc);
-	fio->FputBool(force_rgb565);
+    // version 1.20
+    fio->FputBool(config.ignore_crc);
+    fio->FputBool(force_rgb565);
 
-	// verison 1.30
-	fio->FputBool(watch_battery);
+    // verison 1.30
+    fio->FputBool(watch_battery);
 }
 
 //
@@ -412,7 +412,7 @@ void Setting::SaveSetting(FILEIO *fio)
 //
 const char* Setting::GetSettingDir()
 {
-	return setting_dir;
+    return setting_dir;
 }
 
 //
@@ -421,7 +421,7 @@ const char* Setting::GetSettingDir()
 //
 int Setting::GetSystemMode()
 {
-	return config.boot_mode;
+    return config.boot_mode;
 }
 
 //
@@ -430,7 +430,7 @@ int Setting::GetSystemMode()
 //
 void Setting::SetSystemMode(int mode)
 {
-	config.boot_mode = mode;
+    config.boot_mode = mode;
 }
 
 //
@@ -439,12 +439,11 @@ void Setting::SetSystemMode(int mode)
 //
 int Setting::GetCPUClock()
 {
-	if (config.cpu_type == SETTING_CPU_8MHZ) {
-		return 8;
-	}
-	else {
-		return 4;
-	}
+    if (config.cpu_type == SETTING_CPU_8MHZ) {
+        return 8;
+    } else {
+        return 4;
+    }
 }
 
 //
@@ -453,20 +452,20 @@ int Setting::GetCPUClock()
 //
 void Setting::SetCPUClock(int clock)
 {
-	switch (clock) {
-	// 4MHz
-	case 4:
-		config.cpu_type = SETTING_CPU_4MHZ;
-		break;
+    switch (clock) {
+    // 4MHz
+    case 4:
+        config.cpu_type = SETTING_CPU_4MHZ;
+        break;
 
-	// 8MHz
-	case 8:
-		config.cpu_type = SETTING_CPU_8MHZ;
-		break;
+    // 8MHz
+    case 8:
+        config.cpu_type = SETTING_CPU_8MHZ;
+        break;
 
-	default:
-		break;
-	}
+    default:
+        break;
+    }
 }
 
 //
@@ -475,12 +474,11 @@ void Setting::SetCPUClock(int clock)
 //
 bool Setting::Is8HMode()
 {
-	if ((config.dipswitch & DIP_CLOCK_8MHZH) != 0) {
-		return true;
-	}
-	else {
-		return false;
-	}
+    if ((config.dipswitch & DIP_CLOCK_8MHZH) != 0) {
+        return true;
+    } else {
+        return false;
+    }
 }
 
 //
@@ -489,12 +487,11 @@ bool Setting::Is8HMode()
 //
 void Setting::Set8HMode(bool high)
 {
-	if (high == true) {
-		config.dipswitch |= DIP_CLOCK_8MHZH;
-	}
-	else {
-		config.dipswitch &= ~DIP_CLOCK_8MHZH;
-	}
+    if (high == true) {
+        config.dipswitch |= DIP_CLOCK_8MHZH;
+    } else {
+        config.dipswitch &= ~DIP_CLOCK_8MHZH;
+    }
 }
 
 //
@@ -503,12 +500,11 @@ void Setting::Set8HMode(bool high)
 //
 bool Setting::HasExRAM()
 {
-	if ((config.dipswitch & DIP_DISABLE_EXRAM) != 0) {
-		return false;
-	}
-	else {
-		return true;
-	}
+    if ((config.dipswitch & DIP_DISABLE_EXRAM) != 0) {
+        return false;
+    } else {
+        return true;
+    }
 }
 
 //
@@ -517,12 +513,11 @@ bool Setting::HasExRAM()
 //
 void Setting::SetExRAM(bool enable)
 {
-	if (enable == true) {
-		config.dipswitch &= ~DIP_DISABLE_EXRAM;
-	}
-	else {
-		config.dipswitch |= DIP_DISABLE_EXRAM;
-	}
+    if (enable == true) {
+        config.dipswitch &= ~DIP_DISABLE_EXRAM;
+    } else {
+        config.dipswitch |= DIP_DISABLE_EXRAM;
+    }
 }
 
 //
@@ -531,7 +526,7 @@ void Setting::SetExRAM(bool enable)
 //
 Uint32 Setting::GetDip()
 {
-	return (Uint32)config.dipswitch;
+    return (Uint32)config.dipswitch;
 }
 
 //
@@ -540,7 +535,7 @@ Uint32 Setting::GetDip()
 //
 void Setting::SetDip(Uint32 dip)
 {
-	config.dipswitch = (uint32)dip;
+    config.dipswitch = (uint32)dip;
 }
 
 //
@@ -549,15 +544,15 @@ void Setting::SetDip(Uint32 dip)
 //
 Uint32 Setting::GetSystems()
 {
-	Uint32 info;
+    Uint32 info;
 
-	info = (Uint32)config.dipswitch;
-	info <<= 4;
-	info |= (Uint32)config.cpu_type;
-	info <<= 4;
-	info |= (Uint32)config.boot_mode;
+    info = (Uint32)config.dipswitch;
+    info <<= 4;
+    info |= (Uint32)config.cpu_type;
+    info <<= 4;
+    info |= (Uint32)config.boot_mode;
 
-	return info;
+    return info;
 }
 
 //
@@ -566,7 +561,7 @@ Uint32 Setting::GetSystems()
 //
 bool Setting::IsFastDisk()
 {
-	return config.ignore_crc;
+    return config.ignore_crc;
 }
 
 //
@@ -575,7 +570,7 @@ bool Setting::IsFastDisk()
 //
 void Setting::SetFastDisk(bool enable)
 {
-	config.ignore_crc = enable;
+    config.ignore_crc = enable;
 }
 
 //
@@ -584,7 +579,7 @@ void Setting::SetFastDisk(bool enable)
 //
 int Setting::GetWindowWidth()
 {
-	return window_width;
+    return window_width;
 }
 
 //
@@ -593,7 +588,7 @@ int Setting::GetWindowWidth()
 //
 void Setting::SetWindowWidth(int width)
 {
-	window_width = width;
+    window_width = width;
 }
 
 //
@@ -602,7 +597,7 @@ void Setting::SetWindowWidth(int width)
 //
 int Setting::GetSkipFrame()
 {
-	return skip_frame;
+    return skip_frame;
 }
 
 //
@@ -611,7 +606,7 @@ int Setting::GetSkipFrame()
 //
 void Setting::SetSkipFrame(int frame)
 {
-	skip_frame = frame;
+    skip_frame = frame;
 }
 
 //
@@ -620,7 +615,7 @@ void Setting::SetSkipFrame(int frame)
 //
 Uint8 Setting::GetBrightness()
 {
-	return brightness;
+    return brightness;
 }
 
 //
@@ -629,7 +624,7 @@ Uint8 Setting::GetBrightness()
 //
 void Setting::SetBrightness(Uint8 bri)
 {
-	brightness = bri;
+    brightness = bri;
 }
 
 //
@@ -638,7 +633,7 @@ void Setting::SetBrightness(Uint8 bri)
 //
 Uint8 Setting::GetMenuAlpha()
 {
-	return DEFAULT_MENU_ALPHA;
+    return DEFAULT_MENU_ALPHA;
 }
 
 //
@@ -647,12 +642,11 @@ Uint8 Setting::GetMenuAlpha()
 //
 bool Setting::IsLowReso()
 {
-	if (config.monitor_type == SETTING_MONITOR_15K) {
-		return true;
-	}
-	else {
-		return false;
-	}
+    if (config.monitor_type == SETTING_MONITOR_15K) {
+        return true;
+    } else {
+        return false;
+    }
 }
 
 //
@@ -661,12 +655,11 @@ bool Setting::IsLowReso()
 //
 void Setting::SetLowReso(bool low)
 {
-	if (low == true) {
-		config.monitor_type = SETTING_MONITOR_15K;
-	}
-	else {
-		config.monitor_type = SETTING_MONITOR_24K;
-	}
+    if (low == true) {
+        config.monitor_type = SETTING_MONITOR_15K;
+    } else {
+        config.monitor_type = SETTING_MONITOR_24K;
+    }
 }
 
 //
@@ -675,7 +668,7 @@ void Setting::SetLowReso(bool low)
 //
 bool Setting::HasScanline()
 {
-	return config.scan_line;
+    return config.scan_line;
 }
 
 //
@@ -684,7 +677,7 @@ bool Setting::HasScanline()
 //
 void Setting::SetScanline(bool scanline)
 {
-	config.scan_line = scanline;
+    config.scan_line = scanline;
 }
 
 //
@@ -693,7 +686,7 @@ void Setting::SetScanline(bool scanline)
 //
 bool Setting::HasStatusLine()
 {
-	return status_line;
+    return status_line;
 }
 
 //
@@ -702,7 +695,7 @@ bool Setting::HasStatusLine()
 //
 void Setting::SetStatusLine(bool enable)
 {
-	status_line = enable;
+    status_line = enable;
 }
 
 //
@@ -711,7 +704,7 @@ void Setting::SetStatusLine(bool enable)
 //
 Uint8 Setting::GetStatusAlpha()
 {
-	return status_alpha;
+    return status_alpha;
 }
 
 //
@@ -720,7 +713,7 @@ Uint8 Setting::GetStatusAlpha()
 //
 void Setting::SetStatusAlpha(Uint8 alpha)
 {
-	status_alpha = alpha;
+    status_alpha = alpha;
 }
 
 //
@@ -729,7 +722,7 @@ void Setting::SetStatusAlpha(Uint8 alpha)
 //
 const char* Setting::GetScaleQuality()
 {
-	return scale_quality;
+    return scale_quality;
 }
 
 //
@@ -738,7 +731,7 @@ const char* Setting::GetScaleQuality()
 //
 void Setting::SetScaleQuality(int quality)
 {
-	scale_quality[0] = (char)('0' + quality);
+    scale_quality[0] = (char)('0' + quality);
 }
 
 //
@@ -747,7 +740,7 @@ void Setting::SetScaleQuality(int quality)
 //
 bool Setting::IsForceRGB565()
 {
-	return force_rgb565;
+    return force_rgb565;
 }
 
 //
@@ -756,7 +749,7 @@ bool Setting::IsForceRGB565()
 //
 void Setting::SetForceRGB565(bool enable)
 {
-	force_rgb565 = enable;
+    force_rgb565 = enable;
 }
 
 //
@@ -765,8 +758,8 @@ void Setting::SetForceRGB565(bool enable)
 //
 int Setting::GetAudioDevice()
 {
-	// always use default device
-	return 0;
+    // always use default device
+    return 0;
 }
 
 //
@@ -775,7 +768,7 @@ int Setting::GetAudioDevice()
 //
 int Setting::GetAudioFreq()
 {
-	return config.sound_frequency;
+    return config.sound_frequency;
 }
 
 //
@@ -784,7 +777,7 @@ int Setting::GetAudioFreq()
 //
 void Setting::SetAudioFreq(int freq)
 {
-	config.sound_frequency = freq;
+    config.sound_frequency = freq;
 }
 
 //
@@ -793,7 +786,7 @@ void Setting::SetAudioFreq(int freq)
 //
 int Setting::GetAudioPower()
 {
-	return DEFAULT_AUDIO_POWER;
+    return DEFAULT_AUDIO_POWER;
 }
 
 //
@@ -802,7 +795,7 @@ int Setting::GetAudioPower()
 //
 int Setting::GetAudioUnit()
 {
-	return DEFAULT_AUDIO_UNIT;
+    return DEFAULT_AUDIO_UNIT;
 }
 
 //
@@ -811,7 +804,7 @@ int Setting::GetAudioUnit()
 //
 int Setting::GetAudioBuffer()
 {
-	return config.sound_latency;
+    return config.sound_latency;
 }
 
 //
@@ -820,7 +813,7 @@ int Setting::GetAudioBuffer()
 //
 void Setting::SetAudioBuffer(int ms)
 {
-	config.sound_latency = ms;
+    config.sound_latency = ms;
 }
 
 //
@@ -829,12 +822,11 @@ void Setting::SetAudioBuffer(int ms)
 //
 bool Setting::HasOPNA()
 {
-	if (config.sound_device_type == SETTING_SOUND_OPNA) {
-		return true;
-	}
-	else {
-		return false;
-	}
+    if (config.sound_device_type == SETTING_SOUND_OPNA) {
+        return true;
+    } else {
+        return false;
+    }
 }
 
 //
@@ -843,12 +835,11 @@ bool Setting::HasOPNA()
 //
 void Setting::SetOPNA(bool opna)
 {
-	if (opna == true) {
-		config.sound_device_type = SETTING_SOUND_OPNA;
-	}
-	else {
-		config.sound_device_type = SETTING_SOUND_OPN;
-	}
+    if (opna == true) {
+        config.sound_device_type = SETTING_SOUND_OPNA;
+    } else {
+        config.sound_device_type = SETTING_SOUND_OPN;
+    }
 }
 
 //
@@ -857,7 +848,7 @@ void Setting::SetOPNA(bool opna)
 //
 int Setting::GetSoftKeyType()
 {
-	return softkey_set[softkey_index];
+    return softkey_set[softkey_index];
 }
 
 //
@@ -866,36 +857,36 @@ int Setting::GetSoftKeyType()
 //
 bool Setting::NextSoftKey()
 {
-	int loop;
-	int current;
-	int index;
+    int loop;
+    int current;
+    int index;
 
-	// get current
-	current = GetSoftKeyType();
-	index = softkey_index;
+    // get current
+    current = GetSoftKeyType();
+    index = softkey_index;
 
-	// loop
-	for (loop=0; loop<SDL_arraysize(softkey_set); loop++) {
-		// next index
-		index++;
-		if (index >= SDL_arraysize(softkey_set)) {
-			index = 0;
-		}
+    // loop
+    for (loop = 0; loop < SDL_arraysize(softkey_set); loop++) {
+        // next index
+        index++;
+        if (index >= SDL_arraysize(softkey_set)) {
+            index = 0;
+        }
 
-		// compare
-		if (softkey_set[index] != current) {
-			break;
-		}
-	}
+        // compare
+        if (softkey_set[index] != current) {
+            break;
+        }
+    }
 
-	// compare
-	if (softkey_set[index] != current) {
-		softkey_index = index;
-		return true;
-	}
+    // compare
+    if (softkey_set[index] != current) {
+        softkey_index = index;
+        return true;
+    }
 
-	// all equal
-	return false;
+    // all equal
+    return false;
 }
 
 //
@@ -904,36 +895,36 @@ bool Setting::NextSoftKey()
 //
 bool Setting::PrevSoftKey()
 {
-	int loop;
-	int current;
-	int index;
+    int loop;
+    int current;
+    int index;
 
-	// get current
-	current = GetSoftKeyType();
-	index = softkey_index;
+    // get current
+    current = GetSoftKeyType();
+    index = softkey_index;
 
-	// loop
-	for (loop=0; loop<SDL_arraysize(softkey_set); loop++) {
-		// prev index
-		index--;
-		if (index < 0) {
-			index = SDL_arraysize(softkey_set) - 1;
-		}
+    // loop
+    for (loop = 0; loop < SDL_arraysize(softkey_set); loop++) {
+        // prev index
+        index--;
+        if (index < 0) {
+            index = SDL_arraysize(softkey_set) - 1;
+        }
 
-		// compare
-		if (softkey_set[index] != current) {
-			break;
-		}
-	}
+        // compare
+        if (softkey_set[index] != current) {
+            break;
+        }
+    }
 
-	// compare
-	if (softkey_set[index] != current) {
-		softkey_index = index;
-		return true;
-	}
+    // compare
+    if (softkey_set[index] != current) {
+        softkey_index = index;
+        return true;
+    }
 
-	// all equal
-	return false;
+    // all equal
+    return false;
 }
 
 //
@@ -942,7 +933,7 @@ bool Setting::PrevSoftKey()
 //
 int Setting::GetSoftKeySet(int set)
 {
-	return softkey_set[set];
+    return softkey_set[set];
 }
 
 //
@@ -951,14 +942,13 @@ int Setting::GetSoftKeySet(int set)
 //
 bool Setting::SetSoftKeySet(int set, int type)
 {
-	if (softkey_set[set] == type) {
-		return false;
-	}
+    if (softkey_set[set] == type) {
+        return false;
+    }
 
-	softkey_set[set] = type;
-	return true;
+    softkey_set[set] = type;
+    return true;
 }
-
 
 //
 // GetSoftKeyAlpha()
@@ -966,7 +956,7 @@ bool Setting::SetSoftKeySet(int set, int type)
 //
 Uint8 Setting::GetSoftKeyAlpha()
 {
-	return softkey_alpha;
+    return softkey_alpha;
 }
 
 //
@@ -975,7 +965,7 @@ Uint8 Setting::GetSoftKeyAlpha()
 //
 void Setting::SetSoftKeyAlpha(Uint8 alpha)
 {
-	softkey_alpha = alpha;
+    softkey_alpha = alpha;
 }
 
 //
@@ -984,7 +974,7 @@ void Setting::SetSoftKeyAlpha(Uint8 alpha)
 //
 Uint32 Setting::GetSoftKeyTime()
 {
-	return softkey_time;
+    return softkey_time;
 }
 
 //
@@ -993,7 +983,7 @@ Uint32 Setting::GetSoftKeyTime()
 //
 void Setting::SetSoftKeyTime(Uint32 ms)
 {
-	softkey_time = ms;
+    softkey_time = ms;
 }
 
 //
@@ -1002,7 +992,7 @@ void Setting::SetSoftKeyTime(Uint32 ms)
 //
 bool Setting::IsJoyEnable()
 {
-	return joystick_enable;
+    return joystick_enable;
 }
 
 //
@@ -1011,7 +1001,7 @@ bool Setting::IsJoyEnable()
 //
 void Setting::SetJoyEnable(bool enable)
 {
-	joystick_enable = enable;
+    joystick_enable = enable;
 }
 
 //
@@ -1020,7 +1010,7 @@ void Setting::SetJoyEnable(bool enable)
 //
 bool Setting::IsJoySwap()
 {
-	return joystick_swap;
+    return joystick_swap;
 }
 
 //
@@ -1029,7 +1019,7 @@ bool Setting::IsJoySwap()
 //
 void Setting::SetJoySwap(bool swap)
 {
-	joystick_swap = swap;
+    joystick_swap = swap;
 }
 
 //
@@ -1038,7 +1028,7 @@ void Setting::SetJoySwap(bool swap)
 //
 bool Setting::IsJoyKey()
 {
-	return joystick_key;
+    return joystick_key;
 }
 
 //
@@ -1047,7 +1037,7 @@ bool Setting::IsJoyKey()
 //
 void Setting::SetJoyKey(bool enable)
 {
-	joystick_key = enable;
+    joystick_key = enable;
 }
 
 //
@@ -1056,7 +1046,7 @@ void Setting::SetJoyKey(bool enable)
 //
 Uint32 Setting::GetMouseTime()
 {
-	return mouse_time;
+    return mouse_time;
 }
 
 //
@@ -1065,7 +1055,7 @@ Uint32 Setting::GetMouseTime()
 //
 void Setting::SetMouseTime(Uint32 ms)
 {
-	mouse_time = ms;
+    mouse_time = ms;
 }
 
 //
@@ -1074,7 +1064,7 @@ void Setting::SetMouseTime(Uint32 ms)
 //
 bool Setting::IsKeyEnable()
 {
-	return keyboard_enable;
+    return keyboard_enable;
 }
 
 //
@@ -1083,7 +1073,7 @@ bool Setting::IsKeyEnable()
 //
 void Setting::SetKeyEnable(bool enable)
 {
-	keyboard_enable = enable;
+    keyboard_enable = enable;
 }
 
 //
@@ -1092,7 +1082,7 @@ void Setting::SetKeyEnable(bool enable)
 //
 bool Setting::IsWatchBattery()
 {
-	return watch_battery;
+    return watch_battery;
 }
 
 //
@@ -1101,7 +1091,7 @@ bool Setting::IsWatchBattery()
 //
 void Setting::SetWatchBattery(bool enable)
 {
-	watch_battery = enable;
+    watch_battery = enable;
 }
 
 //
@@ -1110,7 +1100,7 @@ void Setting::SetWatchBattery(bool enable)
 //
 int Setting::GetStateNum()
 {
-	return state_num;
+    return state_num;
 }
 
 //
@@ -1119,7 +1109,7 @@ int Setting::GetStateNum()
 //
 void Setting::SetStateNum(int num)
 {
-	state_num = num;
+    state_num = num;
 }
 
 #endif // SDL

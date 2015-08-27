@@ -1,10 +1,10 @@
 /*
-	Skelton for retropc emulator
+    Skelton for retropc emulator
 
-	Author : Takeda.Toshiya
-	Date   : 2006.08.18 -
+    Author : Takeda.Toshiya
+    Date   : 2006.08.18 -
 
-	[ common header ]
+    [ common header ]
 */
 
 #ifndef _VM_H_

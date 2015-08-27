@@ -1,10 +1,10 @@
 /*
-	Skelton for retropc emulator
+    Skelton for retropc emulator
 
-	Author : Takeda.Toshiya
-	Date   : 2006.08.18 -
+    Author : Takeda.Toshiya
+    Date   : 2006.08.18 -
 
-	[ config ]
+    [ config ]
 */
 
 #include "config.h"

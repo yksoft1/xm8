@@ -1,8 +1,8 @@
 // ---------------------------------------------------------------------------
-//	FM sound generator common timer module
-//	Copyright (C) cisc 1998, 2000.
+//  FM sound generator common timer module
+//  Copyright (C) cisc 1998, 2000.
 // ---------------------------------------------------------------------------
-//	$Id: fmtimer.cpp,v 1.1 2000/09/08 13:45:56 cisc Exp $
+//  $Id: fmtimer.cpp,v 1.1 2000/09/08 13:45:56 cisc Exp $
 
 #include "headers.h"
 #include "fmtimer.h"
@@ -12,146 +12,141 @@
 using namespace FM;
 
 // ---------------------------------------------------------------------------
-//	ƒ^ƒCƒ}[§Œä
+//  ã‚¿ã‚¤ãƒãƒ¼åˆ¶å¾¡
 //
 void Timer::SetTimerControl(uint data)
 {
-	uint tmp = regtc ^ data;
-	regtc = uint8(data);
-	
-	if (data & 0x10) 
-		ResetStatus(1);
-	if (data & 0x20) 
-		ResetStatus(2);
+    uint tmp = regtc ^ data;
+    regtc = uint8(data);
 
-	if (tmp & 0x01)
-		timera_count = (data & 1) ? timera * prescaler : 0;
-	if (tmp & 0x02)
-		timerb_count = (data & 2) ? timerb * prescaler : 0;
+    if (data & 0x10)
+        ResetStatus(1);
+    if (data & 0x20)
+        ResetStatus(2);
+
+    if (tmp & 0x01)
+        timera_count = (data & 1) ? timera * prescaler : 0;
+    if (tmp & 0x02)
+        timerb_count = (data & 2) ? timerb * prescaler : 0;
 }
 
 // ---------------------------------------------------------------------------
-//	ƒ^ƒCƒ}[A üŠúİ’è
+//  ã‚¿ã‚¤ãƒãƒ¼A å‘¨æœŸè¨­å®š
 //
 void Timer::SetTimerA(uint addr, uint data)
 {
-	uint tmp;
-	regta[addr & 1] = uint8(data);
-	tmp = (regta[0] << 2) + (regta[1] & 3);
-	timera = 1024-tmp;
+    uint tmp;
+    regta[addr & 1] = uint8(data);
+    tmp = (regta[0] << 2) + (regta[1] & 3);
+    timera = 1024 - tmp;
 }
 
 // ---------------------------------------------------------------------------
-//	ƒ^ƒCƒ}[B üŠúİ’è
+//  ã‚¿ã‚¤ãƒãƒ¼B å‘¨æœŸè¨­å®š
 //
 void Timer::SetTimerB(uint data)
 {
-	timerb = (256-data) << 4;
+    timerb = (256 - data) << 4;
 }
 
 // ---------------------------------------------------------------------------
-//	ƒ^ƒCƒ}[ŠÔˆ—
+//  ã‚¿ã‚¤ãƒãƒ¼æ™‚é–“å‡¦ç†
 //
 bool Timer::Count(int32 clock)
 {
-	bool event = false;
+    bool event = false;
 
-	if (timera_count)
-	{
-		timera_count -= clock;
-		if (timera_count <= 0)
-		{
-			event = true;
-			TimerA();
+    if (timera_count) {
+        timera_count -= clock;
+        if (timera_count <= 0) {
+            event = true;
+            TimerA();
 
-			while (timera_count <= 0)
-				timera_count += timera * prescaler;
-			
-			if (regtc & 4)
-				SetStatus(1);
-		}
-	}
-	if (timerb_count)
-	{
-		timerb_count -= clock;
-		if (timerb_count <= 0)
-		{
-			event = true;
-			while (timerb_count <= 0)
-				timerb_count += timerb * prescaler;
-			
-			if (regtc & 8)
-				SetStatus(2);
-		}
-	}
-	return event;
+            while (timera_count <= 0)
+                timera_count += timera * prescaler;
+
+            if (regtc & 4)
+                SetStatus(1);
+        }
+    }
+    if (timerb_count) {
+        timerb_count -= clock;
+        if (timerb_count <= 0) {
+            event = true;
+            while (timerb_count <= 0)
+                timerb_count += timerb * prescaler;
+
+            if (regtc & 8)
+                SetStatus(2);
+        }
+    }
+    return event;
 }
 
 // ---------------------------------------------------------------------------
-//	Ÿ‚Éƒ^ƒCƒ}[‚ª”­¶‚·‚é‚Ü‚Å‚ÌŠÔ‚ğ‹‚ß‚é
+//  æ¬¡ã«ã‚¿ã‚¤ãƒãƒ¼ãŒç™ºç”Ÿã™ã‚‹ã¾ã§ã®æ™‚é–“ã‚’æ±‚ã‚ã‚‹
 //
 int32 Timer::GetNextEvent()
 {
 #ifdef SDL
-	if ((timera_count > 0) && (timerb_count > 0)) {
-		return (timera_count < timerb_count ? timera_count : timerb_count);
-	}
-	if (timera_count > 0) {
-		return timera_count;
-	}
-	if (timerb_count > 0) {
-		return timerb_count;
-	}
-	return 0;
+    if ((timera_count > 0) && (timerb_count > 0)) {
+        return (timera_count < timerb_count ? timera_count : timerb_count);
+    }
+    if (timera_count > 0) {
+        return timera_count;
+    }
+    if (timerb_count > 0) {
+        return timerb_count;
+    }
+    return 0;
 #else
-	return (timera_count < timerb_count ? timera_count : timerb_count) + 1;
+    return (timera_count < timerb_count ? timera_count : timerb_count) + 1;
 #endif // SDL
 }
 
 // ---------------------------------------------------------------------------
-//	ƒ^ƒCƒ}[Šî€’lİ’è
+//  ã‚¿ã‚¤ãƒãƒ¼åŸºæº–å€¤è¨­å®š
 //
 void Timer::SetTimerPrescaler(int32 p)
 {
-	prescaler = p;
+    prescaler = p;
 }
 
 // ---------------------------------------------------------------------------
-//	ƒXƒe[ƒgƒZ[ƒu
+//  ã‚¹ãƒ†ãƒ¼ãƒˆã‚»ãƒ¼ãƒ–
 //
-#define TIMER_STATE_VERSION	1
+#define TIMER_STATE_VERSION 1
 
-void Timer::SaveState(void *f)
+void Timer::SaveState(void* f)
 {
-	FILEIO *state_fio = (FILEIO *)f;
-	
-	state_fio->FputUint32(TIMER_STATE_VERSION);
-	
-	state_fio->FputUint8(status);
-	state_fio->FputUint8(regtc);
-	state_fio->Fwrite(regta, sizeof(regta), 1);
-	state_fio->FputInt32(timera);
-	state_fio->FputInt32(timera_count);
-	state_fio->FputInt32(timerb);
-	state_fio->FputInt32(timerb_count);
-	state_fio->FputInt32(prescaler);
+    FILEIO* state_fio = (FILEIO*)f;
+
+    state_fio->FputUint32(TIMER_STATE_VERSION);
+
+    state_fio->FputUint8(status);
+    state_fio->FputUint8(regtc);
+    state_fio->Fwrite(regta, sizeof(regta), 1);
+    state_fio->FputInt32(timera);
+    state_fio->FputInt32(timera_count);
+    state_fio->FputInt32(timerb);
+    state_fio->FputInt32(timerb_count);
+    state_fio->FputInt32(prescaler);
 }
 
-bool Timer::LoadState(void *f)
+bool Timer::LoadState(void* f)
 {
-	FILEIO *state_fio = (FILEIO *)f;
-	
-	if(state_fio->FgetUint32() != TIMER_STATE_VERSION) {
-		return false;
-	}
-	status = state_fio->FgetUint8();
-	regtc = state_fio->FgetUint8();
-	state_fio->Fread(regta, sizeof(regta), 1);
-	timera = state_fio->FgetInt32();
-	timera_count = state_fio->FgetInt32();
-	timerb = state_fio->FgetInt32();
-	timerb_count = state_fio->FgetInt32();
-	prescaler = state_fio->FgetInt32();
-	return true;
-}
+    FILEIO* state_fio = (FILEIO*)f;
 
+    if (state_fio->FgetUint32() != TIMER_STATE_VERSION) {
+        return false;
+    }
+    status = state_fio->FgetUint8();
+    regtc = state_fio->FgetUint8();
+    state_fio->Fread(regta, sizeof(regta), 1);
+    timera = state_fio->FgetInt32();
+    timera_count = state_fio->FgetInt32();
+    timerb = state_fio->FgetInt32();
+    timerb_count = state_fio->FgetInt32();
+    prescaler = state_fio->FgetInt32();
+    return true;
+}

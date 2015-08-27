@@ -1,24 +1,24 @@
 // ---------------------------------------------------------------------------
-//	FM Sound Generator - Core Unit
-//	Copyright (C) cisc 1998, 2003.
+//  FM Sound Generator - Core Unit
+//  Copyright (C) cisc 1998, 2003.
 // ---------------------------------------------------------------------------
-//	$Id: fmgen.cpp,v 1.50 2003/09/10 13:19:34 cisc Exp $
+//  $Id: fmgen.cpp,v 1.50 2003/09/10 13:19:34 cisc Exp $
 // ---------------------------------------------------------------------------
-//	éQçl:
-//		FM sound generator for M.A.M.E., written by Tatsuyuki Satoh.
+//  ÂèÇËÄÉ:
+//      FM sound generator for M.A.M.E., written by Tatsuyuki Satoh.
 //
-// 	ì‰:
-//		OPNB ÇÃ CSM ÉÇÅ[Éh(édólÇ™ÇÊÇ≠ÇÌÇ©ÇÁÇ»Ç¢)
+//  Ë¨é:
+//      OPNB „ÅÆ CSM „É¢„Éº„Éâ(‰ªïÊßò„Åå„Çà„Åè„Çè„Åã„Çâ„Å™„ÅÑ)
 //
-//	êßå¿:
-//		ÅEAR!=31 Ç≈ SSGEC ÇégÇ§Ç∆îgå`Ç™é¿ç€Ç∆àŸÇ»ÇÈâ¬î\ê´Ç†ÇË
+//  Âà∂Èôê:
+//      „ÉªAR!=31 „Åß SSGEC „Çí‰Ωø„ÅÜ„Å®Ê≥¢ÂΩ¢„ÅåÂÆüÈöõ„Å®Áï∞„Å™„ÇãÂèØËÉΩÊÄß„ÅÇ„Çä
 //
-//	é”é´:
-//		Tatsuyuki Satoh Ç≥ÇÒ(fm.c)
-//		Hiromitsu Shioya Ç≥ÇÒ(ADPCM-A)
-//		DMP-SOFT. Ç≥ÇÒ(OPNB)
-//		KAJA Ç≥ÇÒ(test program)
-//		ÇŸÇ©åfé¶î¬ìôÇ≈ólÅXÇ»Ç≤èïåæÅCÇ≤éxâáÇÇ®äÒÇπÇ¢ÇΩÇæÇ¢ÇΩäFólÇ…
+//  Ë¨ùËæû:
+//      Tatsuyuki Satoh „Åï„Çì(fm.c)
+//      Hiromitsu Shioya „Åï„Çì(ADPCM-A)
+//      DMP-SOFT. „Åï„Çì(OPNB)
+//      KAJA „Åï„Çì(test program)
+//      „Åª„ÅãÊé≤Á§∫ÊùøÁ≠â„ÅßÊßò„ÄÖ„Å™„ÅîÂä©Ë®ÄÔºå„ÅîÊîØÊè¥„Çí„ÅäÂØÑ„Åõ„ÅÑ„Åü„Å†„ÅÑ„ÅüÁöÜÊßò„Å´
 // ---------------------------------------------------------------------------
 
 #include "headers.h"
@@ -35,1114 +35,1079 @@
 #define FM_EG_BOTTOM 955
 
 // ---------------------------------------------------------------------------
-//	Table/etc
+//  Table/etc
 //
-namespace FM
-{
-	const uint8 Operator::notetable[128] =
-	{
-		 0,  0,  0,  0,  0,  0,  0,  1,  2,  3,  3,  3,  3,  3,  3,  3, 
-		 4,  4,  4,  4,  4,  4,  4,  5,  6,  7,  7,  7,  7,  7,  7,  7, 
-		 8,  8,  8,  8,  8,  8,  8,  9, 10, 11, 11, 11, 11, 11, 11, 11, 
-		12, 12, 12, 12, 12, 12, 12, 13, 14, 15, 15, 15, 15, 15, 15, 15, 
-		16, 16, 16, 16, 16, 16, 16, 17, 18, 19, 19, 19, 19, 19, 19, 19, 
-		20, 20, 20, 20, 20, 20, 20, 21, 22, 23, 23, 23, 23, 23, 23, 23, 
-		24, 24, 24, 24, 24, 24, 24, 25, 26, 27, 27, 27, 27, 27, 27, 27, 
-		28, 28, 28, 28, 28, 28, 28, 29, 30, 31, 31, 31, 31, 31, 31, 31, 
-	};
-	
-	const int8 Operator::dttable[256] =
-	{
-		  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
-		  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
-		  0,  0,  0,  0,  2,  2,  2,  2,  2,  2,  2,  2,  4,  4,  4,  4,
-		  4,  6,  6,  6,  8,  8,  8, 10, 10, 12, 12, 14, 16, 16, 16, 16,
-		  2,  2,  2,  2,  4,  4,  4,  4,  4,  6,  6,  6,  8,  8,  8, 10,
-		 10, 12, 12, 14, 16, 16, 18, 20, 22, 24, 26, 28, 32, 32, 32, 32,
-		  4,  4,  4,  4,  4,  6,  6,  6,  8,  8,  8, 10, 10, 12, 12, 14,
-		 16, 16, 18, 20, 22, 24, 26, 28, 32, 34, 38, 40, 44, 44, 44, 44,
-		  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
-		  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
-		  0,  0,  0,  0, -2, -2, -2, -2, -2, -2, -2, -2, -4, -4, -4, -4,
-		 -4, -6, -6, -6, -8, -8, -8,-10,-10,-12,-12,-14,-16,-16,-16,-16,
-		 -2, -2, -2, -2, -4, -4, -4, -4, -4, -6, -6, -6, -8, -8, -8,-10,
-		-10,-12,-12,-14,-16,-16,-18,-20,-22,-24,-26,-28,-32,-32,-32,-32,
-		 -4, -4, -4, -4, -4, -6, -6, -6, -8, -8, -8,-10,-10,-12,-12,-14,
-		-16,-16,-18,-20,-22,-24,-26,-28,-32,-34,-38,-40,-44,-44,-44,-44,
-	};
+namespace FM {
+const uint8 Operator::notetable[128] = {
+    0, 0, 0, 0, 0, 0, 0, 1, 2, 3, 3, 3, 3, 3, 3, 3,
+    4, 4, 4, 4, 4, 4, 4, 5, 6, 7, 7, 7, 7, 7, 7, 7,
+    8, 8, 8, 8, 8, 8, 8, 9, 10, 11, 11, 11, 11, 11, 11, 11,
+    12, 12, 12, 12, 12, 12, 12, 13, 14, 15, 15, 15, 15, 15, 15, 15,
+    16, 16, 16, 16, 16, 16, 16, 17, 18, 19, 19, 19, 19, 19, 19, 19,
+    20, 20, 20, 20, 20, 20, 20, 21, 22, 23, 23, 23, 23, 23, 23, 23,
+    24, 24, 24, 24, 24, 24, 24, 25, 26, 27, 27, 27, 27, 27, 27, 27,
+    28, 28, 28, 28, 28, 28, 28, 29, 30, 31, 31, 31, 31, 31, 31, 31,
+};
 
-	const int8 Operator::decaytable1[64][8] = 
-	{
-		0, 0, 0, 0, 0, 0, 0, 0,		0, 0, 0, 0, 0, 0, 0, 0,
-		1, 1, 1, 1, 1, 1, 1, 1,		1, 1, 1, 1, 1, 1, 1, 1,
-		1, 1, 1, 1, 1, 1, 1, 1,		1, 1, 1, 1, 1, 1, 1, 1,
-		1, 1, 1, 0, 1, 1, 1, 0,		1, 1, 1, 0, 1, 1, 1, 0,
-		1, 0, 1, 0, 1, 0, 1, 0,		1, 1, 1, 0, 1, 0, 1, 0,
-		1, 1, 1, 0, 1, 1, 1, 0,		1, 1, 1, 1, 1, 1, 1, 0,
-		1, 0, 1, 0, 1, 0, 1, 0,		1, 1, 1, 0, 1, 0, 1, 0,
-		1, 1, 1, 0, 1, 1, 1, 0,		1, 1, 1, 1, 1, 1, 1, 0,
-		1, 0, 1, 0, 1, 0, 1, 0,		1, 1, 1, 0, 1, 0, 1, 0,
-		1, 1, 1, 0, 1, 1, 1, 0,		1, 1, 1, 1, 1, 1, 1, 0,
-		1, 0, 1, 0, 1, 0, 1, 0,		1, 1, 1, 0, 1, 0, 1, 0,
-		1, 1, 1, 0, 1, 1, 1, 0,		1, 1, 1, 1, 1, 1, 1, 0,
-		1, 0, 1, 0, 1, 0, 1, 0,		1, 1, 1, 0, 1, 0, 1, 0,
-		1, 1, 1, 0, 1, 1, 1, 0,		1, 1, 1, 1, 1, 1, 1, 0,
-		1, 0, 1, 0, 1, 0, 1, 0,		1, 1, 1, 0, 1, 0, 1, 0,
-		1, 1, 1, 0, 1, 1, 1, 0,		1, 1, 1, 1, 1, 1, 1, 0,
-		1, 0, 1, 0, 1, 0, 1, 0,		1, 1, 1, 0, 1, 0, 1, 0,
-		1, 1, 1, 0, 1, 1, 1, 0,		1, 1, 1, 1, 1, 1, 1, 0,
-		1, 0, 1, 0, 1, 0, 1, 0,		1, 1, 1, 0, 1, 0, 1, 0,
-		1, 1, 1, 0, 1, 1, 1, 0,		1, 1, 1, 1, 1, 1, 1, 0,
-		1, 0, 1, 0, 1, 0, 1, 0,		1, 1, 1, 0, 1, 0, 1, 0,
-		1, 1, 1, 0, 1, 1, 1, 0,		1, 1, 1, 1, 1, 1, 1, 0,
-		1, 0, 1, 0, 1, 0, 1, 0,		1, 1, 1, 0, 1, 0, 1, 0,
-		1, 1, 1, 0, 1, 1, 1, 0,		1, 1, 1, 1, 1, 1, 1, 0,
-		1, 1, 1, 1, 1, 1, 1, 1,		2, 1, 1, 1, 2, 1, 1, 1,
-		2, 1, 2, 1, 2, 1, 2, 1,		2, 2, 2, 1, 2, 2, 2, 1,
-		2, 2, 2, 2, 2, 2, 2, 2,		4, 2, 2, 2, 4, 2, 2, 2,	
-		4, 2, 4, 2, 4, 2, 4, 2,		4, 4, 4, 2, 4, 4, 4, 2,
-		4, 4, 4, 4, 4, 4, 4, 4,		8, 4, 4, 4, 8, 4, 4, 4,	
-		8, 4, 8, 4, 8, 4, 8, 4,		8, 8, 8, 4, 8, 8, 8, 4,
-		16,16,16,16,16,16,16,16,	16,16,16,16,16,16,16,16,
-		16,16,16,16,16,16,16,16,	16,16,16,16,16,16,16,16,
-	};
+const int8 Operator::dttable[256] = {
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 2, 2, 2, 2, 2, 2, 2, 2, 4, 4, 4, 4,
+    4, 6, 6, 6, 8, 8, 8, 10, 10, 12, 12, 14, 16, 16, 16, 16,
+    2, 2, 2, 2, 4, 4, 4, 4, 4, 6, 6, 6, 8, 8, 8, 10,
+    10, 12, 12, 14, 16, 16, 18, 20, 22, 24, 26, 28, 32, 32, 32, 32,
+    4, 4, 4, 4, 4, 6, 6, 6, 8, 8, 8, 10, 10, 12, 12, 14,
+    16, 16, 18, 20, 22, 24, 26, 28, 32, 34, 38, 40, 44, 44, 44, 44,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, -2, -2, -2, -2, -2, -2, -2, -2, -4, -4, -4, -4,
+    -4, -6, -6, -6, -8, -8, -8, -10, -10, -12, -12, -14, -16, -16, -16, -16,
+    -2, -2, -2, -2, -4, -4, -4, -4, -4, -6, -6, -6, -8, -8, -8, -10,
+    -10, -12, -12, -14, -16, -16, -18, -20, -22, -24, -26, -28, -32, -32, -32, -32,
+    -4, -4, -4, -4, -4, -6, -6, -6, -8, -8, -8, -10, -10, -12, -12, -14,
+    -16, -16, -18, -20, -22, -24, -26, -28, -32, -34, -38, -40, -44, -44, -44, -44,
+};
 
-	const int Operator::decaytable2[16] = 
-	{
-		1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2047, 2047, 2047, 2047, 2047
-	};
+const int8 Operator::decaytable1[64][8] = {
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+    1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 0,
+    1, 0, 1, 0, 1, 0, 1, 0, 1, 1, 1, 0, 1, 0, 1, 0,
+    1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 0,
+    1, 0, 1, 0, 1, 0, 1, 0, 1, 1, 1, 0, 1, 0, 1, 0,
+    1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 0,
+    1, 0, 1, 0, 1, 0, 1, 0, 1, 1, 1, 0, 1, 0, 1, 0,
+    1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 0,
+    1, 0, 1, 0, 1, 0, 1, 0, 1, 1, 1, 0, 1, 0, 1, 0,
+    1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 0,
+    1, 0, 1, 0, 1, 0, 1, 0, 1, 1, 1, 0, 1, 0, 1, 0,
+    1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 0,
+    1, 0, 1, 0, 1, 0, 1, 0, 1, 1, 1, 0, 1, 0, 1, 0,
+    1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 0,
+    1, 0, 1, 0, 1, 0, 1, 0, 1, 1, 1, 0, 1, 0, 1, 0,
+    1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 0,
+    1, 0, 1, 0, 1, 0, 1, 0, 1, 1, 1, 0, 1, 0, 1, 0,
+    1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 0,
+    1, 0, 1, 0, 1, 0, 1, 0, 1, 1, 1, 0, 1, 0, 1, 0,
+    1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 0,
+    1, 0, 1, 0, 1, 0, 1, 0, 1, 1, 1, 0, 1, 0, 1, 0,
+    1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 0,
+    1, 1, 1, 1, 1, 1, 1, 1, 2, 1, 1, 1, 2, 1, 1, 1,
+    2, 1, 2, 1, 2, 1, 2, 1, 2, 2, 2, 1, 2, 2, 2, 1,
+    2, 2, 2, 2, 2, 2, 2, 2, 4, 2, 2, 2, 4, 2, 2, 2,
+    4, 2, 4, 2, 4, 2, 4, 2, 4, 4, 4, 2, 4, 4, 4, 2,
+    4, 4, 4, 4, 4, 4, 4, 4, 8, 4, 4, 4, 8, 4, 4, 4,
+    8, 4, 8, 4, 8, 4, 8, 4, 8, 8, 8, 4, 8, 8, 8, 4,
+    16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16,
+    16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16,
+};
 
-	const int8 Operator::attacktable[64][8] = 
-	{
-		-1,-1,-1,-1,-1,-1,-1,-1,	-1,-1,-1,-1,-1,-1,-1,-1,
-		 4, 4, 4, 4, 4, 4, 4, 4,	 4, 4, 4, 4, 4, 4, 4, 4,
-		 4, 4, 4, 4, 4, 4, 4, 4,	 4, 4, 4, 4, 4, 4, 4, 4,
-		 4, 4, 4,-1, 4, 4, 4,-1,	 4, 4, 4,-1, 4, 4, 4,-1,
-		 4,-1, 4,-1, 4,-1, 4,-1,	 4, 4, 4,-1, 4,-1, 4,-1,
-		 4, 4, 4,-1, 4, 4, 4,-1,	 4, 4, 4, 4, 4, 4, 4,-1,
-		 4,-1, 4,-1, 4,-1, 4,-1,	 4, 4, 4,-1, 4,-1, 4,-1,
-		 4, 4, 4,-1, 4, 4, 4,-1,	 4, 4, 4, 4, 4, 4, 4,-1,
-		 4,-1, 4,-1, 4,-1, 4,-1,	 4, 4, 4,-1, 4,-1, 4,-1,
-		 4, 4, 4,-1, 4, 4, 4,-1,	 4, 4, 4, 4, 4, 4, 4,-1,
-		 4,-1, 4,-1, 4,-1, 4,-1,	 4, 4, 4,-1, 4,-1, 4,-1,
-		 4, 4, 4,-1, 4, 4, 4,-1,	 4, 4, 4, 4, 4, 4, 4,-1,
-		 4,-1, 4,-1, 4,-1, 4,-1,	 4, 4, 4,-1, 4,-1, 4,-1,
-		 4, 4, 4,-1, 4, 4, 4,-1,	 4, 4, 4, 4, 4, 4, 4,-1,
-		 4,-1, 4,-1, 4,-1, 4,-1,	 4, 4, 4,-1, 4,-1, 4,-1,
-		 4, 4, 4,-1, 4, 4, 4,-1,	 4, 4, 4, 4, 4, 4, 4,-1,
-		 4,-1, 4,-1, 4,-1, 4,-1,	 4, 4, 4,-1, 4,-1, 4,-1,
-		 4, 4, 4,-1, 4, 4, 4,-1,	 4, 4, 4, 4, 4, 4, 4,-1,
-		 4,-1, 4,-1, 4,-1, 4,-1,	 4, 4, 4,-1, 4,-1, 4,-1,
-		 4, 4, 4,-1, 4, 4, 4,-1,	 4, 4, 4, 4, 4, 4, 4,-1,
-		 4,-1, 4,-1, 4,-1, 4,-1,	 4, 4, 4,-1, 4,-1, 4,-1,
-		 4, 4, 4,-1, 4, 4, 4,-1,	 4, 4, 4, 4, 4, 4, 4,-1,
-		 4,-1, 4,-1, 4,-1, 4,-1,	 4, 4, 4,-1, 4,-1, 4,-1,
-		 4, 4, 4,-1, 4, 4, 4,-1,	 4, 4, 4, 4, 4, 4, 4,-1,
-		 4, 4, 4, 4, 4, 4, 4, 4,	 3, 4, 4, 4, 3, 4, 4, 4,
-		 3, 4, 3, 4, 3, 4, 3, 4,	 3, 3, 3, 4, 3, 3, 3, 4,
-		 3, 3, 3, 3, 3, 3, 3, 3,	 2, 3, 3, 3, 2, 3, 3, 3,
-		 2, 3, 2, 3, 2, 3, 2, 3,	 2, 2, 2, 3, 2, 2, 2, 3,
-		 2, 2, 2, 2, 2, 2, 2, 2,	 1, 2, 2, 2, 1, 2, 2, 2,
-		 1, 2, 1, 2, 1, 2, 1, 2,	 1, 1, 1, 2, 1, 1, 1, 2,
-		 0, 0, 0, 0, 0, 0, 0, 0,	 0, 0 ,0, 0, 0, 0, 0, 0,
-		 0, 0, 0, 0, 0, 0, 0, 0,	 0, 0 ,0, 0, 0, 0, 0, 0,
-	};
+const int Operator::decaytable2[16] = {
+    1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2047, 2047, 2047, 2047, 2047
+};
 
-	const int Operator::ssgenvtable[8][2][3][2] =
-	{
-		1, 1,  1, 1,  1, 1,		// 08 
-		0, 1,  1, 1,  1, 1,		// 08 56~
-		0, 1,  2, 0,  2, 0,		// 09
-		0, 1,  2, 0,  2, 0,		// 09
-		1,-1,  0, 1,  1,-1,		// 10
-		0, 1,  1,-1,  0, 1,		// 10 60~
-		1,-1,  0, 0,  0, 0,		// 11
-		0, 1,  0, 0,  0, 0,		// 11 60~
-		2,-1,  2,-1,  2,-1,		// 12
-		1,-1,  2,-1,  2,-1,		// 12 56~
-		1,-1,  0, 0,  0, 0,		// 13
-		1,-1,  0, 0,  0, 0,		// 13
-		0, 1,  1,-1,  0, 1,		// 14
-		1,-1,  0, 1,  1,-1,		// 14 60~
-		0, 1,  2, 0,  2, 0,		// 15
-		1,-1,  2, 0,  2, 0,		// 15 60~
-	};
+const int8 Operator::attacktable[64][8] = {
+    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+    4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4,
+    4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4,
+    4, 4, 4, -1, 4, 4, 4, -1, 4, 4, 4, -1, 4, 4, 4, -1,
+    4, -1, 4, -1, 4, -1, 4, -1, 4, 4, 4, -1, 4, -1, 4, -1,
+    4, 4, 4, -1, 4, 4, 4, -1, 4, 4, 4, 4, 4, 4, 4, -1,
+    4, -1, 4, -1, 4, -1, 4, -1, 4, 4, 4, -1, 4, -1, 4, -1,
+    4, 4, 4, -1, 4, 4, 4, -1, 4, 4, 4, 4, 4, 4, 4, -1,
+    4, -1, 4, -1, 4, -1, 4, -1, 4, 4, 4, -1, 4, -1, 4, -1,
+    4, 4, 4, -1, 4, 4, 4, -1, 4, 4, 4, 4, 4, 4, 4, -1,
+    4, -1, 4, -1, 4, -1, 4, -1, 4, 4, 4, -1, 4, -1, 4, -1,
+    4, 4, 4, -1, 4, 4, 4, -1, 4, 4, 4, 4, 4, 4, 4, -1,
+    4, -1, 4, -1, 4, -1, 4, -1, 4, 4, 4, -1, 4, -1, 4, -1,
+    4, 4, 4, -1, 4, 4, 4, -1, 4, 4, 4, 4, 4, 4, 4, -1,
+    4, -1, 4, -1, 4, -1, 4, -1, 4, 4, 4, -1, 4, -1, 4, -1,
+    4, 4, 4, -1, 4, 4, 4, -1, 4, 4, 4, 4, 4, 4, 4, -1,
+    4, -1, 4, -1, 4, -1, 4, -1, 4, 4, 4, -1, 4, -1, 4, -1,
+    4, 4, 4, -1, 4, 4, 4, -1, 4, 4, 4, 4, 4, 4, 4, -1,
+    4, -1, 4, -1, 4, -1, 4, -1, 4, 4, 4, -1, 4, -1, 4, -1,
+    4, 4, 4, -1, 4, 4, 4, -1, 4, 4, 4, 4, 4, 4, 4, -1,
+    4, -1, 4, -1, 4, -1, 4, -1, 4, 4, 4, -1, 4, -1, 4, -1,
+    4, 4, 4, -1, 4, 4, 4, -1, 4, 4, 4, 4, 4, 4, 4, -1,
+    4, -1, 4, -1, 4, -1, 4, -1, 4, 4, 4, -1, 4, -1, 4, -1,
+    4, 4, 4, -1, 4, 4, 4, -1, 4, 4, 4, 4, 4, 4, 4, -1,
+    4, 4, 4, 4, 4, 4, 4, 4, 3, 4, 4, 4, 3, 4, 4, 4,
+    3, 4, 3, 4, 3, 4, 3, 4, 3, 3, 3, 4, 3, 3, 3, 4,
+    3, 3, 3, 3, 3, 3, 3, 3, 2, 3, 3, 3, 2, 3, 3, 3,
+    2, 3, 2, 3, 2, 3, 2, 3, 2, 2, 2, 3, 2, 2, 2, 3,
+    2, 2, 2, 2, 2, 2, 2, 2, 1, 2, 2, 2, 1, 2, 2, 2,
+    1, 2, 1, 2, 1, 2, 1, 2, 1, 1, 1, 2, 1, 1, 1, 2,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+};
 
-	// fixed equasion-based tables
-	int		pmtable[2][8][FM_LFOENTS];
-	uint	amtable[2][4][FM_LFOENTS];
+const int Operator::ssgenvtable[8][2][3][2] = {
+    1, 1, 1, 1, 1, 1, // 08
+    0, 1, 1, 1, 1, 1, // 08 56~
+    0, 1, 2, 0, 2, 0, // 09
+    0, 1, 2, 0, 2, 0, // 09
+    1, -1, 0, 1, 1, -1, // 10
+    0, 1, 1, -1, 0, 1, // 10 60~
+    1, -1, 0, 0, 0, 0, // 11
+    0, 1, 0, 0, 0, 0, // 11 60~
+    2, -1, 2, -1, 2, -1, // 12
+    1, -1, 2, -1, 2, -1, // 12 56~
+    1, -1, 0, 0, 0, 0, // 13
+    1, -1, 0, 0, 0, 0, // 13
+    0, 1, 1, -1, 0, 1, // 14
+    1, -1, 0, 1, 1, -1, // 14 60~
+    0, 1, 2, 0, 2, 0, // 15
+    1, -1, 2, 0, 2, 0, // 15 60~
+};
 
-	static bool tablemade = false;
+// fixed equasion-based tables
+int pmtable[2][8][FM_LFOENTS];
+uint amtable[2][4][FM_LFOENTS];
+
+static bool tablemade = false;
 }
 
-namespace FM
-{
+namespace FM {
 
 // ---------------------------------------------------------------------------
-//	ÉeÅ[ÉuÉãçÏê¨
+//  „ÉÜ„Éº„Éñ„É´‰ΩúÊàê
 //
 void MakeLFOTable()
 {
-	if (tablemade)
-		return;
+    if (tablemade)
+        return;
 
-	tablemade = true;
-	
-	int i;
+    tablemade = true;
 
-	static const double pms[2][8] = 
-	{ 
-		{ 0, 1/360., 2/360., 3/360.,  4/360.,  6/360., 12/360.,  24/360., },	// OPNA
-//		{ 0, 1/240., 2/240., 4/240., 10/240., 20/240., 80/240., 140/240., },	// OPM
-		{ 0, 1/480., 2/480., 4/480., 10/480., 20/480., 80/480., 140/480., },	// OPM
-//		{ 0, 1/960., 2/960., 4/960., 10/960., 20/960., 80/960., 140/960., },	// OPM
-	};
-	//		 3		 6,      12      30       60       240      420		/ 720
-	//	1.000963
-	//	lfofref[level * max * wave];
-	//	pre = lfofref[level][pms * wave >> 8];
-	static const uint8 amt[2][4] = 
-	{
-		{ 31, 6, 4, 3 }, // OPNA
-		{ 31, 2, 1, 0 }, //	OPM
-	};
-	
-	for (int type = 0; type < 2; type++)
-	{
-		for (i=0; i<8; i++)
-		{
-			double pmb = pms[type][i];
-			for (int j=0; j<FM_LFOENTS; j++)
-			{
-//				double v = pow(2.0, pmb * (2 * j - FM_LFOENTS+1) / (FM_LFOENTS-1));
-				double w = 0.6 * pmb * sin(2 * j * 3.14159265358979323846 / FM_LFOENTS) + 1;
-//				pmtable[type][i][j] = int(0x10000 * (v - 1));
-//				if (type == 0)
-					pmtable[type][i][j] = int(0x10000 * (w - 1));
-//				else
-//					pmtable[type][i][j] = int(0x10000 * (v - 1));
+    int i;
 
-//				printf("pmtable[%d][%d][%.2x] = %5d  %7.5f %7.5f\n", type, i, j, pmtable[type][i][j], v, w);
-			}
-		}
-		for (i=0; i<4; i++)
-		{
-			for (int j=0; j<FM_LFOENTS; j++)
-			{
-				amtable[type][i][j] = (((j * 4) >> amt[type][i]) * 2) << 2;
-			}
-		}
-	}
+    static const double pms[2][8] = {
+        {
+          0, 1 / 360., 2 / 360., 3 / 360., 4 / 360., 6 / 360., 12 / 360., 24 / 360.,
+        }, // OPNA
+        //      { 0, 1/240., 2/240., 4/240., 10/240., 20/240., 80/240., 140/240., },    // OPM
+        {
+          0, 1 / 480., 2 / 480., 4 / 480., 10 / 480., 20 / 480., 80 / 480., 140 / 480.,
+        }, // OPM
+        //      { 0, 1/960., 2/960., 4/960., 10/960., 20/960., 80/960., 140/960., },    // OPM
+    };
+    //       3       6,      12      30       60       240      420     / 720
+    //  1.000963
+    //  lfofref[level * max * wave];
+    //  pre = lfofref[level][pms * wave >> 8];
+    static const uint8 amt[2][4] = {
+        { 31, 6, 4, 3 }, // OPNA
+        { 31, 2, 1, 0 }, // OPM
+    };
+
+    for (int type = 0; type < 2; type++) {
+        for (i = 0; i < 8; i++) {
+            double pmb = pms[type][i];
+            for (int j = 0; j < FM_LFOENTS; j++) {
+                //              double v = pow(2.0, pmb * (2 * j - FM_LFOENTS+1) / (FM_LFOENTS-1));
+                double w = 0.6 * pmb * sin(2 * j * 3.14159265358979323846 / FM_LFOENTS) + 1;
+                //              pmtable[type][i][j] = int(0x10000 * (v - 1));
+                //              if (type == 0)
+                pmtable[type][i][j] = int(0x10000 * (w - 1));
+                //              else
+                //                  pmtable[type][i][j] = int(0x10000 * (v - 1));
+
+                //              printf("pmtable[%d][%d][%.2x] = %5d  %7.5f %7.5f\n", type, i, j, pmtable[type][i][j], v, w);
+            }
+        }
+        for (i = 0; i < 4; i++) {
+            for (int j = 0; j < FM_LFOENTS; j++) {
+                amtable[type][i][j] = (((j * 4) >> amt[type][i]) * 2) << 2;
+            }
+        }
+    }
 }
-
 
 // ---------------------------------------------------------------------------
-//	É`ÉbÉvì‡Ç≈ã§í Ç»ïîï™
+//  „ÉÅ„ÉÉ„ÉóÂÜÖ„ÅßÂÖ±ÈÄö„Å™ÈÉ®ÂàÜ
 //
 Chip::Chip()
-: ratio_(0), aml_(0), pml_(0), pmv_(0), optype_(typeN)
+    : ratio_(0)
+    , aml_(0)
+    , pml_(0)
+    , pmv_(0)
+    , optype_(typeN)
 {
 }
 
-//	ÉNÉçÉbÉNÅEÉTÉìÉvÉäÉìÉOÉåÅ[Égî‰Ç…àÀë∂Ç∑ÇÈÉeÅ[ÉuÉãÇçÏê¨
+//  „ÇØ„É≠„ÉÉ„ÇØ„Éª„Çµ„É≥„Éó„É™„É≥„Ç∞„É¨„Éº„ÉàÊØî„Å´‰æùÂ≠ò„Åô„Çã„ÉÜ„Éº„Éñ„É´„Çí‰ΩúÊàê
 void Chip::SetRatio(uint ratio)
 {
-	if (ratio_ != ratio)
-	{
-		ratio_ = ratio;
-		MakeTable();
-	}
+    if (ratio_ != ratio) {
+        ratio_ = ratio;
+        MakeTable();
+    }
 }
 
 void Chip::MakeTable()
 {
-	int h, l;
-	
-	// PG Part
-	static const float dt2lv[4] = { 1.f, 1.414f, 1.581f, 1.732f };
-	for (h=0; h<4; h++)
-	{
-		assert(2 + FM_RATIOBITS - FM_PGBITS >= 0);
-		double rr = dt2lv[h] * double(ratio_);
-		for (l=0; l<16; l++)
-		{
-			int mul = l ? l * 2 : 1;
-			multable_[h][l] = uint(mul * rr);
-		}
-	}
+    int h, l;
+
+    // PG Part
+    static const float dt2lv[4] = { 1.f, 1.414f, 1.581f, 1.732f };
+    for (h = 0; h < 4; h++) {
+        assert(2 + FM_RATIOBITS - FM_PGBITS >= 0);
+        double rr = dt2lv[h] * double(ratio_);
+        for (l = 0; l < 16; l++) {
+            int mul = l ? l * 2 : 1;
+            multable_[h][l] = uint(mul * rr);
+        }
+    }
 }
 
 // ---------------------------------------------------------------------------
-//	ÉXÉeÅ[ÉgÉZÅ[Éu
+//  „Çπ„ÉÜ„Éº„Éà„Çª„Éº„Éñ
 //
-#define CHIP_STATE_VERSION	1
+#define CHIP_STATE_VERSION 1
 
-void Chip::SaveState(void *f)
+void Chip::SaveState(void* f)
 {
-	FILEIO *state_fio = (FILEIO *)f;
-	
-	state_fio->FputUint32(CHIP_STATE_VERSION);
-	
-	state_fio->FputUint32(ratio_);
-	state_fio->FputUint32(aml_);
-	state_fio->FputUint32(pml_);
-	state_fio->FputInt32(pmv_);
+    FILEIO* state_fio = (FILEIO*)f;
+
+    state_fio->FputUint32(CHIP_STATE_VERSION);
+
+    state_fio->FputUint32(ratio_);
+    state_fio->FputUint32(aml_);
+    state_fio->FputUint32(pml_);
+    state_fio->FputInt32(pmv_);
 }
 
-bool Chip::LoadState(void *f)
+bool Chip::LoadState(void* f)
 {
-	FILEIO *state_fio = (FILEIO *)f;
-	
-	if(state_fio->FgetUint32() != CHIP_STATE_VERSION) {
-		return false;
-	}
-	ratio_ = state_fio->FgetUint32();
-	aml_ = state_fio->FgetUint32();
-	pml_ = state_fio->FgetUint32();
-	pmv_ = state_fio->FgetInt32();
-	return true;
-}
+    FILEIO* state_fio = (FILEIO*)f;
 
+    if (state_fio->FgetUint32() != CHIP_STATE_VERSION) {
+        return false;
+    }
+    ratio_ = state_fio->FgetUint32();
+    aml_ = state_fio->FgetUint32();
+    pml_ = state_fio->FgetUint32();
+    pmv_ = state_fio->FgetInt32();
+    return true;
+}
 
 // ---------------------------------------------------------------------------
-//	Operator
+//  Operator
 //
 bool FM::Operator::tablehasmade = false;
 uint FM::Operator::sinetable[1024];
 int32 FM::Operator::cltable[FM_CLENTS];
 
-//	ç\íz
+//  ÊßãÁØâ
 FM::Operator::Operator()
-: chip_(0)
+    : chip_(0)
 {
-	if (!tablehasmade)
-		MakeTable();
+    if (!tablehasmade)
+        MakeTable();
 
-	// EG Part
-	ar_ = dr_ = sr_ = rr_ = key_scale_rate_ = 0;
-	ams_ = amtable[0][0];
-	mute_ = false;
-	keyon_ = false;
-	tl_out_ = false;
-	ssg_type_ = 0;
+    // EG Part
+    ar_ = dr_ = sr_ = rr_ = key_scale_rate_ = 0;
+    ams_ = amtable[0][0];
+    mute_ = false;
+    keyon_ = false;
+    tl_out_ = false;
+    ssg_type_ = 0;
 
-	// PG Part
-	multiple_ = 0;
-	detune_ = 0;
-	detune2_ = 0;
+    // PG Part
+    multiple_ = 0;
+    detune_ = 0;
+    detune2_ = 0;
 
-	// LFO
-	ms_ = 0;
-	
-//	Reset();
+    // LFO
+    ms_ = 0;
+
+    //  Reset();
 }
 
-//	èâä˙âª
+//  ÂàùÊúüÂåñ
 void FM::Operator::Reset()
 {
-	// EG part
-	tl_ = tl_latch_ = 127;
-	ShiftPhase(off);
-	eg_count_ = 0;
-	eg_curve_count_ = 0;
-	ssg_phase_ = 0;
+    // EG part
+    tl_ = tl_latch_ = 127;
+    ShiftPhase(off);
+    eg_count_ = 0;
+    eg_curve_count_ = 0;
+    ssg_phase_ = 0;
 
-	// PG part
-	pg_count_ = 0;
+    // PG part
+    pg_count_ = 0;
 
-	// OP part
-	out_ = out2_ = 0;
+    // OP part
+    out_ = out2_ = 0;
 
-	param_changed_ = true;
-	PARAMCHANGE(0);
+    param_changed_ = true;
+    PARAMCHANGE(0);
 }
 
 void Operator::MakeTable()
 {
-	// ëŒêîÉeÅ[ÉuÉãÇÃçÏê¨
-	assert(FM_CLENTS >= 256);
+    // ÂØæÊï∞„ÉÜ„Éº„Éñ„É´„ÅÆ‰ΩúÊàê
+    assert(FM_CLENTS >= 256);
 
-	int* p = cltable;
-	int i;
-	for (i=0; i<256; i++)
-	{
-		int v = int(floor(pow(2., 13. - i / 256.)));
-		v = (v + 2) & ~3;
-		*p++ = v;
-		*p++ = -v;
-	}
-	while (p < cltable + FM_CLENTS)
-	{
-		*p = p[-512] / 2;
-		p++;
-	}
+    int* p = cltable;
+    int i;
+    for (i = 0; i < 256; i++) {
+        int v = int(floor(pow(2., 13. - i / 256.)));
+        v = (v + 2) & ~3;
+        *p++ = v;
+        *p++ = -v;
+    }
+    while (p < cltable + FM_CLENTS) {
+        *p = p[-512] / 2;
+        p++;
+    }
 
-//	for (i=0; i<13*256; i++)
-//		printf("%4d, %d, %d\n", i, cltable[i*2], cltable[i*2+1]);
+    //  for (i=0; i<13*256; i++)
+    //      printf("%4d, %d, %d\n", i, cltable[i*2], cltable[i*2+1]);
 
-	// ÉTÉCÉìÉeÅ[ÉuÉãÇÃçÏê¨
-	double log2 = log(2.);
-	for (i=0; i<FM_OPSINENTS/2; i++)
-	{
-		double r = (i * 2 + 1) * FM_PI / FM_OPSINENTS;
-		double q = -256 * log(sin(r)) / log2;
-		uint s = (int) (floor(q + 0.5)) + 1;
-//		printf("%d, %d\n", s, cltable[s * 2] / 8);
-		sinetable[i]                  = s * 2 ;
-		sinetable[FM_OPSINENTS / 2 + i] = s * 2 + 1;
-	}
+    // „Çµ„Ç§„É≥„ÉÜ„Éº„Éñ„É´„ÅÆ‰ΩúÊàê
+    double log2 = log(2.);
+    for (i = 0; i < FM_OPSINENTS / 2; i++) {
+        double r = (i * 2 + 1) * FM_PI / FM_OPSINENTS;
+        double q = -256 * log(sin(r)) / log2;
+        uint s = (int)(floor(q + 0.5)) + 1;
+        //      printf("%d, %d\n", s, cltable[s * 2] / 8);
+        sinetable[i] = s * 2;
+        sinetable[FM_OPSINENTS / 2 + i] = s * 2 + 1;
+    }
 
-	::FM::MakeLFOTable();
+    ::FM::MakeLFOTable();
 
-	tablehasmade = true;
+    tablehasmade = true;
 }
-
-
 
 inline void FM::Operator::SetDPBN(uint dp, uint bn)
 {
-	dp_ = dp, bn_ = bn; param_changed_ = true; 
-	PARAMCHANGE(1);
+    dp_ = dp, bn_ = bn;
+    param_changed_ = true;
+    PARAMCHANGE(1);
 }
 
-
-//	èÄîı
+//  Ê∫ñÂÇô
 void Operator::Prepare()
 {
-	if (param_changed_)
-	{
-		param_changed_ = false;
-		//	PG Part
-		pg_diff_ = (dp_ + dttable[detune_ + bn_]) * chip_->GetMulValue(detune2_, multiple_);
-		pg_diff_ >>= (2 + FM_RATIOBITS - FM_PGBITS);
-		pg_diff_lfo_ = pg_diff_ >> 11;
+    if (param_changed_) {
+        param_changed_ = false;
+        //  PG Part
+        pg_diff_ = (dp_ + dttable[detune_ + bn_]) * chip_->GetMulValue(detune2_, multiple_);
+        pg_diff_ >>= (2 + FM_RATIOBITS - FM_PGBITS);
+        pg_diff_lfo_ = pg_diff_ >> 11;
 
-		// EG Part
-		key_scale_rate_ = bn_ >> (3-ks_);
-		tl_out_ = mute_ ? 0x3ff : tl_ * 8;
-		
-		switch (eg_phase_)
-		{
-		case attack:
-			SetEGRate(ar_ ? Min(63, ar_ + key_scale_rate_) : 0);
-			break;
-		case decay:
-			SetEGRate(dr_ ? Min(63, dr_ + key_scale_rate_) : 0);
-			eg_level_on_next_phase_ = sl_ * 8;
-			break;
-		case sustain:
-			SetEGRate(sr_ ? Min(63, sr_ + key_scale_rate_) : 0);
-			break;
-		case release:
-			SetEGRate(Min(63, rr_ + key_scale_rate_));
-			break;
-		}
+        // EG Part
+        key_scale_rate_ = bn_ >> (3 - ks_);
+        tl_out_ = mute_ ? 0x3ff : tl_ * 8;
 
-		// SSG-EG
-		if (ssg_type_ && (eg_phase_ != release))
-		{
-			int m = ar_ >= (uint)((ssg_type_ == 8 || ssg_type_ == 12) ? 56 : 60);
+        switch (eg_phase_) {
+        case attack:
+            SetEGRate(ar_ ? Min(63, ar_ + key_scale_rate_) : 0);
+            break;
+        case decay:
+            SetEGRate(dr_ ? Min(63, dr_ + key_scale_rate_) : 0);
+            eg_level_on_next_phase_ = sl_ * 8;
+            break;
+        case sustain:
+            SetEGRate(sr_ ? Min(63, sr_ + key_scale_rate_) : 0);
+            break;
+        case release:
+            SetEGRate(Min(63, rr_ + key_scale_rate_));
+            break;
+        }
 
-			if (ssg_phase_ == -1)		// XXX quick fix
-				ssg_phase_ = 0;
-			assert(0 <= ssg_phase_ && ssg_phase_ <= 2);
-			const int* table = ssgenvtable[ssg_type_ & 7][m][ssg_phase_];
+        // SSG-EG
+        if (ssg_type_ && (eg_phase_ != release)) {
+            int m = ar_ >= (uint)((ssg_type_ == 8 || ssg_type_ == 12) ? 56 : 60);
 
-			ssg_offset_ = table[0] * 0x200;
-			ssg_vector_ = table[1];
-		}
-		// LFO
-		ams_ = amtable[type_][amon_ ? (ms_ >> 4) & 3 : 0];
-		EGUpdate();
+            if (ssg_phase_ == -1) // XXX quick fix
+                ssg_phase_ = 0;
+            assert(0 <= ssg_phase_ && ssg_phase_ <= 2);
+            const int* table = ssgenvtable[ssg_type_ & 7][m][ssg_phase_];
 
-		dbgopout_ = 0;
-	}
+            ssg_offset_ = table[0] * 0x200;
+            ssg_vector_ = table[1];
+        }
+        // LFO
+        ams_ = amtable[type_][amon_ ? (ms_ >> 4) & 3 : 0];
+        EGUpdate();
+
+        dbgopout_ = 0;
+    }
 }
-//	envelop ÇÃ eg_phase_ ïœçX
+//  envelop „ÅÆ eg_phase_ Â§âÊõ¥
 void Operator::ShiftPhase(EGPhase nextphase)
 {
-	switch (nextphase)
-	{
-	case attack:		// Attack Phase
-		tl_ = tl_latch_;
-		if (ssg_type_)
-		{
-			ssg_phase_ = ssg_phase_ + 1;
-			if (ssg_phase_ > 2)
-				ssg_phase_ = 1;
-			
-			int m = ar_ >= (uint)((ssg_type_ == 8 || ssg_type_ == 12) ? 56 : 60);
+    switch (nextphase) {
+    case attack: // Attack Phase
+        tl_ = tl_latch_;
+        if (ssg_type_) {
+            ssg_phase_ = ssg_phase_ + 1;
+            if (ssg_phase_ > 2)
+                ssg_phase_ = 1;
 
-			assert(0 <= ssg_phase_ && ssg_phase_ <= 2);
-			const int* table = ssgenvtable[ssg_type_ & 7][m][ssg_phase_];
+            int m = ar_ >= (uint)((ssg_type_ == 8 || ssg_type_ == 12) ? 56 : 60);
 
-			ssg_offset_ = table[0] * 0x200;
-			ssg_vector_ = table[1];
-		}
-		if ((ar_ + key_scale_rate_) < 62)
-		{
-			SetEGRate(ar_ ? Min(63, ar_ + key_scale_rate_) : 0);
-			eg_phase_ = attack;
-			break;
-		}
-	case decay:			// Decay Phase
-		if (sl_)
-		{
-			eg_level_ = 0;
-			eg_level_on_next_phase_ = ssg_type_ ? Min(sl_ * 8, 0x200) : sl_ * 8;
+            assert(0 <= ssg_phase_ && ssg_phase_ <= 2);
+            const int* table = ssgenvtable[ssg_type_ & 7][m][ssg_phase_];
 
-			SetEGRate(dr_ ? Min(63, dr_ + key_scale_rate_) : 0);
-			eg_phase_ = decay;
-			break;
-		}
-	case sustain:		// Sustain Phase
-		eg_level_ = sl_ * 8;
-		eg_level_on_next_phase_ = ssg_type_ ? 0x200 : 0x400;
+            ssg_offset_ = table[0] * 0x200;
+            ssg_vector_ = table[1];
+        }
+        if ((ar_ + key_scale_rate_) < 62) {
+            SetEGRate(ar_ ? Min(63, ar_ + key_scale_rate_) : 0);
+            eg_phase_ = attack;
+            break;
+        }
+    case decay: // Decay Phase
+        if (sl_) {
+            eg_level_ = 0;
+            eg_level_on_next_phase_ = ssg_type_ ? Min(sl_ * 8, 0x200) : sl_ * 8;
 
-		SetEGRate(sr_ ? Min(63, sr_ + key_scale_rate_) : 0);
-		eg_phase_ = sustain;
-		break;
-	
-	case release:		// Release Phase
-		if (ssg_type_)
-		{
-			eg_level_ = eg_level_ * ssg_vector_ + ssg_offset_;
-			ssg_vector_ = 1;
-			ssg_offset_ = 0;
-		}
-		if (eg_phase_ == attack || (eg_level_ < FM_EG_BOTTOM)) //0x400/* && eg_phase_ != off*/))
-		{
-			eg_level_on_next_phase_ = 0x400;
-			SetEGRate(Min(63, rr_ + key_scale_rate_));
-			eg_phase_ = release;
-			break;
-		}
-	case off:			// off
-	default:
-		eg_level_ = FM_EG_BOTTOM;
-		eg_level_on_next_phase_ = FM_EG_BOTTOM;
-		EGUpdate();
-		SetEGRate(0);
-		eg_phase_ = off;
-		break;
-	}
+            SetEGRate(dr_ ? Min(63, dr_ + key_scale_rate_) : 0);
+            eg_phase_ = decay;
+            break;
+        }
+    case sustain: // Sustain Phase
+        eg_level_ = sl_ * 8;
+        eg_level_on_next_phase_ = ssg_type_ ? 0x200 : 0x400;
+
+        SetEGRate(sr_ ? Min(63, sr_ + key_scale_rate_) : 0);
+        eg_phase_ = sustain;
+        break;
+
+    case release: // Release Phase
+        if (ssg_type_) {
+            eg_level_ = eg_level_ * ssg_vector_ + ssg_offset_;
+            ssg_vector_ = 1;
+            ssg_offset_ = 0;
+        }
+        if (eg_phase_ == attack || (eg_level_ < FM_EG_BOTTOM)) //0x400/* && eg_phase_ != off*/))
+        {
+            eg_level_on_next_phase_ = 0x400;
+            SetEGRate(Min(63, rr_ + key_scale_rate_));
+            eg_phase_ = release;
+            break;
+        }
+    case off: // off
+    default:
+        eg_level_ = FM_EG_BOTTOM;
+        eg_level_on_next_phase_ = FM_EG_BOTTOM;
+        EGUpdate();
+        SetEGRate(0);
+        eg_phase_ = off;
+        break;
+    }
 }
 
-//	Block/F-Num
+//  Block/F-Num
 void Operator::SetFNum(uint f)
 {
-	dp_ = (f & 2047) << ((f >> 11) & 7);
-	bn_ = notetable[(f >> 7) & 127];
-	param_changed_ = true;
-	PARAMCHANGE(2);
+    dp_ = (f & 2047) << ((f >> 11) & 7);
+    bn_ = notetable[(f >> 7) & 127];
+    param_changed_ = true;
+    PARAMCHANGE(2);
 }
 
-//	ÇPÉTÉìÉvÉãçáê¨
+//  Ôºë„Çµ„É≥„Éó„É´ÂêàÊàê
 
-//	ISample Ç envelop count (2ÉŒ) Ç…ïœä∑Ç∑ÇÈÉVÉtÉgó 
-#define IS2EC_SHIFT		((20 + FM_PGBITS) - 13)
+//  ISample „Çí envelop count (2œÄ) „Å´Â§âÊèõ„Åô„Çã„Ç∑„Éï„ÉàÈáè
+#define IS2EC_SHIFT ((20 + FM_PGBITS) - 13)
 
-
-// ì¸óÕ: s = 20+FM_PGBITS = 29
-#define Sine(s)	sinetable[((s) >> (20+FM_PGBITS-FM_OPSINBITS))&(FM_OPSINENTS-1)]
-#define SINE(s) sinetable[(s) & (FM_OPSINENTS-1)]
+// ÂÖ•Âäõ: s = 20+FM_PGBITS = 29
+#define Sine(s) sinetable[((s) >> (20 + FM_PGBITS - FM_OPSINBITS)) & (FM_OPSINENTS - 1)]
+#define SINE(s) sinetable[(s) & (FM_OPSINENTS - 1)]
 
 inline FM::ISample Operator::LogToLin(uint a)
 {
-#if 1 // FM_CLENTS < 0xc00		// 400 for TL, 400 for ENV, 400 for LFO.
-	return (a < FM_CLENTS) ? cltable[a] : 0;
+#if 1 // FM_CLENTS < 0xc00      // 400 for TL, 400 for ENV, 400 for LFO.
+    return (a < FM_CLENTS) ? cltable[a] : 0;
 #else
-	return cltable[a];
+    return cltable[a];
 #endif
 }
 
 inline void Operator::EGUpdate()
 {
-	if (!ssg_type_)
-	{
-		eg_out_ = Min(tl_out_ + eg_level_, 0x3ff) << (1 + 2);
-	}
-	else
-	{
-		eg_out_ = Min(tl_out_ + eg_level_ * ssg_vector_ + ssg_offset_, 0x3ff) << (1 + 2);
-	}
+    if (!ssg_type_) {
+        eg_out_ = Min(tl_out_ + eg_level_, 0x3ff) << (1 + 2);
+    } else {
+        eg_out_ = Min(tl_out_ + eg_level_ * ssg_vector_ + ssg_offset_, 0x3ff) << (1 + 2);
+    }
 }
 
 inline void Operator::SetEGRate(uint rate)
 {
-	eg_rate_ = rate;
-	eg_count_diff_ = decaytable2[rate / 4] * chip_->GetRatio();
+    eg_rate_ = rate;
+    eg_count_diff_ = decaytable2[rate / 4] * chip_->GetRatio();
 }
 
-//	EG åvéZ
+//  EG Ë®àÁÆó
 void FM::Operator::EGCalc()
 {
-	eg_count_ = (2047 * 3) << FM_RATIOBITS;				// ##Ç±ÇÃéËî≤Ç´ÇÕçƒåªê´Çí·â∫Ç≥ÇπÇÈ
-	
-	if (eg_phase_ == attack)
-	{
-		int c = attacktable[eg_rate_][eg_curve_count_ & 7];
-		if (c >= 0)
-		{
-			eg_level_ -= 1 + (eg_level_ >> c);
-			if (eg_level_ <= 0)
-				ShiftPhase(decay);
-		}
-		EGUpdate();
-	}
-	else
-	{
-		if (!ssg_type_)
-		{
-			eg_level_ += decaytable1[eg_rate_][eg_curve_count_ & 7];
-			if (eg_level_ >= eg_level_on_next_phase_)
-				ShiftPhase(EGPhase(eg_phase_+1));
-			EGUpdate();
-		}
-		else
-		{
-			eg_level_ += 4 * decaytable1[eg_rate_][eg_curve_count_ & 7];
-			if (eg_level_ >= eg_level_on_next_phase_)
-			{
-				switch (eg_phase_)
-				{
-				case decay:
-					ShiftPhase(sustain);
-					break;
-				case sustain:
-					ShiftPhase(attack);
-					break;
-				case release:
-					ShiftPhase(off);
-					break;
-				}
-			}
-			EGUpdate();
-		}
-	}
-	eg_curve_count_++;
+    eg_count_ = (2047 * 3) << FM_RATIOBITS; // ##„Åì„ÅÆÊâãÊäú„Åç„ÅØÂÜçÁèæÊÄß„Çí‰Ωé‰∏ã„Åï„Åõ„Çã
+
+    if (eg_phase_ == attack) {
+        int c = attacktable[eg_rate_][eg_curve_count_ & 7];
+        if (c >= 0) {
+            eg_level_ -= 1 + (eg_level_ >> c);
+            if (eg_level_ <= 0)
+                ShiftPhase(decay);
+        }
+        EGUpdate();
+    } else {
+        if (!ssg_type_) {
+            eg_level_ += decaytable1[eg_rate_][eg_curve_count_ & 7];
+            if (eg_level_ >= eg_level_on_next_phase_)
+                ShiftPhase(EGPhase(eg_phase_ + 1));
+            EGUpdate();
+        } else {
+            eg_level_ += 4 * decaytable1[eg_rate_][eg_curve_count_ & 7];
+            if (eg_level_ >= eg_level_on_next_phase_) {
+                switch (eg_phase_) {
+                case decay:
+                    ShiftPhase(sustain);
+                    break;
+                case sustain:
+                    ShiftPhase(attack);
+                    break;
+                case release:
+                    ShiftPhase(off);
+                    break;
+                }
+            }
+            EGUpdate();
+        }
+    }
+    eg_curve_count_++;
 }
 
 inline void FM::Operator::EGStep()
 {
-	eg_count_ -= eg_count_diff_;
+    eg_count_ -= eg_count_diff_;
 
-	// EG ÇÃïœâªÇÕëSÉXÉçÉbÉgÇ≈ìØä˙ÇµÇƒÇ¢ÇÈÇ∆Ç¢Ç§â\Ç‡Ç†ÇÈ
-	if (eg_count_ <= 0)
-		EGCalc();
+    // EG „ÅÆÂ§âÂåñ„ÅØÂÖ®„Çπ„É≠„ÉÉ„Éà„ÅßÂêåÊúü„Åó„Å¶„ÅÑ„Çã„Å®„ÅÑ„ÅÜÂôÇ„ÇÇ„ÅÇ„Çã
+    if (eg_count_ <= 0)
+        EGCalc();
 }
 
-//	PG åvéZ
-//	ret:2^(20+PGBITS) / cycle
+//  PG Ë®àÁÆó
+//  ret:2^(20+PGBITS) / cycle
 inline uint32 FM::Operator::PGCalc()
 {
-	uint32 ret = pg_count_;
-	pg_count_ += pg_diff_;
-	dbgpgout_ = ret;
-	return ret;
+    uint32 ret = pg_count_;
+    pg_count_ += pg_diff_;
+    dbgpgout_ = ret;
+    return ret;
 }
 
 inline uint32 FM::Operator::PGCalcL()
 {
-	uint32 ret = pg_count_;
-	pg_count_ += pg_diff_ + ((pg_diff_lfo_ * chip_->GetPMV()) >> 5);// & -(1 << (2+IS2EC_SHIFT)));
-	dbgpgout_ = ret;
-	return ret /* + pmv * pg_diff_;*/;
+    uint32 ret = pg_count_;
+    pg_count_ += pg_diff_ + ((pg_diff_lfo_ * chip_->GetPMV()) >> 5); // & -(1 << (2+IS2EC_SHIFT)));
+    dbgpgout_ = ret;
+    return ret /* + pmv * pg_diff_;*/;
 }
 
-//	OP åvéZ
-//	in: ISample (ç≈ëÂ 8ÉŒ)
+//  OP Ë®àÁÆó
+//  in: ISample (ÊúÄÂ§ß 8œÄ)
 inline FM::ISample FM::Operator::Calc(ISample in)
 {
-	EGStep();
-	out2_ = out_;
+    EGStep();
+    out2_ = out_;
 
-	int pgin = PGCalc() >> (20+FM_PGBITS-FM_OPSINBITS);
-	pgin += in >> (20+FM_PGBITS-FM_OPSINBITS-(2+IS2EC_SHIFT));
-	out_ = LogToLin(eg_out_ + SINE(pgin));
+    int pgin = PGCalc() >> (20 + FM_PGBITS - FM_OPSINBITS);
+    pgin += in >> (20 + FM_PGBITS - FM_OPSINBITS - (2 + IS2EC_SHIFT));
+    out_ = LogToLin(eg_out_ + SINE(pgin));
 
-	dbgopout_ = out_;
-	return out_;
+    dbgopout_ = out_;
+    return out_;
 }
 
 inline FM::ISample FM::Operator::CalcL(ISample in)
 {
-	EGStep();
+    EGStep();
 
-	int pgin = PGCalcL() >> (20+FM_PGBITS-FM_OPSINBITS);
-	pgin += in >> (20+FM_PGBITS-FM_OPSINBITS-(2+IS2EC_SHIFT));
-	out_ = LogToLin(eg_out_ + SINE(pgin) + ams_[chip_->GetAML()]);
+    int pgin = PGCalcL() >> (20 + FM_PGBITS - FM_OPSINBITS);
+    pgin += in >> (20 + FM_PGBITS - FM_OPSINBITS - (2 + IS2EC_SHIFT));
+    out_ = LogToLin(eg_out_ + SINE(pgin) + ams_[chip_->GetAML()]);
 
-	dbgopout_ = out_;
-	return out_;
+    dbgopout_ = out_;
+    return out_;
 }
 
 inline FM::ISample FM::Operator::CalcN(uint noise)
 {
-	EGStep();
-	
-	int lv = Max(0, 0x3ff - (tl_out_ + eg_level_)) << 1;
-	
-	// noise & 1 ? lv : -lv Ç∆ìôâø 
-	noise = (noise & 1) - 1;
-	out_ = (lv + noise) ^ noise;
+    EGStep();
 
-	dbgopout_ = out_;
-	return out_;
+    int lv = Max(0, 0x3ff - (tl_out_ + eg_level_)) << 1;
+
+    // noise & 1 ? lv : -lv „Å®Á≠â‰æ°
+    noise = (noise & 1) - 1;
+    out_ = (lv + noise) ^ noise;
+
+    dbgopout_ = out_;
+    return out_;
 }
 
-//	OP (FB) åvéZ
-//	Self Feedback ÇÃïœí≤ç≈ëÂ = 4ÉŒ
+//  OP (FB) Ë®àÁÆó
+//  Self Feedback „ÅÆÂ§âË™øÊúÄÂ§ß = 4œÄ
 inline FM::ISample FM::Operator::CalcFB(uint fb)
 {
-	EGStep();
+    EGStep();
 
-	ISample in = out_ + out2_;
-	out2_ = out_;
+    ISample in = out_ + out2_;
+    out2_ = out_;
 
-	int pgin = PGCalc() >> (20+FM_PGBITS-FM_OPSINBITS);
-	if (fb < 31)
-	{
-		pgin += ((in << (1 + IS2EC_SHIFT)) >> fb) >> (20+FM_PGBITS-FM_OPSINBITS);
-	}
-	out_ = LogToLin(eg_out_ + SINE(pgin));
-	dbgopout_ = out2_;
+    int pgin = PGCalc() >> (20 + FM_PGBITS - FM_OPSINBITS);
+    if (fb < 31) {
+        pgin += ((in << (1 + IS2EC_SHIFT)) >> fb) >> (20 + FM_PGBITS - FM_OPSINBITS);
+    }
+    out_ = LogToLin(eg_out_ + SINE(pgin));
+    dbgopout_ = out2_;
 
-	return out2_;
+    return out2_;
 }
 
 inline FM::ISample FM::Operator::CalcFBL(uint fb)
 {
-	EGStep();
-	
-	ISample in = out_ + out2_;
-	out2_ = out_;
+    EGStep();
 
-	int pgin = PGCalcL() >> (20+FM_PGBITS-FM_OPSINBITS);
-	if (fb < 31)
-	{
-		pgin += ((in << (1 + IS2EC_SHIFT)) >> fb) >> (20+FM_PGBITS-FM_OPSINBITS);
-	}
+    ISample in = out_ + out2_;
+    out2_ = out_;
 
-	out_ = LogToLin(eg_out_ + SINE(pgin) + ams_[chip_->GetAML()]);
-	dbgopout_ = out_;
+    int pgin = PGCalcL() >> (20 + FM_PGBITS - FM_OPSINBITS);
+    if (fb < 31) {
+        pgin += ((in << (1 + IS2EC_SHIFT)) >> fb) >> (20 + FM_PGBITS - FM_OPSINBITS);
+    }
 
-	return out_;
+    out_ = LogToLin(eg_out_ + SINE(pgin) + ams_[chip_->GetAML()]);
+    dbgopout_ = out_;
+
+    return out_;
 }
 
 // ---------------------------------------------------------------------------
-//	ÉXÉeÅ[ÉgÉZÅ[Éu
+//  „Çπ„ÉÜ„Éº„Éà„Çª„Éº„Éñ
 //
-#define OPERATOR_STATE_VERSION	1
+#define OPERATOR_STATE_VERSION 1
 
-void Operator::SaveState(void *f)
+void Operator::SaveState(void* f)
 {
-	FILEIO *state_fio = (FILEIO *)f;
-	
-	state_fio->FputUint32(OPERATOR_STATE_VERSION);
-	
-	state_fio->FputInt32(out_);
-	state_fio->FputInt32(out2_);
-	state_fio->FputInt32(in2_);
-	state_fio->FputUint32(dp_);
-	state_fio->FputUint32(detune_);
-	state_fio->FputUint32(detune2_);
-	state_fio->FputUint32(multiple_);
-	state_fio->FputUint32(pg_count_);
-	state_fio->FputUint32(pg_diff_);
-	state_fio->FputInt32(pg_diff_lfo_);
-	state_fio->FputUint32(bn_);
-	state_fio->FputInt32(eg_level_);
-	state_fio->FputInt32(eg_level_on_next_phase_);
-	state_fio->FputInt32(eg_count_);
-	state_fio->FputInt32(eg_count_diff_);
-	state_fio->FputInt32(eg_out_);
-	state_fio->FputInt32(tl_out_);
-	state_fio->FputInt32(eg_rate_);
-	state_fio->FputInt32(eg_curve_count_);
-	state_fio->FputInt32(ssg_offset_);
-	state_fio->FputInt32(ssg_vector_);
-	state_fio->FputInt32(ssg_phase_);
-	state_fio->FputUint32(key_scale_rate_);
-	state_fio->FputInt32(static_cast<int>(eg_phase_));
-	state_fio->FputInt32((int)(ams_ - &amtable[0][0][0]));
-	state_fio->FputUint32(ms_);
-	state_fio->FputUint32(tl_);
-	state_fio->FputUint32(tl_latch_);
-	state_fio->FputUint32(ar_);
-	state_fio->FputUint32(dr_);
-	state_fio->FputUint32(sr_);
-	state_fio->FputUint32(sl_);
-	state_fio->FputUint32(rr_);
-	state_fio->FputUint32(ks_);
-	state_fio->FputUint32(ssg_type_);
-	state_fio->FputBool(keyon_);
-	state_fio->FputBool(amon_);
-	state_fio->FputBool(param_changed_);
-	state_fio->FputBool(mute_);
-	state_fio->FputInt32(dbgopout_);
-	state_fio->FputInt32(dbgpgout_);
+    FILEIO* state_fio = (FILEIO*)f;
+
+    state_fio->FputUint32(OPERATOR_STATE_VERSION);
+
+    state_fio->FputInt32(out_);
+    state_fio->FputInt32(out2_);
+    state_fio->FputInt32(in2_);
+    state_fio->FputUint32(dp_);
+    state_fio->FputUint32(detune_);
+    state_fio->FputUint32(detune2_);
+    state_fio->FputUint32(multiple_);
+    state_fio->FputUint32(pg_count_);
+    state_fio->FputUint32(pg_diff_);
+    state_fio->FputInt32(pg_diff_lfo_);
+    state_fio->FputUint32(bn_);
+    state_fio->FputInt32(eg_level_);
+    state_fio->FputInt32(eg_level_on_next_phase_);
+    state_fio->FputInt32(eg_count_);
+    state_fio->FputInt32(eg_count_diff_);
+    state_fio->FputInt32(eg_out_);
+    state_fio->FputInt32(tl_out_);
+    state_fio->FputInt32(eg_rate_);
+    state_fio->FputInt32(eg_curve_count_);
+    state_fio->FputInt32(ssg_offset_);
+    state_fio->FputInt32(ssg_vector_);
+    state_fio->FputInt32(ssg_phase_);
+    state_fio->FputUint32(key_scale_rate_);
+    state_fio->FputInt32(static_cast<int>(eg_phase_));
+    state_fio->FputInt32((int)(ams_ - &amtable[0][0][0]));
+    state_fio->FputUint32(ms_);
+    state_fio->FputUint32(tl_);
+    state_fio->FputUint32(tl_latch_);
+    state_fio->FputUint32(ar_);
+    state_fio->FputUint32(dr_);
+    state_fio->FputUint32(sr_);
+    state_fio->FputUint32(sl_);
+    state_fio->FputUint32(rr_);
+    state_fio->FputUint32(ks_);
+    state_fio->FputUint32(ssg_type_);
+    state_fio->FputBool(keyon_);
+    state_fio->FputBool(amon_);
+    state_fio->FputBool(param_changed_);
+    state_fio->FputBool(mute_);
+    state_fio->FputInt32(dbgopout_);
+    state_fio->FputInt32(dbgpgout_);
 }
 
-bool Operator::LoadState(void *f)
+bool Operator::LoadState(void* f)
 {
-	FILEIO *state_fio = (FILEIO *)f;
-	
-	if(state_fio->FgetUint32() != OPERATOR_STATE_VERSION) {
-		return false;
-	}
-	out_ = state_fio->FgetInt32();
-	out2_ = state_fio->FgetInt32();
-	in2_ = state_fio->FgetInt32();
-	dp_ = state_fio->FgetUint32();
-	detune_ = state_fio->FgetUint32();
-	detune2_ = state_fio->FgetUint32();
-	multiple_ = state_fio->FgetUint32();
-	pg_count_ = state_fio->FgetUint32();
-	pg_diff_ = state_fio->FgetUint32();
-	pg_diff_lfo_ = state_fio->FgetInt32();
-	bn_ = state_fio->FgetUint32();
-	eg_level_ = state_fio->FgetInt32();
-	eg_level_on_next_phase_ = state_fio->FgetInt32();
-	eg_count_ = state_fio->FgetInt32();
-	eg_count_diff_ = state_fio->FgetInt32();
-	eg_out_ = state_fio->FgetInt32();
-	tl_out_ = state_fio->FgetInt32();
-	eg_rate_ = state_fio->FgetInt32();
-	eg_curve_count_ = state_fio->FgetInt32();
-	ssg_offset_ = state_fio->FgetInt32();
-	ssg_vector_ = state_fio->FgetInt32();
-	ssg_phase_ = state_fio->FgetInt32();
-	key_scale_rate_ = state_fio->FgetUint32();
-	eg_phase_ = static_cast<EGPhase>(state_fio->FgetInt32());
-	ams_ = &amtable[0][0][0] + state_fio->FgetInt32();
-	ms_ = state_fio->FgetUint32();
-	tl_ = state_fio->FgetUint32();
-	tl_latch_ = state_fio->FgetUint32();
-	ar_ = state_fio->FgetUint32();
-	dr_ = state_fio->FgetUint32();
-	sr_ = state_fio->FgetUint32();
-	sl_ = state_fio->FgetUint32();
-	rr_ = state_fio->FgetUint32();
-	ks_ = state_fio->FgetUint32();
-	ssg_type_ = state_fio->FgetUint32();
-	keyon_ = state_fio->FgetBool();
-	amon_ = state_fio->FgetBool();
-	param_changed_ = state_fio->FgetBool();
-	mute_ = state_fio->FgetBool();
-	dbgopout_ = state_fio->FgetInt32();
-	dbgpgout_ = state_fio->FgetInt32();
-	return true;
+    FILEIO* state_fio = (FILEIO*)f;
+
+    if (state_fio->FgetUint32() != OPERATOR_STATE_VERSION) {
+        return false;
+    }
+    out_ = state_fio->FgetInt32();
+    out2_ = state_fio->FgetInt32();
+    in2_ = state_fio->FgetInt32();
+    dp_ = state_fio->FgetUint32();
+    detune_ = state_fio->FgetUint32();
+    detune2_ = state_fio->FgetUint32();
+    multiple_ = state_fio->FgetUint32();
+    pg_count_ = state_fio->FgetUint32();
+    pg_diff_ = state_fio->FgetUint32();
+    pg_diff_lfo_ = state_fio->FgetInt32();
+    bn_ = state_fio->FgetUint32();
+    eg_level_ = state_fio->FgetInt32();
+    eg_level_on_next_phase_ = state_fio->FgetInt32();
+    eg_count_ = state_fio->FgetInt32();
+    eg_count_diff_ = state_fio->FgetInt32();
+    eg_out_ = state_fio->FgetInt32();
+    tl_out_ = state_fio->FgetInt32();
+    eg_rate_ = state_fio->FgetInt32();
+    eg_curve_count_ = state_fio->FgetInt32();
+    ssg_offset_ = state_fio->FgetInt32();
+    ssg_vector_ = state_fio->FgetInt32();
+    ssg_phase_ = state_fio->FgetInt32();
+    key_scale_rate_ = state_fio->FgetUint32();
+    eg_phase_ = static_cast<EGPhase>(state_fio->FgetInt32());
+    ams_ = &amtable[0][0][0] + state_fio->FgetInt32();
+    ms_ = state_fio->FgetUint32();
+    tl_ = state_fio->FgetUint32();
+    tl_latch_ = state_fio->FgetUint32();
+    ar_ = state_fio->FgetUint32();
+    dr_ = state_fio->FgetUint32();
+    sr_ = state_fio->FgetUint32();
+    sl_ = state_fio->FgetUint32();
+    rr_ = state_fio->FgetUint32();
+    ks_ = state_fio->FgetUint32();
+    ssg_type_ = state_fio->FgetUint32();
+    keyon_ = state_fio->FgetBool();
+    amon_ = state_fio->FgetBool();
+    param_changed_ = state_fio->FgetBool();
+    mute_ = state_fio->FgetBool();
+    dbgopout_ = state_fio->FgetInt32();
+    dbgpgout_ = state_fio->FgetInt32();
+    return true;
 }
 
 #undef Sine
 
 // ---------------------------------------------------------------------------
-//	4-op Channel
+//  4-op Channel
 //
 const uint8 Channel4::fbtable[8] = { 31, 7, 6, 5, 4, 3, 2, 1 };
 int Channel4::kftable[64];
 
 bool Channel4::tablehasmade = false;
 
-
 Channel4::Channel4()
 {
-	if (!tablehasmade)
-		MakeTable();
+    if (!tablehasmade)
+        MakeTable();
 
-	SetAlgorithm(0);
-	pms = pmtable[0][0];
+    SetAlgorithm(0);
+    pms = pmtable[0][0];
 }
 
 void Channel4::MakeTable()
 {
-	// 100/64 cent =  2^(i*100/64*1200)
-	for (int i=0; i<64; i++)
-	{
-		kftable[i] = int(0x10000 * pow(2., i / 768.) );
-	}
+    // 100/64 cent =  2^(i*100/64*1200)
+    for (int i = 0; i < 64; i++) {
+        kftable[i] = int(0x10000 * pow(2., i / 768.));
+    }
 }
 
-// ÉäÉZÉbÉg
+// „É™„Çª„ÉÉ„Éà
 void Channel4::Reset()
 {
-	op[0].Reset();
-	op[1].Reset();
-	op[2].Reset();
-	op[3].Reset();
+    op[0].Reset();
+    op[1].Reset();
+    op[2].Reset();
+    op[3].Reset();
 }
 
-//	Calc ÇÃópà”
+//  Calc „ÅÆÁî®ÊÑè
 int Channel4::Prepare()
 {
-	op[0].Prepare();
-	op[1].Prepare();
-	op[2].Prepare();
-	op[3].Prepare();
-	
-	pms = pmtable[op[0].type_][op[0].ms_ & 7];
-	int key = (op[0].IsOn() | op[1].IsOn() | op[2].IsOn() | op[3].IsOn()) ? 1 : 0;
-	int lfo = op[0].ms_ & (op[0].amon_ | op[1].amon_ | op[2].amon_ | op[3].amon_ ? 0x37 : 7) ? 2 : 0;
-	return key | lfo;
+    op[0].Prepare();
+    op[1].Prepare();
+    op[2].Prepare();
+    op[3].Prepare();
+
+    pms = pmtable[op[0].type_][op[0].ms_ & 7];
+    int key = (op[0].IsOn() | op[1].IsOn() | op[2].IsOn() | op[3].IsOn()) ? 1 : 0;
+    int lfo = op[0].ms_ & (op[0].amon_ | op[1].amon_ | op[2].amon_ | op[3].amon_ ? 0x37 : 7) ? 2 : 0;
+    return key | lfo;
 }
 
-//	F-Number/BLOCK Çê›íË
+//  F-Number/BLOCK „ÇíË®≠ÂÆö
 void Channel4::SetFNum(uint f)
 {
-	for (int i=0; i<4; i++)
-		op[i].SetFNum(f);
+    for (int i = 0; i < 4; i++)
+        op[i].SetFNum(f);
 }
 
-//	KC/KF Çê›íË
+//  KC/KF „ÇíË®≠ÂÆö
 void Channel4::SetKCKF(uint kc, uint kf)
 {
-	const static uint kctable[16] = 
-	{ 
-		5197, 5506, 5833, 6180, 6180, 6547, 6937, 7349, 
-		7349, 7786, 8249, 8740, 8740, 9259, 9810, 10394, 
-	};
+    const static uint kctable[16] = {
+        5197, 5506, 5833, 6180, 6180, 6547, 6937, 7349,
+        7349, 7786, 8249, 8740, 8740, 9259, 9810, 10394,
+    };
 
-	int oct = 19 - ((kc >> 4) & 7);
+    int oct = 19 - ((kc >> 4) & 7);
 
-//printf("%p", this);
-	uint kcv = kctable[kc & 0x0f];
-	kcv = (kcv + 2) / 4 * 4;
-//printf(" %.4x", kcv);
-	uint dp = kcv * kftable[kf & 0x3f];
-//printf(" %.4x %.4x %.8x", kcv, kftable[kf & 0x3f], dp >> oct);
-	dp >>= 16 + 3;
-	dp <<= 16 + 3;
-	dp >>= oct;	
-	uint bn = (kc >> 2) & 31;
-	op[0].SetDPBN(dp, bn);
-	op[1].SetDPBN(dp, bn);
-	op[2].SetDPBN(dp, bn);
-	op[3].SetDPBN(dp, bn);
-//printf(" %.8x\n", dp);
+    //printf("%p", this);
+    uint kcv = kctable[kc & 0x0f];
+    kcv = (kcv + 2) / 4 * 4;
+    //printf(" %.4x", kcv);
+    uint dp = kcv * kftable[kf & 0x3f];
+    //printf(" %.4x %.4x %.8x", kcv, kftable[kf & 0x3f], dp >> oct);
+    dp >>= 16 + 3;
+    dp <<= 16 + 3;
+    dp >>= oct;
+    uint bn = (kc >> 2) & 31;
+    op[0].SetDPBN(dp, bn);
+    op[1].SetDPBN(dp, bn);
+    op[2].SetDPBN(dp, bn);
+    op[3].SetDPBN(dp, bn);
+    //printf(" %.8x\n", dp);
 }
 
-//	ÉLÅ[êßå‰
+//  „Ç≠„ÉºÂà∂Âæ°
 void Channel4::KeyControl(uint key)
 {
-	if (key & 0x1) op[0].KeyOn(); else op[0].KeyOff();
-	if (key & 0x2) op[1].KeyOn(); else op[1].KeyOff();
-	if (key & 0x4) op[2].KeyOn(); else op[2].KeyOff();
-	if (key & 0x8) op[3].KeyOn(); else op[3].KeyOff();
+    if (key & 0x1)
+        op[0].KeyOn();
+    else
+        op[0].KeyOff();
+    if (key & 0x2)
+        op[1].KeyOn();
+    else
+        op[1].KeyOff();
+    if (key & 0x4)
+        op[2].KeyOn();
+    else
+        op[2].KeyOff();
+    if (key & 0x8)
+        op[3].KeyOn();
+    else
+        op[3].KeyOff();
 }
 
-//	ÉAÉãÉSÉäÉYÉÄÇê›íË
+//  „Ç¢„É´„Ç¥„É™„Ç∫„É†„ÇíË®≠ÂÆö
 void Channel4::SetAlgorithm(uint algo)
 {
-	static const uint8 table1[8][6] = 
-	{
-		{ 0, 1, 1, 2, 2, 3 },	{ 1, 0, 0, 1, 1, 2 },
-		{ 1, 1, 1, 0, 0, 2 },	{ 0, 1, 2, 1, 1, 2 },
-		{ 0, 1, 2, 2, 2, 1 },	{ 0, 1, 0, 1, 0, 1 },
-		{ 0, 1, 2, 1, 2, 1 },	{ 1, 0, 1, 0, 1, 0 },
-	};
+    static const uint8 table1[8][6] = {
+        { 0, 1, 1, 2, 2, 3 }, { 1, 0, 0, 1, 1, 2 }, { 1, 1, 1, 0, 0, 2 }, { 0, 1, 2, 1, 1, 2 }, { 0, 1, 2, 2, 2, 1 }, { 0, 1, 0, 1, 0, 1 }, { 0, 1, 2, 1, 2, 1 }, { 1, 0, 1, 0, 1, 0 },
+    };
 
-	in [0] = &buf[table1[algo][0]];
-	out[0] = &buf[table1[algo][1]];
-	in [1] = &buf[table1[algo][2]];
-	out[1] = &buf[table1[algo][3]];
-	in [2] = &buf[table1[algo][4]];
-	out[2] = &buf[table1[algo][5]];
+    in[0] = &buf[table1[algo][0]];
+    out[0] = &buf[table1[algo][1]];
+    in[1] = &buf[table1[algo][2]];
+    out[1] = &buf[table1[algo][3]];
+    in[2] = &buf[table1[algo][4]];
+    out[2] = &buf[table1[algo][5]];
 
-	op[0].ResetFB();
-	algo_ = algo;
+    op[0].ResetFB();
+    algo_ = algo;
 }
 
-//  çáê¨
+//  ÂêàÊàê
 ISample Channel4::Calc()
 {
-	int r = 0;
-	switch (algo_)
-	{
-	case 0:
-		op[2].Calc(op[1].Out());
-		op[1].Calc(op[0].Out());
-		r = op[3].Calc(op[2].Out());
-		op[0].CalcFB(fb);
-		break;
-	case 1:
-		op[2].Calc(op[0].Out() + op[1].Out());
-		op[1].Calc(0);
-		r = op[3].Calc(op[2].Out());
-		op[0].CalcFB(fb);
-		break;
-	case 2:
-		op[2].Calc(op[1].Out());
-		op[1].Calc(0);
-		r = op[3].Calc(op[0].Out() + op[2].Out());
-		op[0].CalcFB(fb);
-		break;
-	case 3:
-		op[2].Calc(0);
-		op[1].Calc(op[0].Out());
-		r = op[3].Calc(op[1].Out() + op[2].Out());
-		op[0].CalcFB(fb);
-		break;
-	case 4:
-		op[2].Calc(0);
-		r = op[1].Calc(op[0].Out());
-		r += op[3].Calc(op[2].Out());
-		op[0].CalcFB(fb);
-		break;
-	case 5:
-		r =  op[2].Calc(op[0].Out());
-		r += op[1].Calc(op[0].Out());
-		r += op[3].Calc(op[0].Out());
-		op[0].CalcFB(fb);
-		break;
-	case 6:
-		r  = op[2].Calc(0);
-		r += op[1].Calc(op[0].Out());
-		r += op[3].Calc(0);
-		op[0].CalcFB(fb);
-		break;
-	case 7:
-		r  = op[2].Calc(0);
-		r += op[1].Calc(0);
-		r += op[3].Calc(0);
-		r += op[0].CalcFB(fb);
-		break;
-	}
-	return r;
+    int r = 0;
+    switch (algo_) {
+    case 0:
+        op[2].Calc(op[1].Out());
+        op[1].Calc(op[0].Out());
+        r = op[3].Calc(op[2].Out());
+        op[0].CalcFB(fb);
+        break;
+    case 1:
+        op[2].Calc(op[0].Out() + op[1].Out());
+        op[1].Calc(0);
+        r = op[3].Calc(op[2].Out());
+        op[0].CalcFB(fb);
+        break;
+    case 2:
+        op[2].Calc(op[1].Out());
+        op[1].Calc(0);
+        r = op[3].Calc(op[0].Out() + op[2].Out());
+        op[0].CalcFB(fb);
+        break;
+    case 3:
+        op[2].Calc(0);
+        op[1].Calc(op[0].Out());
+        r = op[3].Calc(op[1].Out() + op[2].Out());
+        op[0].CalcFB(fb);
+        break;
+    case 4:
+        op[2].Calc(0);
+        r = op[1].Calc(op[0].Out());
+        r += op[3].Calc(op[2].Out());
+        op[0].CalcFB(fb);
+        break;
+    case 5:
+        r = op[2].Calc(op[0].Out());
+        r += op[1].Calc(op[0].Out());
+        r += op[3].Calc(op[0].Out());
+        op[0].CalcFB(fb);
+        break;
+    case 6:
+        r = op[2].Calc(0);
+        r += op[1].Calc(op[0].Out());
+        r += op[3].Calc(0);
+        op[0].CalcFB(fb);
+        break;
+    case 7:
+        r = op[2].Calc(0);
+        r += op[1].Calc(0);
+        r += op[3].Calc(0);
+        r += op[0].CalcFB(fb);
+        break;
+    }
+    return r;
 }
 
-//  çáê¨
+//  ÂêàÊàê
 ISample Channel4::CalcL()
 {
-	chip_->SetPMV(pms[chip_->GetPML()]);
+    chip_->SetPMV(pms[chip_->GetPML()]);
 
-	int r = 0;
-	switch (algo_)
-	{
-	case 0:
-		op[2].CalcL(op[1].Out());
-		op[1].CalcL(op[0].Out());
-		r = op[3].CalcL(op[2].Out());
-		op[0].CalcFBL(fb);
-		break;
-	case 1:
-		op[2].CalcL(op[0].Out() + op[1].Out());
-		op[1].CalcL(0);
-		r = op[3].CalcL(op[2].Out());
-		op[0].CalcFBL(fb);
-		break;
-	case 2:
-		op[2].CalcL(op[1].Out());
-		op[1].CalcL(0);
-		r = op[3].CalcL(op[0].Out() + op[2].Out());
-		op[0].CalcFBL(fb);
-		break;
-	case 3:
-		op[2].CalcL(0);
-		op[1].CalcL(op[0].Out());
-		r = op[3].CalcL(op[1].Out() + op[2].Out());
-		op[0].CalcFBL(fb);
-		break;
-	case 4:
-		op[2].CalcL(0);
-		r = op[1].CalcL(op[0].Out());
-		r += op[3].CalcL(op[2].Out());
-		op[0].CalcFBL(fb);
-		break;
-	case 5:
-		r =  op[2].CalcL(op[0].Out());
-		r += op[1].CalcL(op[0].Out());
-		r += op[3].CalcL(op[0].Out());
-		op[0].CalcFBL(fb);
-		break;
-	case 6:
-		r  = op[2].CalcL(0);
-		r += op[1].CalcL(op[0].Out());
-		r += op[3].CalcL(0);
-		op[0].CalcFBL(fb);
-		break;
-	case 7:
-		r  = op[2].CalcL(0);
-		r += op[1].CalcL(0);
-		r += op[3].CalcL(0);
-		r += op[0].CalcFBL(fb);
-		break;
-	}
-	return r;
+    int r = 0;
+    switch (algo_) {
+    case 0:
+        op[2].CalcL(op[1].Out());
+        op[1].CalcL(op[0].Out());
+        r = op[3].CalcL(op[2].Out());
+        op[0].CalcFBL(fb);
+        break;
+    case 1:
+        op[2].CalcL(op[0].Out() + op[1].Out());
+        op[1].CalcL(0);
+        r = op[3].CalcL(op[2].Out());
+        op[0].CalcFBL(fb);
+        break;
+    case 2:
+        op[2].CalcL(op[1].Out());
+        op[1].CalcL(0);
+        r = op[3].CalcL(op[0].Out() + op[2].Out());
+        op[0].CalcFBL(fb);
+        break;
+    case 3:
+        op[2].CalcL(0);
+        op[1].CalcL(op[0].Out());
+        r = op[3].CalcL(op[1].Out() + op[2].Out());
+        op[0].CalcFBL(fb);
+        break;
+    case 4:
+        op[2].CalcL(0);
+        r = op[1].CalcL(op[0].Out());
+        r += op[3].CalcL(op[2].Out());
+        op[0].CalcFBL(fb);
+        break;
+    case 5:
+        r = op[2].CalcL(op[0].Out());
+        r += op[1].CalcL(op[0].Out());
+        r += op[3].CalcL(op[0].Out());
+        op[0].CalcFBL(fb);
+        break;
+    case 6:
+        r = op[2].CalcL(0);
+        r += op[1].CalcL(op[0].Out());
+        r += op[3].CalcL(0);
+        op[0].CalcFBL(fb);
+        break;
+    case 7:
+        r = op[2].CalcL(0);
+        r += op[1].CalcL(0);
+        r += op[3].CalcL(0);
+        r += op[0].CalcFBL(fb);
+        break;
+    }
+    return r;
 }
 
-//  çáê¨
+//  ÂêàÊàê
 ISample Channel4::CalcN(uint noise)
 {
-	buf[1] = buf[2] = buf[3] = 0;
+    buf[1] = buf[2] = buf[3] = 0;
 
-	buf[0] = op[0].out_; op[0].CalcFB(fb);
-	*out[0] += op[1].Calc(*in[0]);
-	*out[1] += op[2].Calc(*in[1]);
-	int o = op[3].out_;
-	op[3].CalcN(noise);
-	return *out[2] + o;
+    buf[0] = op[0].out_;
+    op[0].CalcFB(fb);
+    *out[0] += op[1].Calc(*in[0]);
+    *out[1] += op[2].Calc(*in[1]);
+    int o = op[3].out_;
+    op[3].CalcN(noise);
+    return *out[2] + o;
 }
 
-//  çáê¨
+//  ÂêàÊàê
 ISample Channel4::CalcLN(uint noise)
 {
-	chip_->SetPMV(pms[chip_->GetPML()]);
-	buf[1] = buf[2] = buf[3] = 0;
+    chip_->SetPMV(pms[chip_->GetPML()]);
+    buf[1] = buf[2] = buf[3] = 0;
 
-	buf[0] = op[0].out_; op[0].CalcFBL(fb); 
-	*out[0] += op[1].CalcL(*in[0]);
-	*out[1] += op[2].CalcL(*in[1]);
-	int o = op[3].out_;
-	op[3].CalcN(noise);
-	return *out[2] + o;
+    buf[0] = op[0].out_;
+    op[0].CalcFBL(fb);
+    *out[0] += op[1].CalcL(*in[0]);
+    *out[1] += op[2].CalcL(*in[1]);
+    int o = op[3].out_;
+    op[3].CalcN(noise);
+    return *out[2] + o;
 }
 
 // ---------------------------------------------------------------------------
-//	ÉXÉeÅ[ÉgÉZÅ[Éu
+//  „Çπ„ÉÜ„Éº„Éà„Çª„Éº„Éñ
 //
-#define CHANNEL4_STATE_VERSION	1
+#define CHANNEL4_STATE_VERSION 1
 
-void Channel4::SaveState(void *f)
+void Channel4::SaveState(void* f)
 {
-	FILEIO *state_fio = (FILEIO *)f;
-	
-	state_fio->FputUint32(CHANNEL4_STATE_VERSION);
-	
-	state_fio->FputUint32(fb);
-	state_fio->Fwrite(buf, sizeof(buf), 1);
-	for(int i = 0; i < 3; i++) {
-		state_fio->FputInt32((int)(in [i] - &buf[0]));
-		state_fio->FputInt32((int)(out[i] - &buf[0]));
-	}
-	state_fio->FputInt32((int)(pms - &pmtable[0][0][0]));
-	state_fio->FputInt32(algo_);
-	for(int i = 0; i < 4; i++) {
-		op[i].SaveState(f);
-	}
+    FILEIO* state_fio = (FILEIO*)f;
+
+    state_fio->FputUint32(CHANNEL4_STATE_VERSION);
+
+    state_fio->FputUint32(fb);
+    state_fio->Fwrite(buf, sizeof(buf), 1);
+    for (int i = 0; i < 3; i++) {
+        state_fio->FputInt32((int)(in[i] - &buf[0]));
+        state_fio->FputInt32((int)(out[i] - &buf[0]));
+    }
+    state_fio->FputInt32((int)(pms - &pmtable[0][0][0]));
+    state_fio->FputInt32(algo_);
+    for (int i = 0; i < 4; i++) {
+        op[i].SaveState(f);
+    }
 }
 
-bool Channel4::LoadState(void *f)
+bool Channel4::LoadState(void* f)
 {
-	FILEIO *state_fio = (FILEIO *)f;
-	
-	if(state_fio->FgetUint32() != CHANNEL4_STATE_VERSION) {
-		return false;
-	}
-	fb = state_fio->FgetUint32();
-	state_fio->Fread(buf, sizeof(buf), 1);
-	for(int i = 0; i < 3; i++) {
-		in [i] = &buf[0] + state_fio->FgetInt32();
-		out[i] = &buf[0] + state_fio->FgetInt32();
-	}
-	pms = &pmtable[0][0][0] + state_fio->FgetInt32();
-	algo_ = state_fio->FgetInt32();
-	for(int i = 0; i < 4; i++) {
-		if(!op[i].LoadState(f)) {
-			return false;
-		}
-	}
-	return true;
+    FILEIO* state_fio = (FILEIO*)f;
+
+    if (state_fio->FgetUint32() != CHANNEL4_STATE_VERSION) {
+        return false;
+    }
+    fb = state_fio->FgetUint32();
+    state_fio->Fread(buf, sizeof(buf), 1);
+    for (int i = 0; i < 3; i++) {
+        in[i] = &buf[0] + state_fio->FgetInt32();
+        out[i] = &buf[0] + state_fio->FgetInt32();
+    }
+    pms = &pmtable[0][0][0] + state_fio->FgetInt32();
+    algo_ = state_fio->FgetInt32();
+    for (int i = 0; i < 4; i++) {
+        if (!op[i].LoadState(f)) {
+            return false;
+        }
+    }
+    return true;
 }
 
-}	// namespace FM
+} // namespace FM

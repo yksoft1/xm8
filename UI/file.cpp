@@ -20,7 +20,7 @@
 //
 FileIO::FileIO()
 {
-	hfile = NULL;
+    hfile = NULL;
 }
 
 //
@@ -29,7 +29,7 @@ FileIO::FileIO()
 //
 FileIO::~FileIO()
 {
-	Close();
+    Close();
 }
 
 //
@@ -38,24 +38,24 @@ FileIO::~FileIO()
 //
 bool FileIO::Open(const _TCHAR* filename, uint flg)
 {
-	SDL_RWops *ops;
+    SDL_RWops* ops;
 
-	Close();
+    Close();
 
-	// support readonly mode
-	if (flg != readonly) {
-		return false;
-	}
+    // support readonly mode
+    if (flg != readonly) {
+        return false;
+    }
 
-	// open with 'rb' mode
-	ops = SDL_RWFromFile(filename, "rb");
-	if (ops == NULL) {
-		return false;
-	}
+    // open with 'rb' mode
+    ops = SDL_RWFromFile(filename, "rb");
+    if (ops == NULL) {
+        return false;
+    }
 
-	// return
-	hfile = ops;
-	return true;
+    // return
+    hfile = ops;
+    return true;
 }
 
 //
@@ -64,10 +64,10 @@ bool FileIO::Open(const _TCHAR* filename, uint flg)
 //
 void FileIO::Close()
 {
-	if (hfile != NULL) {
-		SDL_RWclose((SDL_RWops*)hfile);
-		hfile = NULL;
-	}
+    if (hfile != NULL) {
+        SDL_RWclose((SDL_RWops*)hfile);
+        hfile = NULL;
+    }
 }
 
 //
@@ -76,16 +76,16 @@ void FileIO::Close()
 //
 int32 FileIO::Read(void* dest, int32 len)
 {
-	size_t s;
+    size_t s;
 
-	if (hfile == NULL) {
-		SDL_assert(false);
-		return -1;
-	}
+    if (hfile == NULL) {
+        SDL_assert(false);
+        return -1;
+    }
 
-	s = SDL_RWread((SDL_RWops*)hfile, dest, 1, (size_t)len);
+    s = SDL_RWread((SDL_RWops*)hfile, dest, 1, (size_t)len);
 
-	return (int32)s;
+    return (int32)s;
 }
 
 //
@@ -94,36 +94,36 @@ int32 FileIO::Read(void* dest, int32 len)
 //
 bool FileIO::Seek(int32 fpos, SeekMethod method)
 {
-	Sint64 pos;
+    Sint64 pos;
 
-	if (hfile == NULL) {
-		SDL_assert(false);
-		return false;
-	}
+    if (hfile == NULL) {
+        SDL_assert(false);
+        return false;
+    }
 
-	switch (method) {
-	case begin:
-		pos = SDL_RWseek((SDL_RWops*)hfile, (Sint64)fpos, RW_SEEK_SET);
-		if (pos >= 0) {
-			return true;
-		}
-		break;
+    switch (method) {
+    case begin:
+        pos = SDL_RWseek((SDL_RWops*)hfile, (Sint64)fpos, RW_SEEK_SET);
+        if (pos >= 0) {
+            return true;
+        }
+        break;
 
-	// from current
-	case current:
-		pos = SDL_RWseek((SDL_RWops*)hfile, (Sint64)fpos, RW_SEEK_CUR);
-		if (pos >= 0) {
-			return true;
-		}
-		break;
+    // from current
+    case current:
+        pos = SDL_RWseek((SDL_RWops*)hfile, (Sint64)fpos, RW_SEEK_CUR);
+        if (pos >= 0) {
+            return true;
+        }
+        break;
 
-	// default
-	default:
-		break;
-	}
+    // default
+    default:
+        break;
+    }
 
-	// error
-	return false;
+    // error
+    return false;
 }
 
 #endif // SDL

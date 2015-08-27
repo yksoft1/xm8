@@ -1,97 +1,95 @@
 // ---------------------------------------------------------------------------
-//	PSG-like sound generator
-//	Copyright (C) cisc 1997, 1999.
+//  PSG-like sound generator
+//  Copyright (C) cisc 1997, 1999.
 // ---------------------------------------------------------------------------
-//	$Id: psg.h,v 1.8 2003/04/22 13:12:53 cisc Exp $
+//  $Id: psg.h,v 1.8 2003/04/22 13:12:53 cisc Exp $
 
 #ifndef PSG_H
 #define PSG_H
 
 #include "types.h"
 
-#define PSG_SAMPLETYPE		int32		// int32 or int16
+#define PSG_SAMPLETYPE int32 // int32 or int16
 
 // ---------------------------------------------------------------------------
-//	class PSG
-//	PSG ‚É—Ç‚­—‚½‰¹‚ğ¶¬‚·‚é‰¹Œ¹ƒ†ƒjƒbƒg
-//	
-//	interface:
-//	bool SetClock(uint clock, uint rate)
-//		‰Šú‰»D‚±‚ÌƒNƒ‰ƒX‚ğg—p‚·‚é‘O‚É‚©‚È‚ç‚¸ŒÄ‚ñ‚Å‚¨‚­‚±‚ÆD
-//		PSG ‚ÌƒNƒƒbƒN‚â PCM ƒŒ[ƒg‚ğİ’è‚·‚é
+//  class PSG
+//  PSG ã«è‰¯ãä¼¼ãŸéŸ³ã‚’ç”Ÿæˆã™ã‚‹éŸ³æºãƒ¦ãƒ‹ãƒƒãƒˆ
 //
-//		clock:	PSG ‚Ì“®ìƒNƒƒbƒN
-//		rate:	¶¬‚·‚é PCM ‚ÌƒŒ[ƒg
-//		retval	‰Šú‰»‚É¬Œ÷‚·‚ê‚Î true
+//  interface:
+//  bool SetClock(uint clock, uint rate)
+//      åˆæœŸåŒ–ï¼ã“ã®ã‚¯ãƒ©ã‚¹ã‚’ä½¿ç”¨ã™ã‚‹å‰ã«ã‹ãªã‚‰ãšå‘¼ã‚“ã§ãŠãã“ã¨ï¼
+//      PSG ã®ã‚¯ãƒ­ãƒƒã‚¯ã‚„ PCM ãƒ¬ãƒ¼ãƒˆã‚’è¨­å®šã™ã‚‹
 //
-//	void Mix(Sample* dest, int nsamples)
-//		PCM ‚ğ nsamples •ª‡¬‚µC dest ‚Ån‚Ü‚é”z—ñ‚É‰Á‚¦‚é(‰ÁZ‚·‚é)
-//		‚ ‚­‚Ü‚Å‰ÁZ‚È‚Ì‚ÅCÅ‰‚É”z—ñ‚ğƒ[ƒƒNƒŠƒA‚·‚é•K—v‚ª‚ ‚é
-//	
-//	void Reset()
-//		ƒŠƒZƒbƒg‚·‚é
+//      clock:  PSG ã®å‹•ä½œã‚¯ãƒ­ãƒƒã‚¯
+//      rate:   ç”Ÿæˆã™ã‚‹ PCM ã®ãƒ¬ãƒ¼ãƒˆ
+//      retval  åˆæœŸåŒ–ã«æˆåŠŸã™ã‚Œã° true
 //
-//	void SetReg(uint reg, uint8 data)
-//		ƒŒƒWƒXƒ^ reg ‚É data ‚ğ‘‚«‚Ş
-//	
-//	uint GetReg(uint reg)
-//		ƒŒƒWƒXƒ^ reg ‚Ì“à—e‚ğ“Ç‚İo‚·
-//	
-//	void SetVolume(int db)
-//		Še‰¹Œ¹‚Ì‰¹—Ê‚ğ’²ß‚·‚é
-//		’PˆÊ‚Í–ñ 1/2 dB
+//  void Mix(Sample* dest, int nsamples)
+//      PCM ã‚’ nsamples åˆ†åˆæˆã—ï¼Œ dest ã§å§‹ã¾ã‚‹é…åˆ—ã«åŠ ãˆã‚‹(åŠ ç®—ã™ã‚‹)
+//      ã‚ãã¾ã§åŠ ç®—ãªã®ã§ï¼Œæœ€åˆã«é…åˆ—ã‚’ã‚¼ãƒ­ã‚¯ãƒªã‚¢ã™ã‚‹å¿…è¦ãŒã‚ã‚‹
 //
-class PSG
-{
+//  void Reset()
+//      ãƒªã‚»ãƒƒãƒˆã™ã‚‹
+//
+//  void SetReg(uint reg, uint8 data)
+//      ãƒ¬ã‚¸ã‚¹ã‚¿ reg ã« data ã‚’æ›¸ãè¾¼ã‚€
+//
+//  uint GetReg(uint reg)
+//      ãƒ¬ã‚¸ã‚¹ã‚¿ reg ã®å†…å®¹ã‚’èª­ã¿å‡ºã™
+//
+//  void SetVolume(int db)
+//      å„éŸ³æºã®éŸ³é‡ã‚’èª¿ç¯€ã™ã‚‹
+//      å˜ä½ã¯ç´„ 1/2 dB
+//
+class PSG {
 public:
-	typedef PSG_SAMPLETYPE Sample;
-	
-	enum
-	{
-		noisetablesize = 1 << 11,	// ©ƒƒ‚ƒŠg—p—Ê‚ğŒ¸‚ç‚µ‚½‚¢‚È‚çŒ¸‚ç‚µ‚Ä
-		toneshift = 24,
-		envshift = 22,
-		noiseshift = 14,
-		oversampling = 2,		// © ‰¹¿‚æ‚è‘¬“x‚ª—Dæ‚È‚çŒ¸‚ç‚·‚Æ‚¢‚¢‚©‚à
-	};
+    typedef PSG_SAMPLETYPE Sample;
+
+    enum {
+        noisetablesize = 1 << 11, // â†ãƒ¡ãƒ¢ãƒªä½¿ç”¨é‡ã‚’æ¸›ã‚‰ã—ãŸã„ãªã‚‰æ¸›ã‚‰ã—ã¦
+        toneshift = 24,
+        envshift = 22,
+        noiseshift = 14,
+        oversampling = 2, // â† éŸ³è³ªã‚ˆã‚Šé€Ÿåº¦ãŒå„ªå…ˆãªã‚‰æ¸›ã‚‰ã™ã¨ã„ã„ã‹ã‚‚
+    };
 
 public:
-	PSG();
-	~PSG();
+    PSG();
+    ~PSG();
 
-	void Mix(Sample* dest, int nsamples);
-	void SetClock(int clock, int rate);
-	
-	void SetVolume(int vol);
-	void SetChannelMask(int c);
-	
-	void Reset();
-	void SetReg(uint regnum, uint8 data);
-	uint GetReg(uint regnum) { return reg[regnum & 0x0f]; }
+    void Mix(Sample* dest, int nsamples);
+    void SetClock(int clock, int rate);
 
-	void SaveState(void *f);
-	bool LoadState(void *f);
-	
+    void SetVolume(int vol);
+    void SetChannelMask(int c);
+
+    void Reset();
+    void SetReg(uint regnum, uint8 data);
+    uint GetReg(uint regnum) { return reg[regnum & 0x0f]; }
+
+    void SaveState(void* f);
+    bool LoadState(void* f);
+
 protected:
-	void MakeNoiseTable();
-	void MakeEnvelopTable();
-	static void StoreSample(Sample& dest, int32 data);
-	
-	uint8 reg[16];
+    void MakeNoiseTable();
+    void MakeEnvelopTable();
+    static void StoreSample(Sample& dest, int32 data);
 
-	const uint* envelop;
-	uint olevel[3];
-	uint32 scount[3], speriod[3];
-	uint32 ecount, eperiod;
-	uint32 ncount, nperiod;
-	uint32 tperiodbase;
-	uint32 eperiodbase;
-	uint32 nperiodbase;
-	int mask;
+    uint8 reg[16];
 
-	static uint enveloptable[16][64];
-	static uint noisetable[noisetablesize];
-	static int EmitTable[32];
+    const uint* envelop;
+    uint olevel[3];
+    uint32 scount[3], speriod[3];
+    uint32 ecount, eperiod;
+    uint32 ncount, nperiod;
+    uint32 tperiodbase;
+    uint32 eperiodbase;
+    uint32 nperiodbase;
+    int mask;
+
+    static uint enveloptable[16][64];
+    static uint noisetable[noisetablesize];
+    static int EmitTable[32];
 };
 
 #endif // PSG_H

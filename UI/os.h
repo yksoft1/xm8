@@ -18,7 +18,7 @@
 //
 #ifdef _WIN32
 #ifdef _MSC_VER
-#pragma warning(disable:4127)
+#pragma warning(disable : 4127)
 #endif _MSC_VER
 #include "SDL.h"
 #include "SDL_syswm.h"

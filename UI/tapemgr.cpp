@@ -22,17 +22,17 @@
 //
 TapeManager::TapeManager()
 {
-	// object
-	vm = NULL;
+    // object
+    vm = NULL;
 
-	// mount status
-	mount_play = false;
-	mount_rec = false;
+    // mount status
+    mount_play = false;
+    mount_rec = false;
 
-	// path and dir
-	path[0] = '\0';
-	dir[0] = '\0';
-	state_path[0] = '\0';
+    // path and dir
+    path[0] = '\0';
+    dir[0] = '\0';
+    state_path[0] = '\0';
 }
 
 //
@@ -41,19 +41,19 @@ TapeManager::TapeManager()
 //
 TapeManager::~TapeManager()
 {
-	Deinit();
+    Deinit();
 }
 
 //
 // Init()
 // initialize
 //
-bool TapeManager::Init(VM *v)
+bool TapeManager::Init(VM* v)
 {
-	// save object
-	vm = v;
+    // save object
+    vm = v;
 
-	return true;
+    return true;
 }
 
 //
@@ -62,117 +62,116 @@ bool TapeManager::Init(VM *v)
 //
 void TapeManager::Deinit()
 {
-	// eject current tape
-	if ((mount_play == true) || (mount_rec == true)) {
-		Eject();
-	}
+    // eject current tape
+    if ((mount_play == true) || (mount_rec == true)) {
+        Eject();
+    }
 }
 
 //
 // SetVM()
 // re-set vm
 //
-void TapeManager::SetVM(VM *v)
+void TapeManager::SetVM(VM* v)
 {
-	// save object
-	vm = v;
+    // save object
+    vm = v;
 }
 
 //
 // Play()
 // play tape
 //
-bool TapeManager::Play(const char *filename)
+bool TapeManager::Play(const char* filename)
 {
-	// Eject
-	Eject();
+    // Eject
+    Eject();
 
-	// open
-	if (Open(filename, false) == false) {
-		return false;
-	}
+    // open
+    if (Open(filename, false) == false) {
+        return false;
+    }
 
-	// virtual machine
-	vm->play_tape((_TCHAR*)path);
+    // virtual machine
+    vm->play_tape((_TCHAR*)path);
 
-	// mount ok
-	mount_play = true;
+    // mount ok
+    mount_play = true;
 
-	return true;
+    return true;
 }
 
 //
 // Rec()
 // rec tape
 //
-bool TapeManager::Rec(const char *filename)
+bool TapeManager::Rec(const char* filename)
 {
-	// Eject
-	Eject();
+    // Eject
+    Eject();
 
-	// open
-	if (Open(filename, true) == false) {
-		return false;
-	}
+    // open
+    if (Open(filename, true) == false) {
+        return false;
+    }
 
-	// virtual machine
-	vm->rec_tape((_TCHAR*)path);
+    // virtual machine
+    vm->rec_tape((_TCHAR*)path);
 
-	// mount ok
-	mount_rec = true;
+    // mount ok
+    mount_rec = true;
 
-	return true;
+    return true;
 }
 
 //
 // Open()
 // open and close
 //
-bool TapeManager::Open(const char *filename, bool rec)
+bool TapeManager::Open(const char* filename, bool rec)
 {
-	char *ptr;
-	char *last;
-	FILEIO fileio;
-	bool ret;
+    char* ptr;
+    char* last;
+    FILEIO fileio;
+    bool ret;
 
-	// specify filename ?
-	if (filename != NULL) {
-		// save path
-		if (strlen(filename) >= sizeof(path)) {
-			return false;
-		}
-		strcpy(path, filename);
+    // specify filename ?
+    if (filename != NULL) {
+        // save path
+        if (strlen(filename) >= sizeof(path)) {
+            return false;
+        }
+        strcpy(path, filename);
 
-		// save directory
-		strcpy(dir, path);
-		ptr = dir;
-		last = dir;
+        // save directory
+        strcpy(dir, path);
+        ptr = dir;
+        last = dir;
 
-		// search last '\\' or '/'
-		while (*ptr != '\0') {
-			if ((*ptr == '\\') || (*ptr == '/')) {
-				last = ptr;
-			}
-			ptr++;
-		}
+        // search last '\\' or '/'
+        while (*ptr != '\0') {
+            if ((*ptr == '\\') || (*ptr == '/')) {
+                last = ptr;
+            }
+            ptr++;
+        }
 
-		// end mark
-		last[1] = '\0';
-	}
+        // end mark
+        last[1] = '\0';
+    }
 
-	// open test
-	if (rec == true) {
-		ret = fileio.Fopen(path, FILEIO_READ_WRITE_NEW_BINARY);
-	}
-	else {
-		ret = fileio.Fopen(path, FILEIO_READ_BINARY);
-	}
-	if (ret == true) {
-		// close immediately
-		fileio.Fclose();
-	}
+    // open test
+    if (rec == true) {
+        ret = fileio.Fopen(path, FILEIO_READ_WRITE_NEW_BINARY);
+    } else {
+        ret = fileio.Fopen(path, FILEIO_READ_BINARY);
+    }
+    if (ret == true) {
+        // close immediately
+        fileio.Fclose();
+    }
 
-	return ret;
+    return ret;
 }
 
 //
@@ -181,14 +180,14 @@ bool TapeManager::Open(const char *filename, bool rec)
 //
 void TapeManager::Eject()
 {
-	// close
-	if ((mount_play == true) || (mount_rec == true)) {
-		vm->close_tape();
+    // close
+    if ((mount_play == true) || (mount_rec == true)) {
+        vm->close_tape();
 
-		// mount flag
-		mount_play = false;
-		mount_rec = false;
-	}
+        // mount flag
+        mount_play = false;
+        mount_rec = false;
+    }
 }
 
 //
@@ -197,7 +196,7 @@ void TapeManager::Eject()
 //
 bool TapeManager::IsPlay()
 {
-	return mount_play;
+    return mount_play;
 }
 
 //
@@ -206,7 +205,7 @@ bool TapeManager::IsPlay()
 //
 bool TapeManager::IsRec()
 {
-	return mount_rec;
+    return mount_rec;
 }
 
 //
@@ -215,42 +214,42 @@ bool TapeManager::IsRec()
 //
 const char* TapeManager::GetDir()
 {
-	return dir;
+    return dir;
 }
 
 //
 // Load()
 // load state
 //
-void TapeManager::Load(FILEIO *fio)
+void TapeManager::Load(FILEIO* fio)
 {
-	bool play;
-	bool rec;
+    bool play;
+    bool rec;
 
-	// eject
-	Eject();
+    // eject
+    Eject();
 
-	fio->Fread(state_path, 1, sizeof(state_path));
-	play = fio->FgetBool();
-	rec = fio->FgetBool();
+    fio->Fread(state_path, 1, sizeof(state_path));
+    play = fio->FgetBool();
+    rec = fio->FgetBool();
 
-	if (play == true) {
-		Play(state_path);
-	}
-	if (rec == true) {
-		Rec(state_path);
-	}
+    if (play == true) {
+        Play(state_path);
+    }
+    if (rec == true) {
+        Rec(state_path);
+    }
 }
 
 //
 // Save()
 // save state
 //
-void TapeManager::Save(FILEIO *fio)
+void TapeManager::Save(FILEIO* fio)
 {
-	fio->Fwrite(state_path, 1, sizeof(state_path));
-	fio->FputBool(mount_play);
-	fio->FputBool(mount_rec);
+    fio->Fwrite(state_path, 1, sizeof(state_path));
+    fio->FputBool(mount_play);
+    fio->FputBool(mount_rec);
 }
 
 #endif // SDL
