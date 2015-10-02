@@ -240,6 +240,12 @@ private:
 	// sound sample multiple table
 	static const int multi_table[16];
 										// multiple table
+
+	// audio parameter
+	Uint8 *audio_param;
+										// Audio::OpenParam
+	bool audio_opened;
+										// audio open flag
 };
 
 #endif // APP_H

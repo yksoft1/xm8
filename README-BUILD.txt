@@ -6,7 +6,7 @@ eXellent Multi-platform emulator type 8 - 'XM8'
 based on ePC-8801MA
 
 Copyright (C) 2015 ＰＩ．
-Version 1.30 (2015/08/23)
+version 1.40 (2015/09/23)
 
 -----------------------------------------------------------------------
 
@@ -29,50 +29,21 @@ Version 1.30 (2015/08/23)
 ューションファイル、プロジェクトファイルを収録しています。
 
 参考として、Windowsで新たに開発環境を構築する場合の手順を以下に記します。
-この場合、無償提供されているパッケージ・ファイル群のみで構築が可能です。
 
 ※2015年7月下旬頃から、Visual C++ 2010 Expressの新規インストールが出来なく
-なりました。今後はVisual C++ 2013 Expressを使用してください。
+なりました。以下はVisual Studio Express 2013を使用する例を示しています。
 
 
-(1)Visual C++ 2010 Express
+(1)Visual Studio Express 2013 for Windows Desktop
 
-Visual C++ 2010 Expressをインストールします。
+Visual Studio Express 2013 with Update 5 for Windows Desktop
 https://www.visualstudio.com/downloads/download-visual-studio-vs
 
-ここでは最新版や次版のプレビューが紹介されていますが、下の方を見ていくと
-2010 Expressのダウンロードリンクが残されています。
+上記リンクの"Visual Studio 2013"をクリックし、Express for Windows Desktop
+のインストールを行います。要求システム要件はWindows 7 SP1以降となります。
 
 
-(2)Windows SDK v7.1
-
-Windows SDK v7.1(Windows SDK for Windows 7 and .NET Framework 4)をインス
-トールします。これにより(1)に64bitコンパイラを追加できます。
-https://www.microsoft.com/en-us/download/details.aspx?id=8279
-
-このインストールに失敗する場合は、以下のプログラムをアンインストールした後
-に再度トライしてください。
-
-・Visual C++ 2010 Redistributable
-・Visual C++ 2010 Runtime
-
-
-(3)Visual Studio 2010 Service Pack 1
-
-Visual C++ 2010 ExpressにService Pack 1を適用します。
-https://www.microsoft.com/ja-jp/download/details.aspx?id=23691
-
-ただし、これにより(2)で追加した64bitコンパイラが削除されます。
-
-
-(4)Windows SDK 7.1 用 Microsoft Visual C++ 2010 Service Pack 1
-コンパイラ更新プログラム 
-
-以下の更新プログラムを適用し、(3)で削除された64bitコンパイラを復元します。
-https://www.microsoft.com/ja-jp/download/details.aspx?id=4422
-
-
-(5)SDL開発ライブラリ
+(2)SDL開発ライブラリ
 
 Windows (Visual C++ 32bit/64bit)向けライブラリをダウンロードします。
 https://www.libsdl.org/download-2.0.php

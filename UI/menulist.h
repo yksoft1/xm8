@@ -153,6 +153,10 @@ private:
 										// finger y on down
 	Uint32 finger_tick;
 										// finger tick on down
+	int finger_focus;
+										// menu index with focus on finger down
+	bool finger_slider;
+										// finger slider enable
 	bool mouse_down;
 										// mouse down flag
 	Uint32 mouse_tick;

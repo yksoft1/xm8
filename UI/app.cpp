@@ -38,7 +38,7 @@
 //
 #define APP_NAME				"XM8 (based on ePC-8801MA)";
 										// application name
-#define APP_VER					0x0130
+#define APP_VER					0x0140
 										// version (BCD)
 #define APP_WIDTH				SCREEN_WIDTH
 										// window width
@@ -141,6 +141,10 @@ App::App()
 
 	// state path
 	state_path[0] = '\0';
+
+	// audio parameter
+	audio_param = NULL;
+	audio_opened = false;
 }
 
 //
@@ -244,6 +248,13 @@ bool App::Init()
 		return false;
 	}
 
+	// audio parameter
+	audio_param = (Uint8*)SDL_malloc(sizeof(Audio::OpenParam));
+	if (audio_param == NULL) {
+		Deinit();
+		return false;
+	}
+
 	// emulator i/f wrapper
 	wrapper = new EMU_SDL(video);
 
@@ -288,6 +299,10 @@ bool App::Init()
 		Deinit();
 		return false;
 	}
+
+	// save audio parameter
+	audio_opened = true;
+	memcpy(audio_param, &param, sizeof(param));
 
 	// create virtual machine
 	vm = new VM(emu);
@@ -418,11 +433,18 @@ void App::Deinit()
 		wrapper = NULL;
 	}
 
+	// audio parameter
+	if (audio_param != NULL) {
+		SDL_free(audio_param);
+		audio_param = NULL;
+	}
+
 	// audio
 	if (audio != NULL) {
 		audio->Deinit();
 		delete audio;
 		audio = NULL;
+		audio_opened = false;
 	}
 
 	// video
@@ -1321,6 +1343,7 @@ void App::OnWindow(SDL_Event *e)
 	bool lostfocus;
 	int width;
 	int height;
+	Audio::OpenParam param;
 
 	// init
 	activate = false;
@@ -1340,7 +1363,7 @@ void App::OnWindow(SDL_Event *e)
 		break;
 
 	case SDL_WINDOWEVENT_EXPOSED:
-		video->DrawCtrl();
+		activate = true;
 		break;
 
 	case SDL_WINDOWEVENT_MOVED:
@@ -1393,6 +1416,12 @@ void App::OnWindow(SDL_Event *e)
 	if (activate == true) {
 		// background -> foreground
 		if (app_background == true) {
+			// audio open
+			if (audio_opened == false) {
+				memcpy(&param, audio_param, sizeof(param));
+				audio_opened = audio->Open(&param);
+			}
+
 			app_background = false;
 			app_forcesync = true;
 			CtrlAudio();
@@ -1408,6 +1437,12 @@ void App::OnWindow(SDL_Event *e)
 		if (app_background == false) {
 			app_background = true;
 			CtrlAudio();
+
+			// audio close
+			if (audio_opened == true) {
+				audio->Close();
+				audio_opened = false;
+			}
 		}
 	}
 
@@ -1902,6 +1937,9 @@ void App::ChangeAudio()
 
 		// initialize event manager
 		evmgr->initialize_sound(param.freq, param.per);
+
+		// save audio parameter
+		memcpy(audio_param, &param, sizeof(param));
 	}
 }
 

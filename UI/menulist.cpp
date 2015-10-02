@@ -29,10 +29,12 @@
 //
 #define MENU_MOTION_TICK_MASK	0xffffff80
 										// OnMouseMotion() tick mask
-#define FINGER_POS_THRES		8
-										// OnFingerDown() vs OnFingerUp() threshold (position)
 #define FINGER_TIME_THRES		200
 										// OnFingerDownn() vs OnFingerUp() threshold (ms)
+#define FINGER_SLIDER_THRES		250
+										// OnFingerMotion() slider threshold (ms)
+#define FINGER_POS_THRES		20
+										// OnFingerMotion() slider threshold (x position)
 #define MENU_ENTER_THRES		250
 										// OnMouseUp() threshold (ms)
 #define MENU_JOY_FIRST			400
@@ -72,6 +74,8 @@ MenuList::MenuList(App *a)
 	finger_x = -1;
 	finger_y = -1;
 	finger_tick = 0;
+	finger_focus = -1;
+	finger_slider = false;
 
 	// mouse
 	mouse_down = false;
@@ -1320,15 +1324,18 @@ void MenuList::OnFingerDown(SDL_Event *e)
 	MenuItem *item;
 	bool result;
 
+	// save finger_x, finger_y
+	finger_x = -1;
+	finger_y = -1;
+	video->ConvertFinger(e->tfinger.x, e->tfinger.y, &finger_x, &finger_y);
+
+	// save tick
+	finger_tick = SDL_GetTicks();
+
 	// finger position to item
 	x = 0;
 	y = 0;
 	result = FingerToItem(e->tfinger.x, e->tfinger.y, &x, &y);
-
-	// save x, y, tick
-	finger_x = x;
-	finger_y = y;
-	finger_tick = SDL_GetTicks();
 
 	// check result
 	if (result == false) {
@@ -1339,11 +1346,8 @@ void MenuList::OnFingerDown(SDL_Event *e)
 	menu_focus = menu_top + y;
 	item = GetItem(menu_focus);
 	item->SetFocus();
-
-	// slider
-	if (item->GetType() == MenuItem::SliderItem) {
-		item->SetSlider(x, MENUITEM_WIDTH);
-	}
+	finger_focus = menu_focus;
+	finger_slider = false;
 
 	// command
 	menu->Command(true, item->GetID());
@@ -1366,13 +1370,7 @@ void MenuList::OnFingerUp(SDL_Event *e)
 	y = 0;
 	result = FingerToItem(e->tfinger.x, e->tfinger.y, &x, &y);
 
-	// check finger_x,finger_y, finger_tick
-	if ((x < (finger_x - FINGER_POS_THRES)) || (x > (finger_x + FINGER_POS_THRES))) {
-		return;
-	}
-	if ((y < (finger_y - FINGER_POS_THRES)) || (y > (finger_y + FINGER_POS_THRES))) {
-		return;
-	}
+	// check finger_tick
 	if ((Uint32)(SDL_GetTicks() - finger_tick) > FINGER_TIME_THRES) {
 		return;
 	}
@@ -1390,6 +1388,10 @@ void MenuList::OnFingerUp(SDL_Event *e)
 		item = GetItem(menu_focus);
 		menu->Command(false, item->GetID());
 	}
+
+	// clear finger_focus
+	finger_focus = -1;
+	finger_slider = false;
 }
 
 //
@@ -1398,9 +1400,16 @@ void MenuList::OnFingerUp(SDL_Event *e)
 //
 void MenuList::OnFingerMotion(SDL_Event *e)
 {
+	int fx;
+	int fy;
 	int x;
 	int y;
 	MenuItem *item;
+
+	// convert position
+	fx = -1;
+	fy = -1;
+	video->ConvertFinger(e->tfinger.x, e->tfinger.y, &fx, &fy);
 
 	// finger position to item
 	x = 0;
@@ -1430,8 +1439,24 @@ void MenuList::OnFingerMotion(SDL_Event *e)
 
 	// slider
 	if (item->GetType() == MenuItem::SliderItem) {
-		item->SetSlider(x, MENUITEM_WIDTH);
-		menu->Command(true, item->GetID());
+		if (finger_slider == false) {
+			// slider move is disabled (default)
+			if ((Uint32)(SDL_GetTicks() - finger_tick) > FINGER_SLIDER_THRES) {
+				// keep in touch
+				if (finger_focus == menu_focus) {
+					// focus is as same as on touch
+					if ((fx < (finger_x - FINGER_POS_THRES)) || (fx >(finger_x + FINGER_POS_THRES))) {
+						// move over FINGER_POS_THRES
+						finger_slider = true;
+					}
+				}
+			}
+		}
+
+		if (finger_slider == true) {
+			item->SetSlider(x, MENUITEM_WIDTH);
+			menu->Command(true, item->GetID());
+		}
 	}
 }
 
