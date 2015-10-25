@@ -29,17 +29,17 @@
 //
 #define MENU_MOTION_TICK_MASK	0xffffff80
 										// OnMouseMotion() tick mask
-#define FINGER_TIME_THRES		200
+#define FINGER_TIME_THRES		250
 										// OnFingerDownn() vs OnFingerUp() threshold (ms)
 #define FINGER_SLIDER_THRES		250
 										// OnFingerMotion() slider threshold (ms)
-#define FINGER_POS_THRES		20
+#define FINGER_POS_THRES		24
 										// OnFingerMotion() slider threshold (x position)
 #define MENU_ENTER_THRES		250
 										// OnMouseUp() threshold (ms)
-#define MENU_JOY_FIRST			400
+#define MENU_JOY_FIRST			350
 										// joystick first wait (ms)
-#define MENU_JOY_REPEAT			140
+#define MENU_JOY_REPEAT			120
 										// joystick repeat wait (ms)
 
 //
@@ -1331,6 +1331,7 @@ void MenuList::OnFingerDown(SDL_Event *e)
 
 	// save tick
 	finger_tick = SDL_GetTicks();
+	finger_focus = -1;
 
 	// finger position to item
 	x = 0;
@@ -1376,7 +1377,7 @@ void MenuList::OnFingerUp(SDL_Event *e)
 	}
 
 	// outside area -> back
-	if (result == false) {
+	if ((result == false) && (finger_focus < 0)) {
 		menu->CmdBack();
 		return;
 	}
@@ -1429,9 +1430,12 @@ void MenuList::OnFingerMotion(SDL_Event *e)
 		return;
 	}
 
-	menu_top = (menu_focus - y);
-	if (menu_top < 0) {
-		menu_top = 0;
+	// scroll
+	if (finger_slider == false) {
+		menu_top = (menu_focus - y);
+		if (menu_top < 0) {
+			menu_top = 0;
+		}
 	}
 
 	item = GetItem(menu_focus);
@@ -1441,7 +1445,7 @@ void MenuList::OnFingerMotion(SDL_Event *e)
 	if (item->GetType() == MenuItem::SliderItem) {
 		if (finger_slider == false) {
 			// slider move is disabled (default)
-			if ((Uint32)(SDL_GetTicks() - finger_tick) > FINGER_SLIDER_THRES) {
+			if ((Uint32)(SDL_GetTicks() - finger_tick) >= FINGER_SLIDER_THRES) {
 				// keep in touch
 				if (finger_focus == menu_focus) {
 					// focus is as same as on touch

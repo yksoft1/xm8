@@ -53,7 +53,7 @@ public:
 										// enter video menu
 	void EnterAudio();
 										// enter audio menu
-	void EnterInput();
+	void EnterInput(int id);
 										// enter input menu
 	void EnterReset();
 										// enter reset menu
@@ -63,6 +63,10 @@ public:
 										// enter softkey menu
 	void EnterDip();
 										// enter dip menu
+	void EnterJoymap(int id);
+										// enter joymap menu
+	void EnterVmKey(int id);
+										// enter vmkey menu
 	void EnterFile();
 										// enter file menu
 	void Command(bool down, int id);
@@ -97,6 +101,10 @@ public:
 										// command (softkey)
 	void CmdDip(int id);
 										// command (dip)
+	void CmdJoymap(int id);
+										// command (joymap)
+	void CmdVmKey(int id);
+										// command (vmkey)
 	void CmdFile(int id);
 										// command (file)
 	void Draw();
@@ -147,6 +155,10 @@ private:
 										// parent file select id
 	int softkey_id;
 										// parent softkey type id
+	int joymap_id;
+										// parent joymap id
+	static const int vmkey_table[55 * 2];
+										// MENU_VMKEY table
 };
 
 #endif // MENU_H

@@ -85,6 +85,8 @@ public:
 										// key down to vm
 	void GetKeyVM(Uint8 *buf);
 										// get key buffer from vm
+	Uint32 GetKeyCode(Uint32 port, Uint32 bit);
+										// get keycode from vm
 	void EnterMenu(int id);
 										// menu mode
 	void LeaveMenu(bool check = true);

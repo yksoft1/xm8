@@ -398,7 +398,12 @@ void UPD765A::write_signal(int id, uint32 data, uint32 mask)
 		}
 		reset_signal = next;
 	} else if(id == SIG_UPD765A_TC) {
+#ifdef SDL
+		// phase==PHASE_EXEC support (for Xanadu Scenario II)
+		if(phase == PHASE_READ || phase == PHASE_WRITE || phase == PHASE_SCAN || (phase == PHASE_RESULT && count == 7) || (phase == PHASE_EXEC)) {
+#else
 		if(phase == PHASE_READ || phase == PHASE_WRITE || phase == PHASE_SCAN || (phase == PHASE_RESULT && count == 7)) {
+#endif // SDL
 			if(data & mask) {
 				prevphase = phase;
 				phase = PHASE_TC;

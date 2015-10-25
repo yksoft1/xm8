@@ -95,6 +95,10 @@ private:
 										// get shift bits
 	void SetKeyStatus();
 										// set key status to EMU
+	void OnJoyKeyDown(int button);
+										// joystick button down (keyboard emulation)
+	void OnJoyKeyUp(int button);
+										// joystick button up (keyboard emulation)
 	App *app;
 										// application
 	Setting *setting;
@@ -137,8 +141,6 @@ private:
 										// key map (base)
 	static const Uint32 joystick_button[15 * 2];
 										// joystick button bit map
-	static const SDL_Scancode joystick_key[15];
-										// joystick to keyboard map
 	static const softkey_param softkey_full[66 + 1];
 										// softkey (full key)
 	static const softkey_param softkey_curten[31 + 1];

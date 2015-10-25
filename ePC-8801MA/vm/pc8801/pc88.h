@@ -410,6 +410,9 @@ public:
 	uint32 portf1_in();
 	void portfc_out(uint32 addr, uint32 data);
 	uint32 portfc_in(uint32 addr);
+
+	// version 1.50
+	uint32 get_key_code(uint32 port, uint32 bit);
 #endif // SDL
 };
 

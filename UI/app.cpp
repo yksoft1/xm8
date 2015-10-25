@@ -38,7 +38,7 @@
 //
 #define APP_NAME				"XM8 (based on ePC-8801MA)";
 										// application name
-#define APP_VER					0x0140
+#define APP_VER					0x0150
 										// version (BCD)
 #define APP_WIDTH				SCREEN_WIDTH
 										// window width
@@ -1691,6 +1691,15 @@ void App::OnKeyVM(SDL_Scancode code)
 void App::GetKeyVM(Uint8 *buf)
 {
 	pc88->get_key_status((uint8*)buf);
+}
+
+//
+// GetKeyCode()
+// get keycode from port and bit
+//
+Uint32 App::GetKeyCode(Uint32 port, Uint32 bit)
+{
+	return (Uint32)pc88->get_key_code((uint32)port, (uint32)bit);
 }
 
 //

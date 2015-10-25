@@ -492,14 +492,6 @@ bool DiskManager::Analyze()
 				num_of_banks = 0;
 				break;
 			}
-
-			// track offset < add
-			if (trkofs > add) {
-				if ((header[0x1b] != 0x00) || (track < 80)) {
-					num_of_banks = 0;
-					break;
-				}
-			}
 		}
 		if (num_of_banks == 0) {
 			break;

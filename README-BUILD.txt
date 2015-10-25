@@ -6,7 +6,7 @@ eXellent Multi-platform emulator type 8 - 'XM8'
 based on ePC-8801MA
 
 Copyright (C) 2015 ＰＩ．
-version 1.40 (2015/09/23)
+version 1.50 (2015/10/23)
 
 -----------------------------------------------------------------------
 
@@ -28,10 +28,7 @@ version 1.40 (2015/09/23)
 "Windows"ディレクトリにVisual Studio 2010以降のバージョンで使用可能なソリ
 ューションファイル、プロジェクトファイルを収録しています。
 
-参考として、Windowsで新たに開発環境を構築する場合の手順を以下に記します。
-
-※2015年7月下旬頃から、Visual C++ 2010 Expressの新規インストールが出来なく
-なりました。以下はVisual Studio Express 2013を使用する例を示しています。
+参考として、Visual Studio Express 2013を使用する例を示します。
 
 
 (1)Visual Studio Express 2013 for Windows Desktop

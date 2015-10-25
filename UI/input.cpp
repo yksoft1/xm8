@@ -644,6 +644,65 @@ void Input::OnKeyDown(bool soft, SDL_Scancode code)
 }
 
 //
+// OnJoyKeyDown()
+// joystick button down (keyboard emulation)
+//
+void Input::OnJoyKeyDown(int button)
+{
+	Uint32 data;
+	Uint32 port;
+	Uint32 bit;
+
+	// get data from setting
+	data = setting->GetJoystickToKey(button);
+
+	// check data >= 0x1000
+	if (data >= 0x1000) {
+		switch (data & 3) {
+		// 0x1000: (Menu)
+		case 0:
+			app->EnterMenu(MENU_MAIN);
+			break;
+		// 0x1001: (Next)
+		case 1:
+			ChangeList(true, true);
+			break;
+		// 0x1002: (Prev)
+		case 2:
+			ChangeList(false, true);
+			break;
+		// others
+		default:
+			break;
+		}
+		return;
+	}
+
+	// divide data to port and bit
+	bit = data & 0x07;
+	port = (data >> 8);
+
+	// get code from vm
+	data = app->GetKeyCode(port, bit);
+
+	// 8bit only
+	if (data < 0x100) {
+		key_status[data] = (Uint8)data;
+	}
+
+	// notify to VM
+	if ((port == 0x0a) && (bit == 7)) {
+		app->OnKeyVM(SDL_SCANCODE_CAPSLOCK);
+	}
+	if ((port == 0x08) && (bit == 5)) {
+		app->OnKeyVM(SDL_SCANCODE_SCROLLLOCK);
+	}
+
+	// set key status
+	SetKeyStatus();
+}
+
+//
 // OnKeyUp()
 // key up
 //
@@ -668,6 +727,40 @@ void Input::OnKeyUp(bool soft, SDL_Scancode code)
 
 	// 8bit only
 	key_status[data] = 0;
+
+	// set key status
+	SetKeyStatus();
+}
+
+//
+// OnJoyKeyUp()
+// joystick button up (keyboard emulation)
+//
+void Input::OnJoyKeyUp(int button)
+{
+	Uint32 data;
+	Uint32 port;
+	Uint32 bit;
+
+	// get data from setting
+	data = setting->GetJoystickToKey(button);
+
+	// check data >= 0x1000
+	if (data >= 0x1000) {
+		return;
+	}
+
+	// divide data to port and bit
+	bit = data & 0x07;
+	port = (data >> 8);
+
+	// get code from vm
+	data = app->GetKeyCode(port, bit);
+
+	// 8bit only
+	if (data < 0x100) {
+		key_status[data] = 0;
+	}
 
 	// set key status
 	SetKeyStatus();
@@ -883,23 +976,16 @@ void Input::OnJoystick()
 		prev = joystick_prev;
 
 		// loop table
-		for (loop=0; loop<SDL_arraysize(joystick_key); loop++) {
+		for (loop=0; loop<15; loop++) {
 			// now_state != prev_state ?
 			if ((eor & 1) != 0) {
 				if ((prev & 1) == 0) {
 					// release -> press
-					if (joystick_key[loop] == SDL_SCANCODE_F11) {
-						app->EnterMenu(MENU_MAIN);
-					}
-					else {
-						OnKeyDown(false, joystick_key[loop]);
-					}
+					OnJoyKeyDown(loop);
 				}
 				else {
 					// press -> release
-					if (joystick_key[loop] != SDL_SCANCODE_F11) {
-						OnKeyUp(false, joystick_key[loop]);
-					}
+					OnJoyKeyUp(loop);
 				}
 			}
 
@@ -1417,27 +1503,6 @@ const Uint32 Input::joystick_button[15 * 2] = {
 	0x00000002, 0x00000000,				// SDL_CONTROLLER_BUTTON_DPAD_DOWN
 	0x00000004, 0x00000000,				// SDL_CONTROLLER_BUTTON_DPAD_LEFT
 	0x00000008, 0x00000000,				// SDL_CONTROLLER_BUTTON_DPAD_RIGHT
-};
-
-//
-// joystick bit to keyboard table
-//
-const SDL_Scancode Input::joystick_key[15] = {
-	SDL_SCANCODE_KP_8,					// SDL_CONTROLLER_BUTTON_DPAD_UP
-	SDL_SCANCODE_KP_2,					// SDL_CONTROLLER_BUTTON_DPAD_DOWN
-	SDL_SCANCODE_KP_4,					// SDL_CONTROLLER_BUTTON_DPAD_LEFT
-	SDL_SCANCODE_KP_6,					// SDL_CONTROLLER_BUTTON_DPAD_RIGHT
-	SDL_SCANCODE_SPACE,					// SDL_CONTROLLER_BUTTON_A
-	SDL_SCANCODE_RETURN,				// SDL_CONTROLLER_BUTTON_B
-	SDL_SCANCODE_ESCAPE,				// SDL_CONTROLLER_BUTTON_X
-	SDL_SCANCODE_LSHIFT,				// SDL_CONTROLLER_BUTTON_Y
-	SDL_SCANCODE_Z,						// SDL_CONTROLLER_BUTTON_BACK
-	SDL_SCANCODE_X,						// SDL_CONTROLLER_BUTTON_GUIDE
-	SDL_SCANCODE_Y,						// SDL_CONTROLLER_BUTTON_START
-	SDL_SCANCODE_N,						// SDL_CONTROLLER_BUTTON_LEFTSTICK,
-	SDL_SCANCODE_F11,					// SDL_CONTROLLER_BUTTON_RIGHTSTICK,
-	SDL_SCANCODE_F11,					// SDL_CONTROLLER_BUTTON_LEFTSHOULDER,
-	SDL_SCANCODE_F11					// SDL_CONTROLLER_BUTTON_RIGHTSHOULDER
 };
 
 //

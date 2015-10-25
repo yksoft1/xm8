@@ -55,8 +55,12 @@
 #define MENU_SOFTKEY4			16
 										// softkey menu 4
 #define MENU_DIP				17
-										// dip switch
-#define MENU_FILE				18
+										// dipswitch menu
+#define MENU_JOYMAP				18
+										// joystick to keyboard map menu
+#define MENU_VMKEY				19
+										// vmkey menu
+#define MENU_FILE				20
 										// file menu
 
 //
@@ -326,16 +330,18 @@
 										// softkey alpha
 #define MENU_INPUT_SOFTTIME		1007
 										// softkey timeout
-#define MENU_INPUT_JOYENABLE	1008
-										// joystick enable
-#define MENU_INPUT_JOYSWAP		1009
-										// joystick button swap
-#define MENU_INPUT_JOYKEY		1010
-										// joystick to keyboard
-#define MENU_INPUT_MOUSETIME	1011
-										// mouse timeout
-#define MENU_INPUT_KEYENABLE	1012
+#define MENU_INPUT_KEYENABLE	1008
 										// keyboard enable
+#define MENU_INPUT_JOYENABLE	1009
+										// joystick enable
+#define MENU_INPUT_JOYSWAP		1010
+										// joystick button swap
+#define MENU_INPUT_JOYKEY		1011
+										// joystick to keyboard
+#define MENU_INPUT_JOYMAP		1012
+										// joystick to keyboard map
+#define MENU_INPUT_MOUSETIME	1013
+										// mouse timeout
 #define MENU_INPUT_MAX			1099
 										// maximum
 
@@ -497,6 +503,164 @@
 #define MENU_DIP_PARITY			1498
 										// parity radio
 #define MENU_DIP_MAX			1499
+										// maximum
+
+//
+// joystick to keyboard map menu
+//
+#define MENU_JOYMAP_MIN			1500
+										// minimum
+#define MENU_JOYMAP_DPAD_UP		1501
+										// SDL_CONTROLLER_BUTTON_DPAD_UP
+#define MENU_JOYMAP_DPAD_DOWN	1502
+										// SDL_CONTROLLER_BUTTON_DPAD_DOWN
+#define MENU_JOYMAP_DPAD_LEFT	1503
+										// SDL_CONTROLLER_BUTTON_DPAD_LEFT
+#define MENU_JOYMAP_DPAD_RIGHT	1504
+										// SDL_CONTROLLER_BUTTON_DPAD_RIGHT
+#define MENU_JOYMAP_A			1505
+										// SDL_CONTROLLER_BUTTON_A
+#define MENU_JOYMAP_B			1506
+										// SDL_CONTROLLER_BUTTON_B
+#define MENU_JOYMAP_X			1507
+										// SDL_CONTROLLER_BUTTON_X
+#define MENU_JOYMAP_Y			1508
+										// SDL_CONTROLLER_BUTTON_Y
+#define MENU_JOYMAP_BACK		1509
+										// SDL_CONTROLLER_BUTTON_BACK
+#define MENU_JOYMAP_GUIDE		1510
+										// SDL_CONTROLLER_BUTTON_GUIDE
+#define MENU_JOYMAP_START		1511
+										// SDL_CONTROLLER_BUTTON_START
+#define MENU_JOYMAP_LEFTSTICK	1512
+										// SDL_CONTROLLER_BUTTON_LEFTSTICK
+#define MENU_JOYMAP_RIGHTSTICK	1513
+										// SDL_CONTROLLER_BUTTON_RIGHTSTICK
+#define MENU_JOYMAP_LEFTSLDR	1514
+										// SDL_CONTROLLER_BUTTON_LEFTSHOULDER
+#define MENU_JOYMAP_RIGHTSLDR	1515
+										// SDL_CONTROLLER_BUTTON_RIGHTSHOULDER
+#define MENU_JOYMAP_DEFAULT		1516
+										// restore default settings
+#define MENU_JOYMAP_MAX			1599
+										// maximum
+
+//
+// vmkey menu
+//
+#define MENU_VMKEY_MIN			1600
+										// minumum
+#define MENU_VMKEY_MENU			1601
+										// (Menu)
+#define MENU_VMKEY_NEXT			1602
+										// (Next)
+#define MENU_VMKEY_PREV			1603
+										// (Prev)
+#define MENU_VMKEY_TEN0			1604
+										// Tenkey 0
+#define MENU_VMKEY_TEN1			1605
+										// Tenkey 1
+#define MENU_VMKEY_TEN2			1606
+										// Tenkey 2
+#define MENU_VMKEY_TEN3			1607
+										// Tenkey 3
+#define MENU_VMKEY_TEN4			1608
+										// Tenkey 4
+#define MENU_VMKEY_TEN5			1609
+										// Tenkey 5
+#define MENU_VMKEY_TEN6			1610
+										// Tenkey 6
+#define MENU_VMKEY_TEN7			1611
+										// Tenkey 7
+#define MENU_VMKEY_TEN8			1612
+										// Tenkey 8
+#define MENU_VMKEY_TEN9			1613
+										// Tenkey 9
+#define MENU_VMKEY_F1			1614
+										// Function 1
+#define MENU_VMKEY_F2			1615
+										// Function 2
+#define MENU_VMKEY_F3			1616
+										// Function 3
+#define MENU_VMKEY_F4			1617
+										// Function 4
+#define MENU_VMKEY_F5			1618
+										// Function 5
+#define MENU_VMKEY_ESC			1619
+										// ESC
+#define MENU_VMKEY_SPACE		1620
+										// SPACE
+#define MENU_VMKEY_RETURN		1621
+										// RETURN
+#define MENU_VMKEY_DEL			1622
+										// DEL
+#define MENU_VMKEY_HOMECLR		1623
+										// HOMECLR
+#define MENU_VMKEY_HELP			1624
+										// HELP
+#define MENU_VMKEY_SHIFT		1625
+										// SHIFT
+#define MENU_VMKEY_CTRL			1626
+										// CTRL
+#define MENU_VMKEY_CAPS			1627
+										// CAPS
+#define MENU_VMKEY_KANA			1628
+										// KANA
+#define MENU_VMKEY_GRPH			1629
+										// GRPH
+#define MENU_VMKEY_A			1630
+										// A
+#define MENU_VMKEY_B			1631
+										// B
+#define MENU_VMKEY_C			1632
+										// C
+#define MENU_VMKEY_D			1633
+										// D
+#define MENU_VMKEY_E			1634
+										// E
+#define MENU_VMKEY_F			1635
+										// F
+#define MENU_VMKEY_G			1636
+										// G
+#define MENU_VMKEY_H			1637
+										// H
+#define MENU_VMKEY_I			1638
+										// I
+#define MENU_VMKEY_J			1639
+										// J
+#define MENU_VMKEY_K			1640
+										// K
+#define MENU_VMKEY_L			1641
+										// L
+#define MENU_VMKEY_M			1642
+										// M
+#define MENU_VMKEY_N			1643
+										// N
+#define MENU_VMKEY_O			1644
+										// O
+#define MENU_VMKEY_P			1645
+										// P
+#define MENU_VMKEY_Q			1646
+										// Q
+#define MENU_VMKEY_R			1647
+										// R
+#define MENU_VMKEY_S			1648
+										// S
+#define MENU_VMKEY_T			1649
+										// T
+#define MENU_VMKEY_U			1650
+										// U
+#define MENU_VMKEY_V			1651
+										// V
+#define MENU_VMKEY_W			1652
+										// W
+#define MENU_VMKEY_X			1653
+										// X
+#define MENU_VMKEY_Y			1654
+										// Y
+#define MENU_VMKEY_Z			1655
+										// Z
+#define MENU_VMKEY_MAX			1699
 										// maximum
 
 //

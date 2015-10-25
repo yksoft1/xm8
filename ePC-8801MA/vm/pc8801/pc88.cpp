@@ -1550,6 +1550,19 @@ static const uint8 intr_mask2_table[8] = {
 	~7, ~3, ~5, ~1, ~6, ~2, ~4, ~0
 };
 
+#ifdef SDL
+
+uint32 PC88::get_key_code(uint32 port, uint32 bit)
+{
+	if ((port < 15) && (bit < 8)) {
+		return key_table[port][bit];
+	}
+
+	return 0;
+}
+
+#endif // SDL
+
 void PC88::initialize()
 {
 	memset(rdmy, 0xff, sizeof(rdmy));

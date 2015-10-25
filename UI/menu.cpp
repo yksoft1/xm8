@@ -52,6 +52,9 @@ Menu::Menu(App *a)
 
 	// softkey
 	softkey_id = MENU_INPUT_SOFTKEY1;
+
+	// joystick to keyboard
+	joymap_id = MENU_JOYMAP_DPAD_UP;
 }
 
 //
@@ -117,6 +120,9 @@ void Menu::EnterMenu(int menu_id)
 
 	// initialize softkey id
 	softkey_id = MENU_INPUT_SOFTKEY1;
+
+	// initialize joymap id
+	joymap_id = MENU_JOYMAP_DPAD_UP;
 
 	// inform list of starting menu
 	list->EnterMenu();
@@ -798,7 +804,7 @@ void Menu::EnterAudio()
 // EnterInput()
 // enter input menu
 //
-void Menu::EnterInput()
+void Menu::EnterInput(int id)
 {
 	list->SetTitle("<< Input Options >>", MENU_INPUT);
 
@@ -812,8 +818,9 @@ void Menu::EnterInput()
 	list->AddCheckButton("Keyboard enable", MENU_INPUT_KEYENABLE);
 #endif // __ANDROID__
 	list->AddCheckButton("Joystick enable", MENU_INPUT_JOYENABLE);
-	list->AddCheckButton("Joystick to keyboard", MENU_INPUT_JOYKEY);
 	list->AddCheckButton("Joystick button swap", MENU_INPUT_JOYSWAP);
+	list->AddCheckButton("Joystick to keyboard", MENU_INPUT_JOYKEY);
+	list->AddButton("Joystick to keyboard map", MENU_INPUT_JOYMAP);
 #ifndef __ANDROID__
 	list->AddSlider("Mouse timeout", MENU_INPUT_MOUSETIME, 400, 20000, 200);
 #endif // !__ANDROID__
@@ -829,8 +836,8 @@ void Menu::EnterInput()
 
 	// joystick
 	list->SetCheck(MENU_INPUT_JOYENABLE, setting->IsJoyEnable());
-	list->SetCheck(MENU_INPUT_JOYKEY, setting->IsJoyKey());
 	list->SetCheck(MENU_INPUT_JOYSWAP, setting->IsJoySwap());
+	list->SetCheck(MENU_INPUT_JOYKEY, setting->IsJoyKey());
 
 #ifndef __ANDROID__
 	// mouse
@@ -838,7 +845,7 @@ void Menu::EnterInput()
 #endif // !__ANDROID__
 
 	// focus
-	list->SetFocus(softkey_id);
+	list->SetFocus(id);
 }
 
 //
@@ -1111,6 +1118,102 @@ void Menu::EnterDip()
 }
 
 //
+// EnterJoymap()
+// enter joymap menu
+//
+void Menu::EnterJoymap(int id)
+{
+	list->SetTitle("<< Joystick to keyboard map >>", MENU_JOYMAP);
+
+	list->AddButton("SDL_BUTTON_DPAD_UP", MENU_JOYMAP_DPAD_UP);
+	list->AddButton("SDL_BUTTON_DPAD_DOWN", MENU_JOYMAP_DPAD_DOWN);
+	list->AddButton("SDL_BUTTON_DPAD_LEFT", MENU_JOYMAP_DPAD_LEFT);
+	list->AddButton("SDL_BUTTON_DPAD_RIGHT", MENU_JOYMAP_DPAD_RIGHT);
+	list->AddButton("SDL_BUTTON_A", MENU_JOYMAP_A);
+	list->AddButton("SDL_BUTTON_B", MENU_JOYMAP_B);
+	list->AddButton("SDL_BUTTON_X", MENU_JOYMAP_X);
+	list->AddButton("SDL_BUTTON_Y", MENU_JOYMAP_Y);
+	list->AddButton("SDL_BUTTON_BACK", MENU_JOYMAP_BACK);
+	list->AddButton("SDL_BUTTON_GUIDE", MENU_JOYMAP_GUIDE);
+	list->AddButton("SDL_BUTTON_START", MENU_JOYMAP_START);
+	list->AddButton("SDL_BUTTON_LEFTSTICK", MENU_JOYMAP_LEFTSTICK);
+	list->AddButton("SDL_BUTTON_RIGHTSTICK", MENU_JOYMAP_RIGHTSTICK);
+	list->AddButton("SDL_BUTTON_LEFTSHOULDER", MENU_JOYMAP_LEFTSLDR);
+	list->AddButton("SDL_BUTTON_RIGHTSHOULDER", MENU_JOYMAP_RIGHTSLDR);
+
+	list->AddButton("Restore default settings", MENU_JOYMAP_DEFAULT);
+
+	list->SetFocus(id);
+}
+
+//
+// EnterVmKey()
+// enter vmkey menu
+//
+void Menu::EnterVmKey(int id)
+{
+	list->SetTitle("<< Select a key >>", MENU_VMKEY);
+
+	list->AddButton("(User Interface)", MENU_VMKEY_MENU);
+	list->AddButton("(Next Softkey)", MENU_VMKEY_NEXT);
+	list->AddButton("(Prev Softkey)", MENU_VMKEY_PREV);
+	list->AddButton("Tenkey 0", MENU_VMKEY_TEN0);
+	list->AddButton("Tenkey 1", MENU_VMKEY_TEN1);
+	list->AddButton("Tenkey 2", MENU_VMKEY_TEN2);
+	list->AddButton("Tenkey 3", MENU_VMKEY_TEN3);
+	list->AddButton("Tenkey 4", MENU_VMKEY_TEN4);
+	list->AddButton("Tenkey 5", MENU_VMKEY_TEN5);
+	list->AddButton("Tenkey 6", MENU_VMKEY_TEN6);
+	list->AddButton("Tenkey 7", MENU_VMKEY_TEN7);
+	list->AddButton("Tenkey 8", MENU_VMKEY_TEN8);
+	list->AddButton("Tenkey 9", MENU_VMKEY_TEN9);
+	list->AddButton("Funckey 1", MENU_VMKEY_F1);
+	list->AddButton("Funckey 2", MENU_VMKEY_F2);
+	list->AddButton("Funckey 3", MENU_VMKEY_F3);
+	list->AddButton("Funckey 4", MENU_VMKEY_F4);
+	list->AddButton("Funckey 5", MENU_VMKEY_F5);
+	list->AddButton("ESC", MENU_VMKEY_ESC);
+	list->AddButton("SPACE", MENU_VMKEY_SPACE);
+	list->AddButton("RETURN", MENU_VMKEY_RETURN);
+	list->AddButton("DEL", MENU_VMKEY_DEL);
+	list->AddButton("HOMECLR", MENU_VMKEY_HOMECLR);
+	list->AddButton("HELP", MENU_VMKEY_HELP);
+	list->AddButton("SHIFT", MENU_VMKEY_SHIFT);
+	list->AddButton("CTRL", MENU_VMKEY_CTRL);
+	list->AddButton("CAPS", MENU_VMKEY_CAPS);
+	list->AddButton("KANA", MENU_VMKEY_KANA);
+	list->AddButton("GRPH", MENU_VMKEY_GRPH);
+	list->AddButton("A", MENU_VMKEY_A);
+	list->AddButton("B", MENU_VMKEY_B);
+	list->AddButton("C", MENU_VMKEY_C);
+	list->AddButton("D", MENU_VMKEY_D);
+	list->AddButton("E", MENU_VMKEY_E);
+	list->AddButton("F", MENU_VMKEY_F);
+	list->AddButton("G", MENU_VMKEY_H);
+	list->AddButton("H", MENU_VMKEY_J);
+	list->AddButton("I", MENU_VMKEY_I);
+	list->AddButton("J", MENU_VMKEY_J);
+	list->AddButton("K", MENU_VMKEY_K);
+	list->AddButton("L", MENU_VMKEY_L);
+	list->AddButton("M", MENU_VMKEY_M);
+	list->AddButton("N", MENU_VMKEY_N);
+	list->AddButton("O", MENU_VMKEY_O);
+	list->AddButton("P", MENU_VMKEY_P);
+	list->AddButton("Q", MENU_VMKEY_Q);
+	list->AddButton("R", MENU_VMKEY_R);
+	list->AddButton("S", MENU_VMKEY_S);
+	list->AddButton("T", MENU_VMKEY_T);
+	list->AddButton("U", MENU_VMKEY_U);
+	list->AddButton("V", MENU_VMKEY_V);
+	list->AddButton("W", MENU_VMKEY_W);
+	list->AddButton("X", MENU_VMKEY_X);
+	list->AddButton("Y", MENU_VMKEY_Y);
+	list->AddButton("Z", MENU_VMKEY_Z);
+
+	list->SetFocus(id);
+}
+
+//
 // EnterFile()
 // enter file menu
 //
@@ -1251,10 +1354,26 @@ void Menu::Command(bool down, int id)
 		return;
 	}
 
-	// dip menu
+	// dipswitch menu
 	if ((id >= MENU_DIP_MIN) && (id <= MENU_DIP_MAX)) {
 		if (down == false) {
 			CmdDip(id);
+		}
+		return;
+	}
+
+	// joystick to keyboard map menu
+	if ((id >= MENU_JOYMAP_MIN) && (id <= MENU_JOYMAP_MAX)) {
+		if (down == false) {
+			CmdJoymap(id);
+		}
+		return;
+	}
+
+	// vmkey menu
+	if ((id >= MENU_VMKEY_MIN) && (id <= MENU_VMKEY_MAX)) {
+		if (down == false) {
+			CmdVmKey(id);
 		}
 		return;
 	}
@@ -1344,12 +1463,22 @@ void Menu::CmdBack()
 	case MENU_SOFTKEY2:
 	case MENU_SOFTKEY3:
 	case MENU_SOFTKEY4:
-		EnterInput();
+		EnterInput(softkey_id);
 		break;
 
-	// dip menu
+	// dipswitch menu
 	case MENU_DIP:
 		EnterSystem(MENU_SYSTEM_DIP);
+		break;
+
+	// joystick to keyboard map menu
+	case MENU_JOYMAP:
+		EnterInput(MENU_INPUT_JOYMAP);
+		break;
+
+	// vmkey menu
+	case MENU_VMKEY:
+		EnterJoymap(joymap_id);
 		break;
 
 	// file menu
@@ -1443,7 +1572,7 @@ void Menu::CmdMain(int id)
 
 	// input options
 	case MENU_MAIN_INPUT:
-		EnterInput();
+		EnterInput(MENU_INPUT_SOFTKEY1);
 		break;
 
 #ifndef __ANDROID__
@@ -2164,6 +2293,21 @@ void Menu::CmdInput(bool down, int id)
 		}
 		break;
 
+	// joystick button swap
+	case MENU_INPUT_JOYSWAP:
+		if (down == false) {
+			swap = list->GetCheck(MENU_INPUT_JOYSWAP);
+			if (swap == true) {
+				list->SetCheck(MENU_INPUT_JOYSWAP, false);
+				setting->SetJoySwap(false);
+			}
+			else {
+				list->SetCheck(MENU_INPUT_JOYSWAP, true);
+				setting->SetJoySwap(true);
+			}
+		}
+		break;
+
 	// joystick to keyboard
 	case MENU_INPUT_JOYKEY:
 		if (down == false) {
@@ -2179,18 +2323,10 @@ void Menu::CmdInput(bool down, int id)
 		}
 		break;
 
-	// joystick button swap
-	case MENU_INPUT_JOYSWAP:
+	// joystick to keyboard map
+	case MENU_INPUT_JOYMAP:
 		if (down == false) {
-			swap = list->GetCheck(MENU_INPUT_JOYSWAP);
-			if (swap == true) {
-				list->SetCheck(MENU_INPUT_JOYSWAP, false);
-				setting->SetJoySwap(false);
-			}
-			else {
-				list->SetCheck(MENU_INPUT_JOYSWAP, true);
-				setting->SetJoySwap(true);
-			}
+			EnterJoymap(MENU_JOYMAP_DPAD_UP);
 		}
 		break;
 
@@ -2275,7 +2411,7 @@ void Menu::CmdSoftKey(int id)
 	}
 
 	// enter input menu
-	EnterInput();
+	EnterInput(softkey_id);
 }
 
 //
@@ -2480,6 +2616,88 @@ void Menu::CmdDip(int id)
 }
 
 //
+// CmdJoymap()
+// command (joymap)
+//
+void Menu::CmdJoymap(int id)
+{
+	int data;
+	int loop;
+
+	// restore default ?
+	if (id == MENU_JOYMAP_DEFAULT) {
+		setting->DefJoystickToKey();
+		return;
+	}
+
+	// save id
+	joymap_id = id;
+
+	// get number 0 to 14
+	id -= MENU_JOYMAP_DPAD_UP;
+	if ((id >= 0) && (id < 15)) {
+		// get data
+		data = (int)setting->GetJoystickToKey(id);
+
+		// find MENU_VMKEY id
+		for (loop=0; loop < (int)(SDL_arraysize(vmkey_table) / 2); loop++) {
+			// compare data with vmkey table data
+			if (vmkey_table[loop * 2 + 1] == data) {
+				// equal
+				EnterVmKey(vmkey_table[loop * 2 + 0]);
+				break;
+			}
+		}
+	}
+}
+
+//
+// CmdVmKey()
+// command (vmkey)
+//
+void Menu::CmdVmKey(int id)
+{
+	Uint32 data;
+	int loop;
+
+	// initialize
+	data = 0x10000;
+
+	switch (id) {
+	case MENU_VMKEY_MENU:
+		data = 0x1000;
+		break;
+
+	case MENU_VMKEY_NEXT:
+		data = 0x1001;
+		break;
+
+	case MENU_VMKEY_PREV:
+		data = 0x1002;
+		break;
+
+	default:
+		// find loop
+		for (loop = 0; loop < (int)(SDL_arraysize(vmkey_table) / 2); loop++) {
+			// compare id
+			if (vmkey_table[loop * 2 + 0] == id) {
+				// equal
+				data = (Uint32)vmkey_table[loop * 2 + 1];
+				break;
+			}
+		}
+		break;
+	}
+
+	// set
+	if (data < 0x10000) {
+		setting->SetJoystickToKey(joymap_id - MENU_JOYMAP_DPAD_UP, data);
+	}
+
+	EnterJoymap(joymap_id);
+}
+
+//
 // CmdFile()
 // command (file)
 //
@@ -2673,5 +2891,66 @@ void Menu::OnFingerMotion(SDL_Event *e)
 {
 	list->OnFingerMotion(e);
 }
+
+//
+// MENU_VMKEY to data table
+//
+const int Menu::vmkey_table[55 * 2] = {
+	MENU_VMKEY_MENU,	0x1000,
+	MENU_VMKEY_NEXT,	0x1001,
+	MENU_VMKEY_PREV,	0x1002,
+	MENU_VMKEY_TEN0,	0x0000,
+	MENU_VMKEY_TEN1,	0x0001,
+	MENU_VMKEY_TEN2,	0x0002,
+	MENU_VMKEY_TEN3,	0x0003,
+	MENU_VMKEY_TEN4,	0x0004,
+	MENU_VMKEY_TEN5,	0x0005,
+	MENU_VMKEY_TEN6,	0x0006,
+	MENU_VMKEY_TEN7,	0x0007,
+	MENU_VMKEY_TEN8,	0x0100,
+	MENU_VMKEY_TEN9,	0x0101,
+	MENU_VMKEY_F1,		0x0901,
+	MENU_VMKEY_F2,		0x0902,
+	MENU_VMKEY_F3,		0x0903,
+	MENU_VMKEY_F4,		0x0904,
+	MENU_VMKEY_F5,		0x0905,
+	MENU_VMKEY_ESC,		0x0907,
+	MENU_VMKEY_SPACE,	0x0906,
+	MENU_VMKEY_RETURN,	0x0e00,
+	MENU_VMKEY_DEL,		0x0c07,
+	MENU_VMKEY_HOMECLR,	0x0800,
+	MENU_VMKEY_HELP,	0x0a03,
+	MENU_VMKEY_SHIFT,	0x0e02,
+	MENU_VMKEY_CTRL,	0x0807,
+	MENU_VMKEY_CAPS,	0x0a07,
+	MENU_VMKEY_KANA,	0x0805,
+	MENU_VMKEY_GRPH,	0x0804,
+	MENU_VMKEY_A,		0x0201,
+	MENU_VMKEY_B,		0x0202,
+	MENU_VMKEY_C,		0x0203,
+	MENU_VMKEY_D,		0x0204,
+	MENU_VMKEY_E,		0x0205,
+	MENU_VMKEY_F,		0x0206,
+	MENU_VMKEY_G,		0x0207,
+	MENU_VMKEY_H,		0x0300,
+	MENU_VMKEY_I,		0x0301,
+	MENU_VMKEY_J,		0x0302,
+	MENU_VMKEY_K,		0x0303,
+	MENU_VMKEY_L,		0x0304,
+	MENU_VMKEY_M,		0x0305,
+	MENU_VMKEY_N,		0x0306,
+	MENU_VMKEY_O,		0x0307,
+	MENU_VMKEY_P,		0x0400,
+	MENU_VMKEY_Q,		0x0401,
+	MENU_VMKEY_R,		0x0402,
+	MENU_VMKEY_S,		0x0403,
+	MENU_VMKEY_T,		0x0404,
+	MENU_VMKEY_U,		0x0405,
+	MENU_VMKEY_V,		0x0406,
+	MENU_VMKEY_W,		0x0407,
+	MENU_VMKEY_X,		0x0500,
+	MENU_VMKEY_Y,		0x0501,
+	MENU_VMKEY_Z,		0x0502
+};
 
 #endif // SDL

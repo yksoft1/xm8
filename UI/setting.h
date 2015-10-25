@@ -209,6 +209,12 @@ public:
 										// get keyboard enable
 	void SetKeyEnable(bool enable);
 										// set keyboard enable
+	Uint32 GetJoystickToKey(int button);
+										// get joystick to keyboard map
+	void SetJoystickToKey(int button, Uint32 data);
+										// set joystick to keyboard map
+	void DefJoystickToKey();
+										// default joystick to keyboard map
 
 	// state
 	int GetStateNum();
@@ -267,6 +273,8 @@ private:
 										// force RGB565 (version 1.20)
 	bool watch_battery;
 										// watch battery (version 1.30)
+	uint32 joystick_to_key[15];
+										// joystick to keyboard map (version 1.50)
 };
 
 #endif // SETTING_H

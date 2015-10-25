@@ -52,6 +52,8 @@
 										// version 1.20
 #define SETTING_VERSION_130		20150822
 										// version 1.30
+#define SETTING_VERSION_150		20151020
+										// version 1.50
 
 // video
 #define DEFAULT_WINDOW_WIDTH	640
@@ -155,6 +157,9 @@ Setting::Setting()
 
 	// setting (power)
 	watch_battery = true;
+
+	// setting (joystick to keyboard map)
+	DefJoystickToKey();
 
 	// save state
 	state_num = 0;
@@ -323,6 +328,13 @@ bool Setting::LoadSetting(FILEIO *fio)
 			watch_battery = fio->FgetBool();
 		}
 
+		// version 1.50
+		if (version >= SETTING_VERSION_150) {
+			for (loop=0; loop<SDL_arraysize(joystick_to_key); loop++) {
+				joystick_to_key[loop] = fio->FgetUint32();
+			}
+		}
+
 		return true;
 	}
 
@@ -356,7 +368,7 @@ void Setting::SaveSetting(FILEIO *fio)
 	int loop;
 
 	// version
-	fio->FputUint32(SETTING_VERSION_130);
+	fio->FputUint32(SETTING_VERSION_150);
 
 	// system
 	fio->FputInt32(config.boot_mode);
@@ -404,6 +416,11 @@ void Setting::SaveSetting(FILEIO *fio)
 
 	// verison 1.30
 	fio->FputBool(watch_battery);
+
+	// version 1.50
+	for (loop=0; loop<SDL_arraysize(joystick_to_key); loop++) {
+		fio->FputUint32(joystick_to_key[loop]);
+	}
 }
 
 //
@@ -1084,6 +1101,47 @@ bool Setting::IsKeyEnable()
 void Setting::SetKeyEnable(bool enable)
 {
 	keyboard_enable = enable;
+}
+
+//
+// GetJoystickToKey()
+// get joystick to keyboard map
+//
+Uint32 Setting::GetJoystickToKey(int button)
+{
+	return joystick_to_key[button];
+}
+
+//
+// SetJoystickToKey()
+// set joystick to keyboard map
+//
+void Setting::SetJoystickToKey(int button, Uint32 data)
+{
+	joystick_to_key[button] = data;
+}
+
+//
+// DefJoystickToKey()
+// default joystick to keyboard map
+//
+void Setting::DefJoystickToKey()
+{
+	joystick_to_key[0] = 0x0100;
+	joystick_to_key[1] = 0x0002;
+	joystick_to_key[2] = 0x0004;
+	joystick_to_key[3] = 0x0006;
+	joystick_to_key[4] = 0x0906;
+	joystick_to_key[5] = 0x0e00;
+	joystick_to_key[6] = 0x0907;
+	joystick_to_key[7] = 0x0e02;
+	joystick_to_key[8] = 0x0502;
+	joystick_to_key[9] = 0x0500;
+	joystick_to_key[10] = 0x0501;
+	joystick_to_key[11] = 0x0306;
+	joystick_to_key[12] = 0x1000;
+	joystick_to_key[13] = 0x1000;
+	joystick_to_key[14] = 0x1000;
 }
 
 //
