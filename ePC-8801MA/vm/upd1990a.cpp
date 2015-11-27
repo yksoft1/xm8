@@ -166,7 +166,11 @@ void UPD1990A::write_signal(int id, uint32 data, uint32 mask)
 				if(hold) {
 					// restart event
 					cancel_event(this, register_id_1sec);
+#ifdef SDL
+					register_event(this, EVENT_1SEC, 100000.0, true, &register_id_1sec);
+#else
 					register_event(this, EVENT_1SEC, 1000000.0, true, &register_id_1sec);
+#endif // SDL
 					hold = false;
 				}
 				break;
@@ -274,6 +278,10 @@ bool UPD1990A::load_state(FILEIO* state_fio)
 #ifdef HAS_UPD4990A
 	shift_cmd = state_fio->FgetUint8();
 #endif
+
+	// version 1.60
+	adjust_event(register_id_1sec, 100000.0);
+
 	return true;
 }
 

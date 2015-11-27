@@ -225,6 +225,9 @@ public:
 	int vblank_clocks;
 	void request_single_exec();
 	uint32 single_exec_clock;
+
+	// version 1.60
+	void adjust_event(int regsiter_id, double usec);
 #endif // SDL
 };
 

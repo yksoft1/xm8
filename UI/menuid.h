@@ -660,6 +660,18 @@
 										// Y
 #define MENU_VMKEY_Z			1655
 										// Z
+#define MENU_VMKEY_UP			1656
+										// UP
+#define MENU_VMKEY_DOWN			1657
+										// UP
+#define MENU_VMKEY_LEFT			1658
+										// UP
+#define MENU_VMKEY_RIGHT		1659
+										// UP
+#define MENU_VMKEY_ROLLUP		1660
+										// ROLL UP
+#define MENU_VMKEY_ROLLDOWN		1661
+										// ROLL DOWN
 #define MENU_VMKEY_MAX			1699
 										// maximum
 

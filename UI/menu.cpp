@@ -1189,8 +1189,8 @@ void Menu::EnterVmKey(int id)
 	list->AddButton("D", MENU_VMKEY_D);
 	list->AddButton("E", MENU_VMKEY_E);
 	list->AddButton("F", MENU_VMKEY_F);
-	list->AddButton("G", MENU_VMKEY_H);
-	list->AddButton("H", MENU_VMKEY_J);
+	list->AddButton("G", MENU_VMKEY_G);
+	list->AddButton("H", MENU_VMKEY_H);
 	list->AddButton("I", MENU_VMKEY_I);
 	list->AddButton("J", MENU_VMKEY_J);
 	list->AddButton("K", MENU_VMKEY_K);
@@ -1209,6 +1209,12 @@ void Menu::EnterVmKey(int id)
 	list->AddButton("X", MENU_VMKEY_X);
 	list->AddButton("Y", MENU_VMKEY_Y);
 	list->AddButton("Z", MENU_VMKEY_Z);
+	list->AddButton("UP", MENU_VMKEY_UP);
+	list->AddButton("DOWN", MENU_VMKEY_DOWN);
+	list->AddButton("LEFT", MENU_VMKEY_LEFT);
+	list->AddButton("RIGHT", MENU_VMKEY_RIGHT);
+	list->AddButton("ROLL UP", MENU_VMKEY_ROLLUP);
+	list->AddButton("ROLL DOWN", MENU_VMKEY_ROLLDOWN);
 
 	list->SetFocus(id);
 }
@@ -2895,7 +2901,7 @@ void Menu::OnFingerMotion(SDL_Event *e)
 //
 // MENU_VMKEY to data table
 //
-const int Menu::vmkey_table[55 * 2] = {
+const int Menu::vmkey_table[61 * 2] = {
 	MENU_VMKEY_MENU,	0x1000,
 	MENU_VMKEY_NEXT,	0x1001,
 	MENU_VMKEY_PREV,	0x1002,
@@ -2950,7 +2956,13 @@ const int Menu::vmkey_table[55 * 2] = {
 	MENU_VMKEY_W,		0x0407,
 	MENU_VMKEY_X,		0x0500,
 	MENU_VMKEY_Y,		0x0501,
-	MENU_VMKEY_Z,		0x0502
+	MENU_VMKEY_Z,		0x0502,
+	MENU_VMKEY_UP,		0x0801,
+	MENU_VMKEY_DOWN,	0x0A01,
+	MENU_VMKEY_LEFT,	0x0A02,
+	MENU_VMKEY_RIGHT,	0x0802,
+	MENU_VMKEY_ROLLUP,	0x0B00,
+	MENU_VMKEY_ROLLDOWN,0x0B01
 };
 
 #endif // SDL

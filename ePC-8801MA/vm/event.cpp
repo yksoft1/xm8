@@ -772,6 +772,18 @@ void EVENT::register_vline_event(DEVICE* dev)
 	}
 }
 
+#ifdef SDL
+void EVENT::adjust_event(int register_id, double usec)
+{
+	usec = ((1024.0 * usec * d_cpu[0].cpu_clocks) / 1000000.0) + 0.5;
+	if (event[register_id].loop_clock != usec) {
+		event[register_id].remain_clock = usec;
+		event[register_id].loop_clock = usec;
+		event[register_id].passed_clock = 0;
+	}
+}
+#endif // SDL
+
 void EVENT::event_callback(int event_id, int err)
 {
 //	if(event_id == EVENT_MIX) {

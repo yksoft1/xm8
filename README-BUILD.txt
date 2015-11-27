@@ -6,7 +6,7 @@ eXellent Multi-platform emulator type 8 - 'XM8'
 based on ePC-8801MA
 
 Copyright (C) 2015 ＰＩ．
-version 1.50 (2015/10/23)
+version 1.60 (2015/11/23)
 
 -----------------------------------------------------------------------
 
@@ -34,7 +34,7 @@ version 1.50 (2015/10/23)
 (1)Visual Studio Express 2013 for Windows Desktop
 
 Visual Studio Express 2013 with Update 5 for Windows Desktop
-https://www.visualstudio.com/downloads/download-visual-studio-vs
+https://www.visualstudio.com/downloads/download-visual-studio-vs/
 
 上記リンクの"Visual Studio 2013"をクリックし、Express for Windows Desktop
 のインストールを行います。要求システム要件はWindows 7 SP1以降となります。

@@ -157,7 +157,7 @@ private:
 										// parent softkey type id
 	int joymap_id;
 										// parent joymap id
-	static const int vmkey_table[55 * 2];
+	static const int vmkey_table[61 * 2];
 										// MENU_VMKEY table
 };
 

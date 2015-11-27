@@ -625,6 +625,13 @@ public:
 		}
 		event_manager->request_single_exec();
 	}
+	virtual void adjust_event(int register_id, double usec)
+	{
+		if (event_manager == NULL) {
+			event_manager = vm->first_device->next_device;
+		}
+		event_manager->adjust_event(register_id, usec);
+	}
 #endif // SDL
 	virtual void update_timing(int new_clocks, double new_frames_per_sec, int new_lines_per_frame) {}
 	
