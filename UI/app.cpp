@@ -38,7 +38,7 @@
 //
 #define APP_NAME				"XM8 (based on ePC-8801MA)";
 										// application name
-#define APP_VER					0x0160
+#define APP_VER					0x0161
 										// version (BCD)
 #define APP_WIDTH				SCREEN_WIDTH
 										// window width
@@ -630,6 +630,9 @@ void App::Run()
 
 	// load state 0 (auto)
 	Load(0);
+
+	// enter menu
+	EnterMenu(MENU_MAIN);
 
 	// main loop
 	while (app_quit == false) {

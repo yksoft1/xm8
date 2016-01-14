@@ -231,7 +231,7 @@ void Menu::EnterMain(int id)
 		list->AddButton("Normal Speed", MENU_MAIN_SPEED);
 	}
 	else {
-		list->AddButton("Full Speed\n", MENU_MAIN_SPEED);
+		list->AddButton("Full Speed", MENU_MAIN_SPEED);
 	}
 
 	list->AddButton("Reset", MENU_MAIN_RESET);
@@ -482,60 +482,60 @@ void Menu::EnterSystem(int id)
 		add = true;
 	}
 	if ((ver[0] == 0x34) && (add == false)) {
-		list->AddButton("ROM: PC-8801mkIISR/TR\n", MENU_SYSTEM_ROMVER);
+		list->AddButton("ROM: PC-8801mkIISR/TR", MENU_SYSTEM_ROMVER);
 		add = true;
 	}
 	if ((ver[0] < 0x38) && (add == false)) {
 		if (ver[2] == 0xfe) {
-			list->AddButton("ROM: PC-8801mkIIMR\n", MENU_SYSTEM_ROMVER);
+			list->AddButton("ROM: PC-8801mkIIMR", MENU_SYSTEM_ROMVER);
 		}
 		else {
-			list->AddButton("ROM: PC-8801mkIIFR\n", MENU_SYSTEM_ROMVER);
+			list->AddButton("ROM: PC-8801mkIIFR", MENU_SYSTEM_ROMVER);
 		}
 		add = true;
 	}
 	if ((ver[0] == 0x38) && (add == false)) {
 		if (ver[2] == 0xfe) {
-			list->AddButton("ROM: PC-8801MH\n", MENU_SYSTEM_ROMVER);
+			list->AddButton("ROM: PC-8801MH", MENU_SYSTEM_ROMVER);
 		}
 		else {
-			list->AddButton("ROM: PC-8801FH\n", MENU_SYSTEM_ROMVER);
+			list->AddButton("ROM: PC-8801FH", MENU_SYSTEM_ROMVER);
 		}
 		add = true;
 	}
 	if ((ver[1] < 0x31) && (add == false)) {
 		if (ver[2] == 0xfe) {
-			list->AddButton("ROM: PC-8801MA\n", MENU_SYSTEM_ROMVER);
+			list->AddButton("ROM: PC-8801MA", MENU_SYSTEM_ROMVER);
 		}
 		else {
-			list->AddButton("ROM: PC-8801FA\n", MENU_SYSTEM_ROMVER);
+			list->AddButton("ROM: PC-8801FA", MENU_SYSTEM_ROMVER);
 		}
 		add = true;
 	}
 	if ((ver[1] == 0x31) && (add == false)) {
 		if (ver[2] == 0xfe) {
-			list->AddButton("ROM: PC-8801MA2\n", MENU_SYSTEM_ROMVER);
+			list->AddButton("ROM: PC-8801MA2", MENU_SYSTEM_ROMVER);
 		}
 		else {
-			list->AddButton("ROM: PC-8801FE\n", MENU_SYSTEM_ROMVER);
+			list->AddButton("ROM: PC-8801FE", MENU_SYSTEM_ROMVER);
 		}
 		add = true;
 	}
 	if ((ver[1] == 0x32) && (add == false)) {
-		list->AddButton("ROM: PC-98DO\n", MENU_SYSTEM_ROMVER);
+		list->AddButton("ROM: PC-98DO", MENU_SYSTEM_ROMVER);
 		add = true;
 	}
 	if ((ver[1] == 0x33) && (add == false)) {
 		if (ver[2] == 0xfe) {
-			list->AddButton("ROM: PC-8801MC\n", MENU_SYSTEM_ROMVER);
+			list->AddButton("ROM: PC-8801MC", MENU_SYSTEM_ROMVER);
 		}
 		else {
-			list->AddButton("ROM: PC-8801FE2\n", MENU_SYSTEM_ROMVER);
+			list->AddButton("ROM: PC-8801FE2", MENU_SYSTEM_ROMVER);
 		}
 		add = true;
 	}
 	if ((ver[1] > 0x33) && (add == false)) {
-		list->AddButton("ROM: PC-98DO+\n", MENU_SYSTEM_ROMVER);
+		list->AddButton("ROM: PC-98DO+", MENU_SYSTEM_ROMVER);
 		add = true;
 	}
 
@@ -632,7 +632,7 @@ void Menu::EnterVideo()
 	list->AddSlider("Brightness", MENU_VIDEO_BRIGHTNESS, 0x40, 0xff, 1);
 
 	// status line
-	list->AddCheckButton("Status area\n", MENU_VIDEO_STATUSCHK);
+	list->AddCheckButton("Status area", MENU_VIDEO_STATUSCHK);
 	list->AddSlider("Status transparency", MENU_VIDEO_STATUSALPHA, 0, 0xff, 1);
 
 #ifdef _WIN32
@@ -1738,7 +1738,7 @@ void Menu::CmdLoad(int id)
 
 	// update text
 	strcpy(textprev, list->GetText(MENU_LOAD_0 + id));
-	sprintf(textbuf, "Slot %d Loading...\n", id);
+	sprintf(textbuf, "Slot %d Loading...", id);
 	list->SetText(MENU_LOAD_0 + id, textbuf);
 
 	// draw
@@ -1772,7 +1772,7 @@ void Menu::CmdSave(int id)
 
 	// update text
 	strcpy(textprev, list->GetText(MENU_SAVE_0 + id));
-	sprintf(textbuf, "Slot %d Saving...\n", id);
+	sprintf(textbuf, "Slot %d Saving...", id);
 	list->SetText(MENU_SAVE_0 + id, textbuf);
 
 	// draw
@@ -2380,6 +2380,14 @@ void Menu::CmdQuit(int id)
 	switch (id) {
 	// yes
 	case MENU_QUIT_YES:
+		// update text
+		list->SetText(MENU_QUIT_YES, "Saving...");
+
+		// draw
+		Draw();
+		video->Draw();
+
+		// quit
 		app->Quit();
 		app->LeaveMenu();
 		break;

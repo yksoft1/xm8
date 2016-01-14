@@ -6,7 +6,7 @@ eXellent Multi-platform emulator type 8 - 'XM8'
 based on ePC-8801MA
 
 Copyright (C) 2015 ＰＩ．
-version 1.60 (2015/11/23)
+version 1.61 (2015/12/23)
 
 -----------------------------------------------------------------------
 
