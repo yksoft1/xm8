@@ -5,8 +5,8 @@
 eXellent Multi-platform emulator type 8 - 'XM8'
 based on ePC-8801MA
 
-Copyright (C) 2015 ＰＩ．
-version 1.61 (2015/12/23)
+Copyright (C) 2015-2018 ＰＩ．
+version 1.70 (2018/01/23)
 
 -----------------------------------------------------------------------
 
@@ -34,16 +34,19 @@ version 1.61 (2015/12/23)
 (1)Visual Studio Express 2013 for Windows Desktop
 
 Visual Studio Express 2013 with Update 5 for Windows Desktop
-https://www.visualstudio.com/downloads/download-visual-studio-vs/
+https://my.visualstudio.com/downloads/
+(Microsoftアカウントが必要)
 
-上記リンクの"Visual Studio 2013"をクリックし、Express for Windows Desktop
-のインストールを行います。要求システム要件はWindows 7 SP1以降となります。
+ページ内のの"Visual Studio Express 2013 for Windows Desktop with Update 5"を
+クリックし、ダウンロードします。(必要に応じ事前に言語をJPに変えてください)
 
 
 (2)SDL開発ライブラリ
 
 Windows (Visual C++ 32bit/64bit)向けライブラリをダウンロードします。
 https://www.libsdl.org/download-2.0.php
+
+version 1.70ビルド時点の最新版はSDL 2.0.7(stable)です。
 
 これをSource\Windows\SDLへ展開します。以下のようになります。
 
@@ -61,26 +64,16 @@ Releaseターゲットはランタイムライブラリを静的リンクしま�
 はこれと異なり、ランタイムDLLを利用する設定としています。
 
 
-＜SDL＞
-
-XM8.exeに同梱して配布しているSDL2.dllは、SDL 2.0.3にタッチ操作の不具合修正
-パッチを当てたバージョンです。これを作成する場合は、SDL 2.0.3のソースツリー
-に対し、以下のファイルを差し替えてください。
-
-src/video/windows/SDL_windowsevents.c
-
-
 
 □Linux
 
 
 ＜開発環境の構築＞
-
 g++と標準のツールチェインを利用し、SDL 2.0をビルドする環境を整えます。詳し
 くは以下を参照してください。
 https://wiki.libsdl.org/Installation#Linux.2FUnix
 
-作者環境であるXUbuntu 14.04での場合を例として挙げます。
+作者環境であるXUbuntu 16.04での場合を例として挙げます。
 
 sudo apt-get install g++ build-essential libsdl2-dev
 
@@ -101,66 +94,51 @@ make
 
 ＜開発環境の構築＞
 
-これまでAndroidアプリケーションの開発環境としてEclipse+ADT Pluginが使われて
-きましたが、2015年現在はAndroid Studioへの移行が進みつつある状況です。しかし
-XM8ではSDL 2.0との親和性を考慮し、従来通りのEclipse+ADTを採用しました。
+2018年初頭現在、SDLを使用したAndroidアプリケーションの構築は非常に困難です。
 
-通常のAndroidアプリケーションを作成する場合と同様に、以下をインストールしま
-す。
+過去に使われてきたEclipse + ADT Plugin + ndk-build + gccという組み合わせが
+Android Studio + gradle + CMake + Clangと大幅に変わってしまい、これに対し
+SDLが追い付いていない状態です。さらにgradle pluginのバージョン依存も加わり
+複雑怪奇といってよい状況を呈しています。
 
-(1)JDK
-(2)Eclipse for Java
-(3)Android SDK
-(4)ADT Plugin
+version 1.70のビルドにあたってはWindows/Linuxと異なりSDL 2.0.7(stable)を
+上記理由より早々に諦め、開発中バージョンであるSDL 2.0.8のスナップショット、
+SDL-2.0.8-11774を採用しました。
 
-EclipseからAndroid SDK Managerを起動し、(3)でインストールしたAndroid SDKの
-場所を指定します。さらにAndroid SDK Managerの画面で"Obsolete"にチェックし、
-Android 4.0 (API 14)のSDK Platformをインストールします。
+上記バージョンを入手できたという前提で、作者のビルド環境を記載します。
 
-次にAndroid NDKをインストールします。これでJNI(Java Native Interface)を利用
-するアプリケーションを作成できるようになります。NDKのルートディレクトリにパ
-スを通し、任意のディレクトリ上で"ndk-build"が実行できることを確かめます。
+・Android Studio             : 3.0.1
+・JDK                        : 上記Android Studio内蔵のOpenJDK
+・gradle                     : 4.1
+・gradle plugin              : 3.0.1
+・Android SDK Platform-Tools : 27.0.1
+・Android SDK Tools          : 26.1.1
+・Android SDK Platforms      : Android 8.0 (Oreo)
 
-最後に、SDL 2.0のソースコードをダウンロードします。（作者はSDL 2.0.3を使用し
-ています）
-https://www.libsdl.org/download-2.0.php
+この他、CMakeとNDKが必要です。詳しくは以下を参照ください。
 
-ソースコードに含まれる"Android.mk"ファイルが、Source/Android/XM8/jni/SDL/
-に来るように展開します。つまり、以下の構成になります。
-
-Source/Android/XM8/jni/SDL/Android.mk（ndk-build向けmakeファイル）
-Source/Android/XM8/jni/SDL/include/*（インクルードファイル）
-Source/Android/XM8/jni/SDL/src/*（SDLソースコード）
-
-version 1.10以降、キーボードとジョイスティックの両方をサポートするためSDLに
-パッチを入れることにしました。以下のファイルを差し替えてください。
-
-src/joystick/android/SDL_sysjoystick.c
+https://developer.android.com/studio/projects/add-native-code.html?hl=ja
 
 
-＜ビルド＞
+SDL-2.0.8-11774のサブディレクトリ"include"と"src"の内容を、それぞれ以下の
+フォルダにコピーします。
 
-まずJNIの部分をビルドします。以下の手順になります。
+Source/Android/XM8/app/src/main/cpp/SDL/include (includeファイル)
+Source/Android/XM8/app/src/main/cpp/SDL/src     (ソースファイルツリー)
 
-cd Source
-cd Android
-cd XM8
-ndk-build NDK_DEBUG=0
 
-armeabi, armeabi-v7a, x86のそれぞれについて、"libmain.so"と"libSDL2.so"が
-出来ればOKです。
+Android Studioを起動し、"Open an existing Android Studio Project"で
+Source/Android/XM8フォルダを指定します。自動的にgradle sync projectが行われ
+ます。(CPUにもよりますが、遅いとsync完了まで5分程度かかります)
 
-次にEclipseを起動し、Source/Android/XM8にあるプロジェクトをロードします。
+Android StudioではCMake・NDKとの連携が取られているため、version 1.61以前で
+必要であったndk-buildの事前実行は不要です。
 
-Package Explorerの"XM8"を右クリックし、"Debug As"→"Android Application"を
-選択します。ここでUSBデバッグ可能なデバイスが接続されていれば、XM8.apkが
-インストール、実行されます。
+Run→Run"app" メニューでDebugバージョンのビルドと端末へのダウンロード、
+Build→Generate Signed APK メニューでReleaseバージョンのビルドと署名付与が
+行えます。
 
-このときオプションに当たるROMファイルが見つからない場合、AssetManagerで
-ブレークすることがあります。実害はありませんのでEclipse上でResumeを何度か
-選択し、先に進ませてください。
-
-配布用のapkファイルを作成するには"Export Signed Application Package"操作を
-行います。詳しくは以下を参照ください。
-http://developer.android.com/tools/publishing/app-signing.html
+Releaseバージョンのビルドではarm64-v8a, armeabi-v7a, x86, x86-64の4つのアー
+キテクチャに対しSDL本体とXM8のコンパイルが行われるため、フルビルドの場合は
+数分～10分以上の時間を要します。
 (EOF)

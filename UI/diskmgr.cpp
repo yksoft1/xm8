@@ -204,7 +204,7 @@ bool DiskManager::IsOpen()
 }
 
 //
-// IsNext
+// IsNext()
 // check next ready
 //
 bool DiskManager::IsNext()
@@ -313,6 +313,27 @@ int DiskManager::GetAccess()
 const char* DiskManager::GetDir()
 {
 	return dir;
+}
+
+//
+// GetFileName()
+// get disk file name
+//
+const char* DiskManager::GetFileName()
+{
+	size_t len;
+
+	// open ?
+	if (ready == false) {
+		return nullstr;
+	}
+
+	// get length of directory
+	len = strlen(dir);
+	SDL_assert(len > 0);
+	SDL_assert(strlen(path) > len);
+
+	return &path[len];
 }
 
 //
@@ -434,6 +455,9 @@ bool DiskManager::Analyze()
 	if (fio.Fopen(path, FILEIO_READ_BINARY) == false) {
 		return false;
 	}
+
+	// version 1.70
+	readonly = fio.IsProtected(path);
 
 	// clear
 	num_of_banks = 0;

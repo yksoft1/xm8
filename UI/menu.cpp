@@ -23,6 +23,10 @@
 #include "tapemgr.h"
 #include "menulist.h"
 #include "menuid.h"
+#include "converter.h"
+#ifdef __ANDROID__
+#include "xm8jni.h"
+#endif // __ANDROID__
 #include "menu.h"
 
 //
@@ -38,9 +42,11 @@ Menu::Menu(App *a)
 	platform = NULL;
 	setting = NULL;
 	video = NULL;
+	input = NULL;
 	list = NULL;
 	diskmgr = NULL;
 	tapemgr = NULL;
+	converter = NULL;
 
 	// top id
 	top_id = MENU_BACK;
@@ -48,6 +54,7 @@ Menu::Menu(App *a)
 	// file selector
 	file_dir[0] = '\0';
 	file_target[0] = '\0';
+	file_expect[0] = '\0';
 	file_id = MENU_BACK;
 
 	// softkey
@@ -76,6 +83,8 @@ bool Menu::Init()
 	platform = app->GetPlatform();
 	setting = app->GetSetting();
 	video = app->GetVideo();
+	input = app->GetInput();
+	converter = app->GetConverter();
 
 	// create menu list
 	list = new MenuList(app);
@@ -157,7 +166,7 @@ void Menu::UpdateMenu()
 	}
 
 	// main menu ?
-	if (top_id != MENU_MAIN) {
+	if (list->GetID() != MENU_MAIN) {
 		return;
 	}
 
@@ -186,7 +195,14 @@ void Menu::UpdateMenu()
 //
 void Menu::ProcessMenu()
 {
-	list->ProcessMenu();
+	if (list->GetID() == MENU_JOYTEST) {
+		// joystick is now testing, do not affect menu operation
+		list->ProcessMenu(false);
+	}
+	else {
+		// normal
+		list->ProcessMenu(true);
+	}
 }
 
 //
@@ -249,6 +265,7 @@ void Menu::EnterDrive1(int id)
 {
 	int banks;
 	int loop;
+	char expect[_MAX_PATH * 3];
 
 	list->SetTitle("<< Drive 1 >>", MENU_DRIVE1);
 
@@ -279,6 +296,10 @@ void Menu::EnterDrive1(int id)
 		id = MENU_DRIVE1_OPEN;
 	}
 	list->SetFocus(id);
+
+	// file_expect
+	strcpy(expect, diskmgr[0]->GetFileName());
+	converter->UtfToSjis(expect, file_expect);
 }
 
 //
@@ -289,6 +310,7 @@ void Menu::EnterDrive2(int id)
 {
 	int banks;
 	int loop;
+	char expect[_MAX_PATH * 3];
 
 	list->SetTitle("<< Drive 2 >>", MENU_DRIVE2);
 
@@ -319,6 +341,10 @@ void Menu::EnterDrive2(int id)
 		id = MENU_DRIVE2_OPEN;
 	}
 	list->SetFocus(id);
+
+	// file_expect
+	strcpy(expect, diskmgr[1]->GetFileName());
+	converter->UtfToSjis(expect, file_expect);
 }
 
 //
@@ -327,6 +353,8 @@ void Menu::EnterDrive2(int id)
 //
 void Menu::EnterCmt(int id)
 {
+	char expect[_MAX_PATH * 3];
+
 	list->SetTitle("<< CMT >>", MENU_CMT);
 
 	// play and rec
@@ -348,6 +376,10 @@ void Menu::EnterCmt(int id)
 		id = MENU_CMT_PLAY;
 	}
 	list->SetFocus(id);
+
+	// file_expect
+	strcpy(expect, tapemgr->GetFileName());
+	converter->UtfToSjis(expect, file_expect);
 }
 
 //
@@ -539,6 +571,16 @@ void Menu::EnterSystem(int id)
 		add = true;
 	}
 
+#ifdef __ANDROID__
+	if (Android_GetSdkVersion() >= 21) {
+		// Android 5.0 or later
+		if (Android_HasExternalSD() != 0) {
+			// detect external SD card (supports one card only)
+			list->AddCheckButton("Use ext.SD (on next launch)", MENU_ANDROID_SAF);
+		}
+	}
+#endif // __ANDROID__
+
 	// mode
 	switch (setting->GetSystemMode()) {
 	case SETTING_V1S_MODE:
@@ -588,6 +630,21 @@ void Menu::EnterSystem(int id)
 	// watch battery
 	list->SetCheck(MENU_SYSTEM_BATTERY, setting->IsWatchBattery());
 
+#ifdef __ANDROID__
+	// use external SD
+	if (Android_GetSdkVersion() >= 21) {
+		// Android 5.0 or later
+		if (Android_HasExternalSD() != 0) {
+			if (Android_HasTreeUri() != 0) {
+				list->SetCheck(MENU_ANDROID_SAF, true);
+			}
+			else {
+				list->SetCheck(MENU_ANDROID_SAF, false);
+			}
+		}
+	}
+#endif // __ANDROID__
+
 	// set focus
 	list->SetFocus(id);
 }
@@ -599,9 +656,7 @@ void Menu::EnterSystem(int id)
 void Menu::EnterVideo()
 {
 	int id;
-#ifdef _WIN32
 	const char *quality;
-#endif // _WIN32
 
 	list->SetTitle("<< Video Options >>", MENU_VIDEO);
 
@@ -635,10 +690,8 @@ void Menu::EnterVideo()
 	list->AddCheckButton("Status area", MENU_VIDEO_STATUSCHK);
 	list->AddSlider("Status transparency", MENU_VIDEO_STATUSALPHA, 0, 0xff, 1);
 
-#ifdef _WIN32
 	// scaling quality
 	list->AddCheckButton("Scaling filter", MENU_VIDEO_SCALEFILTER);
-#endif // _WIN32
 
 #ifdef __ANDROID__
 	// force RGB565
@@ -713,7 +766,6 @@ void Menu::EnterVideo()
 	list->SetCheck(MENU_VIDEO_STATUSCHK, setting->HasStatusLine());
 	list->SetSlider(MENU_VIDEO_STATUSALPHA, setting->GetStatusAlpha());
 
-#ifdef _WIN32
 	// scaling quality
 	quality = setting->GetScaleQuality();
 	if (quality[0] == '0') {
@@ -722,7 +774,6 @@ void Menu::EnterVideo()
 	else {
 		list->SetCheck(MENU_VIDEO_SCALEFILTER, true);
 	}
-#endif // _WIN32
 
 #ifdef __ANDROID__
 	// force RGB565
@@ -821,6 +872,7 @@ void Menu::EnterInput(int id)
 	list->AddCheckButton("Joystick button swap", MENU_INPUT_JOYSWAP);
 	list->AddCheckButton("Joystick to keyboard", MENU_INPUT_JOYKEY);
 	list->AddButton("Joystick to keyboard map", MENU_INPUT_JOYMAP);
+	list->AddCheckButton("Joystick test", MENU_INPUT_JOYTEST);
 #ifndef __ANDROID__
 	list->AddSlider("Mouse timeout", MENU_INPUT_MOUSETIME, 400, 20000, 200);
 #endif // !__ANDROID__
@@ -838,6 +890,7 @@ void Menu::EnterInput(int id)
 	list->SetCheck(MENU_INPUT_JOYENABLE, setting->IsJoyEnable());
 	list->SetCheck(MENU_INPUT_JOYSWAP, setting->IsJoySwap());
 	list->SetCheck(MENU_INPUT_JOYKEY, setting->IsJoyKey());
+	list->SetCheck(MENU_INPUT_JOYTEST, setting->IsJoyEnable());
 
 #ifndef __ANDROID__
 	// mouse
@@ -912,11 +965,6 @@ void Menu::EnterSoftKey()
 //
 void Menu::EnterDip()
 {
-	int id;
-	Uint32 dip;
-	Uint32 baudrate;
-	Uint32 parity;
-
 	list->SetTitle("<< DIP settings >>", MENU_DIP);
 
 	list->AddRadioButton("Boot as BASIC    mode", MENU_DIP_BASICMODE, MENU_DIP_BOOTMODE);
@@ -957,6 +1005,21 @@ void Menu::EnterDip()
 	list->AddRadioButton("Odd  parity", MENU_DIP_ODDPARITY, MENU_DIP_PARITY);
 
 	list->AddButton("Restore default settings", MENU_DIP_DEFAULT);
+
+	// set focus
+	list->SetFocus(EnterDipSub());
+}
+
+//
+// EnterDipSub()
+// set radio buttons from setting->GetDip()
+//
+int Menu::EnterDipSub()
+{
+	Uint32 dip;
+	Uint32 baudrate;
+	Uint32 parity;
+	int id;
 
 	// get dip switch
 	dip = setting->GetDip();
@@ -1113,8 +1176,7 @@ void Menu::EnterDip()
 		break;
 	}
 
-	// set focus
-	list->SetFocus(id);
+	return id;
 }
 
 //
@@ -1215,6 +1277,7 @@ void Menu::EnterVmKey(int id)
 	list->AddButton("RIGHT", MENU_VMKEY_RIGHT);
 	list->AddButton("ROLL UP", MENU_VMKEY_ROLLUP);
 	list->AddButton("ROLL DOWN", MENU_VMKEY_ROLLDOWN);
+	list->AddButton("TAB", MENU_VMKEY_TAB);
 
 	list->SetFocus(id);
 }
@@ -1228,6 +1291,8 @@ void Menu::EnterFile()
 	const char *name;
 	int id;
 	Uint32 info;
+	int id_focus;
+	bool matched;
 
 	// title
 	list->SetTitle(file_dir, MENU_FILE, true);
@@ -1237,7 +1302,16 @@ void Menu::EnterFile()
 
 	// loop
 	id = MENU_FILE_MIN;
+	id_focus = MENU_FILE_MIN;
+	matched = false;
 	while (name != NULL) {
+		// compare name
+		if (strcmp(file_expect, name) == 0) {
+			matched = true;
+			id_focus = id;
+		}
+
+		// add item
 		list->AddButton(name, id);
 		list->SetUser(id, info);
 		name = platform->FindNext(&info);
@@ -1246,6 +1320,28 @@ void Menu::EnterFile()
 
 	// sort
 	list->Sort();
+
+	// set focus
+	if (matched == true) {
+		list->SetFocus(id_focus);
+	}
+	file_expect[0] = '\0';
+}
+
+//
+// EnterJoyTest()
+// enter joytest menu
+//
+void Menu::EnterJoyTest()
+{
+	int loop;
+
+	list->SetTitle("<< Joystick test >>", MENU_JOYTEST);
+
+	list->AddButton("(Press A+B to quit)", MENU_JOYTEST_QUIT);
+	for (loop=0; loop<15; loop++) {
+		list->AddButton("", MENU_JOYTEST_BUTTON1 + loop);
+	}
 }
 
 //
@@ -1384,6 +1480,12 @@ void Menu::Command(bool down, int id)
 		return;
 	}
 
+	// joytest menu
+	if ((id >= MENU_JOYTEST_MIN) && (id <= MENU_JOYTEST_MAX)) {
+		// do nothing
+		return;
+	}
+
 	// file menu
 	if (id >= MENU_FILE_MIN) {
 		if (down == false) {
@@ -1485,6 +1587,11 @@ void Menu::CmdBack()
 	// vmkey menu
 	case MENU_VMKEY:
 		EnterJoymap(joymap_id);
+		break;
+
+	// joytest menu
+	case MENU_JOYTEST:
+		EnterInput(MENU_INPUT_JOYTEST);
 		break;
 
 	// file menu
@@ -1911,6 +2018,24 @@ void Menu::CmdSystem(int id)
 	case MENU_SYSTEM_ROMVER:
 		break;
 
+#ifdef __ANDROID__
+	case MENU_ANDROID_SAF:
+		if (Android_HasTreeUri() == 0) {
+			// request activity
+			Android_RequestActivity();
+
+			// update text
+			list->SetText(MENU_ANDROID_SAF, "Choose SD Card \x81\xa8 Select");
+		}
+		else {
+			// clear tree uri
+			Android_ClearTreeUri();
+
+			// unchecked
+			list->SetCheck(MENU_ANDROID_SAF, false);
+		}
+#endif // __ANDROID__
+
 	default:
 		break;
 	}
@@ -1926,9 +2051,7 @@ void Menu::CmdVideo(bool down, int id)
 	bool radio;
 	bool scanline;
 	bool status;
-#ifdef _WIN32
 	const char *quality;
-#endif // _WIN32
 	int width;
 
 	// initialize
@@ -2066,7 +2189,6 @@ void Menu::CmdVideo(bool down, int id)
 		setting->SetStatusAlpha((Uint8)list->GetSlider(MENU_VIDEO_STATUSALPHA));
 		break;
 
-#ifdef _WIN32
 	// scaling quality
 	case MENU_VIDEO_SCALEFILTER:
 		if (down == false) {
@@ -2077,13 +2199,16 @@ void Menu::CmdVideo(bool down, int id)
 				video->RebuildTexture(false);
 			}
 			else {
+#ifdef _WIN32
 				setting->SetScaleQuality(2);
+#else
+				setting->SetScaleQuality(1);
+#endif // _WIN32
 				list->SetCheck(MENU_VIDEO_SCALEFILTER, true);
 				video->RebuildTexture(false);
 			}
 		}
 		break;
-#endif // _WIN32
 
 #ifdef __ANDROID__
 	// force RGB565
@@ -2290,10 +2415,12 @@ void Menu::CmdInput(bool down, int id)
 			enable = list->GetCheck(MENU_INPUT_JOYENABLE);
 			if (enable == true) {
 				list->SetCheck(MENU_INPUT_JOYENABLE, false);
+				list->SetCheck(MENU_INPUT_JOYTEST, false);
 				setting->SetJoyEnable(false);
 			}
 			else {
 				list->SetCheck(MENU_INPUT_JOYENABLE, true);
+				list->SetCheck(MENU_INPUT_JOYTEST, true);
 				setting->SetJoyEnable(true);
 			}
 		}
@@ -2333,6 +2460,15 @@ void Menu::CmdInput(bool down, int id)
 	case MENU_INPUT_JOYMAP:
 		if (down == false) {
 			EnterJoymap(MENU_JOYMAP_DPAD_UP);
+		}
+		break;
+
+	// joystick test
+	case MENU_INPUT_JOYTEST:
+		if (down == false) {
+			if (setting->IsJoyEnable() == true) {
+				EnterJoyTest();
+			}
 		}
 		break;
 
@@ -2409,7 +2545,6 @@ void Menu::CmdQuit(int id)
 void Menu::CmdSoftKey(int id)
 {
 	int set;
-	Input *input;
 
 	// get set
 	set = softkey_id - MENU_INPUT_SOFTKEY1;
@@ -2420,7 +2555,6 @@ void Menu::CmdSoftKey(int id)
 	// setting
 	if (setting->SetSoftKeySet(set, id) == true) {
 		// inform input of change sofkey set
-		input = app->GetInput();
 		input->RebuildList();
 	}
 
@@ -2604,7 +2738,7 @@ void Menu::CmdDip(int id)
 		list->SetRadio(MENU_DIP_WIDTH80, MENU_DIP_WIDTH);
 		setting->SetDip(setting->GetDip() & ~DIP_WIDTH_40);
 		list->SetRadio(MENU_DIP_LINE20, MENU_DIP_LINE);
-		setting->SetDip(setting->GetDip() & ~DIP_LINE_25);
+		setting->SetDip(setting->GetDip() | DIP_LINE_25);
 		list->SetRadio(MENU_DIP_FROMDISK, MENU_DIP_BOOTFROM);
 		setting->SetDip(setting->GetDip() & ~DIP_BOOT_ROM);
 		list->SetRadio(MENU_DIP_MEMWAIT_OFF, MENU_DIP_MEMWAIT);
@@ -2625,6 +2759,9 @@ void Menu::CmdDip(int id)
 		setting->SetDip(setting->GetDip() & ~DIP_DISABLE_DEL);
 		list->SetRadio(MENU_DIP_NOPARITY, MENU_DIP_PARITY);
 		setting->SetDip((setting->GetDip() & ~DIP_PARITY) | (0 << DIP_PARITY_SHIFT));
+
+		// version 1.70
+		EnterDipSub();
 		break;
 	}
 }
@@ -2732,7 +2869,17 @@ void Menu::CmdFile(int id)
 
 	// directory ?
 	if (platform->IsDir(list->GetUser(id)) == true) {
+#ifdef __ANDROID__
+		if (Android_ChDir(file_target, name) != 0) {
+			MakeExpect(name);
+			strcpy(file_dir, file_target);
+			EnterFile();
+			return;
+		}
+#endif // __ANDROID__
+
 		if (platform->MakePath(file_target, name) == true) {
+			MakeExpect(name);
 			strcpy(file_dir, file_target);
 			EnterFile();
 		}
@@ -2817,6 +2964,81 @@ void Menu::CmdFile(int id)
 }
 
 //
+// MakeExpect()
+// make file_exepct[]
+//
+void Menu::MakeExpect(const char *name)
+{
+	char *ptr;
+	char *last;
+
+	// init
+	file_expect[0] = '\0';
+
+	// directory up only
+	if ((strcmp(name, "..\\") != 0) && (strcmp(name, "../") != 0)) {
+		return;
+	}
+
+	// find last terminator from file_dir[]
+	ptr = file_dir;
+	last = file_dir;
+
+	// search last '\\' or '/'
+	while (*ptr != '\0') {
+		if ((*ptr == '\\') || (*ptr == '/')) {
+			if (ptr[1] != '\0') {
+				last = ptr + 1;
+			}
+		}
+		ptr++;
+	}
+
+	// set directory name to file_expect[]
+	converter->UtfToSjis(last, file_expect);
+}
+
+//
+// JoyTest()
+// joystick test
+//
+void Menu::JoyTest()
+{
+	Uint32 status[2];
+	int id;
+	int loop;
+
+	// get status
+	input->GetJoystick(status);
+
+	// check A+B to quit
+	if ((status[0] & 0x30) == 0x30) {
+		// quit
+		EnterInput(MENU_INPUT_JOYTEST);
+		return;
+	}
+
+	// init id
+	id = MENU_JOYTEST_BUTTON1;
+
+	// button loop
+	for (loop=0; loop<15; loop++) {
+		// check button
+		if (((status[0] & joytest_table[loop * 2 + 0]) != 0) || ((status[1] & joytest_table[loop * 2 + 1]) != 0)) {
+			// pressed
+			list->SetText(id, joytest_name[loop]);
+			id++;
+		}
+	}
+
+	// others
+	while (id <= MENU_JOYTEST_BUTTON15) {
+		list->SetText(id, "");
+		id++;
+	}
+}
+
+//
 // Draw()
 // draw menu screen
 //
@@ -2876,7 +3098,14 @@ void Menu::OnMouseWheel(SDL_Event *e)
 //
 void Menu::OnJoystick()
 {
-	list->OnJoystick();
+	if (list->GetID() == MENU_JOYTEST) {
+		// call directly
+		JoyTest();
+	}
+	else {
+		// normal
+		list->OnJoystick();
+	}
 }
 
 //
@@ -2909,7 +3138,7 @@ void Menu::OnFingerMotion(SDL_Event *e)
 //
 // MENU_VMKEY to data table
 //
-const int Menu::vmkey_table[61 * 2] = {
+const int Menu::vmkey_table[62 * 2] = {
 	MENU_VMKEY_MENU,	0x1000,
 	MENU_VMKEY_NEXT,	0x1001,
 	MENU_VMKEY_PREV,	0x1002,
@@ -2970,7 +3199,51 @@ const int Menu::vmkey_table[61 * 2] = {
 	MENU_VMKEY_LEFT,	0x0A02,
 	MENU_VMKEY_RIGHT,	0x0802,
 	MENU_VMKEY_ROLLUP,	0x0B00,
-	MENU_VMKEY_ROLLDOWN,0x0B01
+	MENU_VMKEY_ROLLDOWN,0x0B01,
+	MENU_VMKEY_TAB,		0x0A00
+};
+
+//
+// MENU_JOYTEST table
+// see input.cpp (Input::joystick_button[])
+//
+const Uint32 Menu::joytest_table[15 * 2] = {
+	0x00000001, 0x00000000,				// SDL_BUTTON_DPAD_UP
+	0x00000002, 0x00000000,				// SDL_BUTTON_DPAD_DOWN
+	0x00000004, 0x00000000,				// SDL_BUTTON_DPAD_LEFT
+	0x00000008, 0x00000000,				// SDL_BUTTON_DPAD_RIGHT
+	0x00000010, 0x00000000,				// SDL_BUTTON_A
+	0x00000020, 0x00000000,				// SDL_BUTTON_B
+	0x00000040, 0x00000000,				// SDL_BUTTON_X
+	0x00000080, 0x00000000,				// SDL_BUTTON_Y
+	0x00000000, 0x00000001,				// SDL_BUTTON_BACK
+	0x00000000, 0x00000002,				// SDL_BUTTON_GUIDE
+	0x00000000, 0x00000004,				// SDL_BUTTON_START
+	0x00000000, 0x00000008,				// SDL_BUTTON_LEFTSTICK
+	0x00000000, 0x00000010,				// SDL_BUTTON_RIGHTSTICK
+	0x00000000, 0x00000020,				// SDL_BUTTON_LEFTSHOULDER
+	0x00000000, 0x00000040				// SDL_BUTTON_RIGHTSHOULDER
+};
+
+//
+// MENU_JOYTEST name table
+//
+const char* Menu::joytest_name[15] = {
+	"SDL_BUTTON_DPAD_UP",
+	"SDL_BUTTON_DPAD_DOWN",
+	"SDL_BUTTON_DPAD_LEFT",
+	"SDL_BUTTON_DPAD_RIGHT",
+	"SDL_BUTTON_A",
+	"SDL_BUTTON_B",
+	"SDL_BUTTON_X",
+	"SDL_BUTTON_Y",
+	"SDL_BUTTON_BACK",
+	"SDL_BUTTON_GUIDE",
+	"SDL_BUTTON_START",
+	"SDL_BUTTON_LEFTSTICK",
+	"SDL_BUTTON_RIGHTSTICK",
+	"SDL_BUTTON_LEFTSHOULDER",
+	"SDL_BUTTON_RIGHTSHOULDER"
 };
 
 #endif // SDL

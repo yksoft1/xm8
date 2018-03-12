@@ -31,7 +31,7 @@ public:
 	// control
 	void EnterMenu();
 										// enter menu mode
-	void ProcessMenu();
+	void ProcessMenu(bool joystick);
 										// process menu
 	void Clear();
 										// clear all element
@@ -107,7 +107,7 @@ private:
 										// get menu item from id
 	bool FingerToItem(float tx, float ty, int *x, int *y);
 										// finger to item
-	bool PosToItem(int *x, int *y);
+	bool PosToItem(int *x, int *y, bool finger = false);
 										// screen position to item
 	bool IsUp(int y);
 										// check screen position to up scroll

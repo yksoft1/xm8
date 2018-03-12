@@ -13,6 +13,9 @@
 #include "os.h"
 #include "common.h"
 #include "fileio.h"
+#ifdef __ANDROID__
+#include "xm8jni.h"
+#endif // __ANDROID__
 
 //
 // FILEIO()
@@ -64,7 +67,11 @@ bool FILEIO::Fopen(_TCHAR *filename, int mode)
 	switch (mode) {
 	// read binary
 	case FILEIO_READ_BINARY:
+#ifdef __ANDROID__
+		ops = (SDL_RWops*)SDL_RWFromFile_SAF(filename, "r+b");
+#else
 		ops = SDL_RWFromFile(filename, "r+b");
+#endif // __ANDROID__
 		if (ops != NULL) {
 			fp = ops;
 			return true;
@@ -81,7 +88,11 @@ bool FILEIO::Fopen(_TCHAR *filename, int mode)
 
 	// write binary
 	case FILEIO_WRITE_BINARY:
+#ifdef __ANDROID__
+		ops = (SDL_RWops*)SDL_RWFromFile_SAF(filename, "wb");
+#else
 		ops = SDL_RWFromFile(filename, "wb");
+#endif // __ANDROID__
 		if (ops != NULL) {
 			fp = ops;
 			return true;
@@ -90,7 +101,11 @@ bool FILEIO::Fopen(_TCHAR *filename, int mode)
 
 	// create new binary
 	case FILEIO_READ_WRITE_NEW_BINARY:
+#ifdef __ANDROID__
+		ops = (SDL_RWops*)SDL_RWFromFile_SAF(filename, "w+b");
+#else
 		ops = SDL_RWFromFile(filename, "w+b");
+#endif // __ANDROID__
 		if (ops != NULL) {
 			fp = ops;
 			return true;
@@ -628,5 +643,59 @@ void FILEIO::Remove(_TCHAR *filename)
 	// because only DISK::teledisk_to_d88() calls FILEIO::Remove()
 	SDL_assert(false);
 }
+
+#ifdef __ANDROID__
+
+//
+// SDL_RWFromFile_SAF
+// open file stream with Storage Access Framework
+//
+void* FILEIO::SDL_RWFromFile_SAF(const char *filename, const char *mode)
+{
+	int type;
+	int fd;
+	FILE *fp;
+
+	// use default fopen() till Android 4.4 (KitKat)
+	if (Android_GetSdkVersion() < 21) {
+		return (void*)SDL_RWFromFile(filename, mode);
+	}
+
+	// is external SD ?
+	if (Android_IsExternalSD(filename) == 0) {
+		return (void*)SDL_RWFromFile(filename, mode);
+	}
+
+	// has tree uri ?
+	if (Android_HasTreeUri() == 0) {
+		return NULL;
+	}
+
+	// convert mode to type
+	type = 0;
+	if (strcmp(mode, "wb") == 0) {
+		type = 1;
+	}
+	if (strcmp(mode, "w+b") == 0) {
+		type = 2;
+	}
+
+	// get file descriptor from Java
+	fd = Android_GetFileDescriptor(filename, type);
+	if (fd < 0) {
+		return NULL;
+	}
+
+	// try to open file from file descriptor
+	fp = fdopen(fd, mode);
+	if (fp == NULL) {
+		return NULL;
+	}
+
+	// open ok
+	return SDL_RWFromFP(fp, SDL_TRUE);
+}
+
+#endif // __ANDROID__
 
 #endif // SDL

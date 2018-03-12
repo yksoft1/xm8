@@ -55,6 +55,8 @@ public:
 										// rebuild softkey list
 	void ChangeList(bool next, bool prev);
 										// next or prev softkey list
+	void DelayedBreak();
+										// break the key after minimum time
 
 	// action
 	bool GetKeyStatus(SDL_Scancode code);
@@ -137,6 +139,10 @@ private:
 										// key buffer from PC88::key_status
 	Uint32 key_table[0x120];
 										// key map (current)
+	Uint32 key_soft_make_tick[0x120];
+										// key make tick (from softkey only)
+	bool key_soft_break_flag[0x120];
+										// key break flag (from softkey only)
 	static const Uint32 key_base[0x120];
 										// key map (base)
 	static const Uint32 joystick_button[15 * 2];

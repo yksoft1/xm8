@@ -58,12 +58,6 @@ public:
 	void Run();
 										// run
 
-	// event
-	static int CommonFilter(void *userdata, SDL_Event *e);
-										// event filter (common)
-	int EventFilter(SDL_Event *e);
-										// event filter (instance)
-
 	// mode
 	void FullScreen();
 										// full screen
@@ -129,9 +123,10 @@ private:
 	void PowerMng();
 										// power management
 
-	// android intent
-	void ProcessIntent();
+#ifdef __ANDROID__
+	bool ProcessIntent();
 										// process intent
+#endif // __ANDROID__
 
 	// event
 	void Poll(SDL_Event *e);

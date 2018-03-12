@@ -62,6 +62,8 @@
 										// vmkey menu
 #define MENU_FILE				20
 										// file menu
+#define MENU_JOYTEST			21
+										// joystick test menu
 
 //
 // main menu
@@ -228,6 +230,8 @@
 										// dip switch
 #define MENU_SYSTEM_ROMVER		711
 										// rom version
+#define MENU_ANDROID_SAF		712
+										// storage access framework (for Android 5.0 or later)
 #define MENU_SYSTEM_MODE		797
 										// mode radio
 #define MENU_SYSTEM_CLOCK		798
@@ -342,6 +346,8 @@
 										// joystick to keyboard map
 #define MENU_INPUT_MOUSETIME	1013
 										// mouse timeout
+#define MENU_INPUT_JOYTEST		1014
+										// joystick test
 #define MENU_INPUT_MAX			1099
 										// maximum
 
@@ -663,16 +669,58 @@
 #define MENU_VMKEY_UP			1656
 										// UP
 #define MENU_VMKEY_DOWN			1657
-										// UP
+										// DOWN
 #define MENU_VMKEY_LEFT			1658
-										// UP
+										// LEFT
 #define MENU_VMKEY_RIGHT		1659
-										// UP
+										// RIGHT
 #define MENU_VMKEY_ROLLUP		1660
 										// ROLL UP
 #define MENU_VMKEY_ROLLDOWN		1661
 										// ROLL DOWN
+#define MENU_VMKEY_TAB			1662
+										// TAB
 #define MENU_VMKEY_MAX			1699
+										// maximum
+
+//
+// joystick test menu
+//
+#define MENU_JOYTEST_MIN		1700
+										// minumum
+#define MENU_JOYTEST_QUIT		1701
+										// QUIT
+#define MENU_JOYTEST_BUTTON1	1702
+										// BUTTON 1
+#define MENU_JOYTEST_BUTTON2	1703
+										// BUTTON 2
+#define MENU_JOYTEST_BUTTON3	1704
+										// BUTTON 3
+#define MENU_JOYTEST_BUTTON4	1705
+										// BUTTON 4
+#define MENU_JOYTEST_BUTTON5	1706
+										// BUTTON 5
+#define MENU_JOYTEST_BUTTON6	1707
+										// BUTTON 6
+#define MENU_JOYTEST_BUTTON7	1708
+										// BUTTON 7
+#define MENU_JOYTEST_BUTTON8	1709
+										// BUTTON 8
+#define MENU_JOYTEST_BUTTON9	1710
+										// BUTTON 9
+#define MENU_JOYTEST_BUTTON10	1711
+										// BUTTON 10
+#define MENU_JOYTEST_BUTTON11	1712
+										// BUTTON 11
+#define MENU_JOYTEST_BUTTON12	1713
+										// BUTTON 12
+#define MENU_JOYTEST_BUTTON13	1714
+										// BUTTON 13
+#define MENU_JOYTEST_BUTTON14	1715
+										// BUTTON 14
+#define MENU_JOYTEST_BUTTON15	1716
+										// BUTTON 15
+#define MENU_JOYTEST_MAX		1799
 										// maximum
 
 //

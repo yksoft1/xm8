@@ -149,7 +149,7 @@ void MenuList::EnterMenu()
 // ProcessMenu()
 // process menu
 //
-void MenuList::ProcessMenu()
+void MenuList::ProcessMenu(bool joystick)
 {
 	int x;
 	int y;
@@ -157,7 +157,12 @@ void MenuList::ProcessMenu()
 	SDL_Event evt;
 
 	// OnJoystick
-	OnJoystick();
+	if (joystick == true) {
+		OnJoystick();
+	}
+	else {
+		joy_prev = 0x30;
+	}
 
 	// get mouse state
 	button = SDL_GetMouseState(&x, &y);
@@ -1373,6 +1378,9 @@ void MenuList::OnFingerUp(SDL_Event *e)
 
 	// check finger_tick
 	if ((Uint32)(SDL_GetTicks() - finger_tick) > FINGER_TIME_THRES) {
+		// version 1.70
+		finger_focus = -1;
+		finger_slider = false;
 		return;
 	}
 
@@ -1421,6 +1429,9 @@ void MenuList::OnFingerMotion(SDL_Event *e)
 			if (IsLow(x, y) == true) {
 				if (menu_top > 0) {
 					menu_top--;
+
+					// dec tick to avoid command (version 1.70)
+					finger_tick = (Uint32)(SDL_GetTicks() - FINGER_TIME_THRES - 1);
 				}
 
 				item = GetItem(menu_focus);
@@ -1432,6 +1443,11 @@ void MenuList::OnFingerMotion(SDL_Event *e)
 
 	// scroll
 	if (finger_slider == false) {
+		// dec tick to avoid command (version 1.70)
+		if (menu_top != (menu_focus - y)) {
+			finger_tick = (Uint32)(SDL_GetTicks() - FINGER_TIME_THRES - 1);
+		}
+
 		menu_top = (menu_focus - y);
 		if (menu_top < 0) {
 			menu_top = 0;
@@ -1475,17 +1491,18 @@ bool MenuList::FingerToItem(float tx, float ty, int *x, int *y)
 		return false;
 	}
 
-	return PosToItem(x, y);
+	return PosToItem(x, y, true);
 }
 
 //
 // PosToItem()
 // mouse position to item
 //
-bool MenuList::PosToItem(int *x, int *y)
+bool MenuList::PosToItem(int *x, int *y, bool finger)
 {
 	int xx;
 	int yy;
+	int mod;
 
 	// get
 	xx = *x;
@@ -1509,6 +1526,7 @@ bool MenuList::PosToItem(int *x, int *y)
 	}
 
 	// divide
+	mod = yy % MENUITEM_HEIGHT;
 	yy /= MENUITEM_HEIGHT;
 
 	// title ?
@@ -1516,13 +1534,33 @@ bool MenuList::PosToItem(int *x, int *y)
 		return false;
 	}
 	if (yy >= MENUITEM_LINES) {
-		return false;
+		// version 1.70
+		if ((yy == MENUITEM_LINES) && (finger == true)) {
+			// mergin:1/3 * MENUITEM_HEIGHT
+			if (mod < (MENUITEM_HEIGHT / 3)) {
+				yy = MENUITEM_LINES - 1;
+			}
+		}
+
+		if (yy >= MENUITEM_LINES) {
+			return false;
+		}
 	}
 	yy--;
 
 	// over ?
 	if ((menu_top + yy) >= menu_items) {
-		return false;
+		// version 1.70
+		if ((menu_top + yy == menu_items) && (finger == true)) {
+			// mergin:1/3 * MENUITEM_HEIGHT
+			if (mod < (MENUITEM_HEIGHT / 3)) {
+				yy = menu_items - menu_top - 1;
+			}
+		}
+
+		if ((menu_top + yy) >= menu_items) {
+			return false;
+		}
 	}
 
 	// ok

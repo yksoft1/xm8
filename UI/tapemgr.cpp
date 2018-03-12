@@ -33,6 +33,7 @@ TapeManager::TapeManager()
 	path[0] = '\0';
 	dir[0] = '\0';
 	state_path[0] = '\0';
+	nullstr[0] = '\0';
 }
 
 //
@@ -216,6 +217,27 @@ bool TapeManager::IsRec()
 const char* TapeManager::GetDir()
 {
 	return dir;
+}
+
+//
+// GetFileName()
+// get tape file name
+//
+const char* TapeManager::GetFileName()
+{
+	size_t len;
+
+	// open ?
+	if ((mount_play == false) && (mount_rec == false)) {
+		return nullstr;
+	}
+
+	// get length of directory
+	len = strlen(dir);
+	SDL_assert(len > 0);
+	SDL_assert(strlen(path) > len);
+
+	return &path[len];
 }
 
 //

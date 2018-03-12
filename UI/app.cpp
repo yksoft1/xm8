@@ -31,6 +31,9 @@
 #include "menuid.h"
 #include "diskmgr.h"
 #include "tapemgr.h"
+#ifdef __ANDROID__
+#include "xm8jni.h"
+#endif // __ANDROID__
 #include "app.h"
 
 //
@@ -38,7 +41,7 @@
 //
 #define APP_NAME				"XM8 (based on ePC-8801MA)";
 										// application name
-#define APP_VER					0x0161
+#define APP_VER					0x0170
 										// version (BCD)
 #define APP_WIDTH				SCREEN_WIDTH
 										// window width
@@ -72,16 +75,6 @@
 										// state file name
 #define MOUSE_INFINITE_TIME		20000
 										// mouse infinite time (ms)
-
-//
-// global variable
-// for android intent
-//
-#ifdef __ANDROID__
-extern "C" {
-char intent_buffer[_MAX_PATH * 3];
-};
-#endif // __ANDROID__
 
 //
 // App()
@@ -168,6 +161,13 @@ bool App::Init()
 	int loop;
 	const char *name;
 
+#ifdef __ANDROID__
+	// check skip flag
+	if (Android_ChkSkipMain() != 0) {
+		return false;
+	}
+#endif // __ANDROID__
+
 	// get platform
 	name = SDL_GetPlatform();
 	if (strcmp(name, PLATFORM_IOS) == 0) {
@@ -195,10 +195,8 @@ bool App::Init()
 		return false;
 	}
 
-	if (strcmp(name, PLATFORM_WINDOWS) == 0) {
-		// Windows platform
-		SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, setting->GetScaleQuality());
-	}
+	// spcfiy scaling quality (all platforms)
+	SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, setting->GetScaleQuality());
 
 	// platform (1)
 	platform = new Platform(this);
@@ -224,9 +222,6 @@ bool App::Init()
 
 	// enable drag and drop
 	SDL_EventState(SDL_DROPFILE, SDL_ENABLE);
-
-	// set event filter
-	SDL_SetEventFilter(CommonFilter, (void*)this);
 
 	// platform (2)
 	if (platform->Init(window) == false) {
@@ -360,6 +355,11 @@ bool App::Init()
 	// system information
 	system_info = setting->GetSystems();
 
+#ifdef __ANDROID__
+	// poll joystick for second launch (see SDL_SYS_JoystickDetect())
+	Android_PollJoystick();
+#endif // __ANDROID__
+
 	return true;
 }
 
@@ -370,6 +370,13 @@ bool App::Init()
 void App::Deinit()
 {
 	int drive;
+
+#ifdef __ANDROID__
+	// check skip flag
+	if (Android_ChkSkipMain() != 0) {
+		return;
+	}
+#endif // __ANDROID__
 
 	// tape manager
 	if (tapemgr != NULL) {
@@ -628,19 +635,25 @@ void App::Run()
 	normskip = 0;
 	fullskip = 0;
 
+#ifdef __ANDROID__
+	// android intent
+	if (ProcessIntent() == false) {
+		// load state 0 (auto)
+		Load(0);
+
+		// enter menu
+		EnterMenu(MENU_MAIN);
+	}
+#else
 	// load state 0 (auto)
 	Load(0);
 
 	// enter menu
 	EnterMenu(MENU_MAIN);
+#endif // __ANDROID__
 
 	// main loop
 	while (app_quit == false) {
-#ifdef __ANDROID__
-		// android intent
-		ProcessIntent();
-#endif // __ANDROID__
-
 		// stop virtual machine or menu
 		if ((app_menu == true) || (app_background == true) || (app_powerdown == true)) {
 			// draw
@@ -890,6 +903,7 @@ void App::Run()
 
 		// softkey
 		input->ProcessList();
+		input->DelayedBreak();
 
 		// sleep 0 if full speed
 		if (app_fullspeed == true) {
@@ -1023,105 +1037,42 @@ void App::PowerMng()
 	}
 }
 
+#ifdef __ANDROID__
 //
 // ProcessIntent()
 // process android intent
 //
-void App::ProcessIntent()
+bool App::ProcessIntent()
 {
-#ifdef __ANDROID__
 	bool result;
+	const char *intent;
 
-	if (::intent_buffer[0] == '\0') {
-		return;
+	// check intent
+	if (Android_HasIntent() == 0) {
+		return false;
 	}
+
+	// get intent
+	intent = Android_GetIntent();
 
 	// drive 1
 	diskmgr[0]->Close();
-	result = diskmgr[0]->Open(::intent_buffer, 0);
+	result = diskmgr[0]->Open(intent, 0);
 
 	// drive 2
 	diskmgr[1]->Close();
 	if (result == true) {
 		if (diskmgr[0]->GetBanks() > 1) {
-			diskmgr[1]->Open(::intent_buffer, 1);
+			diskmgr[1]->Open(intent, 1);
 		}
 	}
 
-	if (result == true) {
-		// leave menu
-		LeaveMenu();
+	// clear intent
+	Android_ClearIntent();
 
-		// reset
-		Reset();
-	}
-
-	// clear buffer
-	::intent_buffer[0] = '\0';
+	return result;
+}
 #endif // __ANDROID__
-}
-
-//
-// CommonFilter()
-// event filter (common)
-//
-int App::CommonFilter(void *userdata, SDL_Event *e)
-{
-	App *app;
-
-	// cast user parameter
-	app = (App*)userdata;
-
-	return app->EventFilter(e);
-}
-
-//
-// EventFilter()
-// event filter (instance)
-//
-int App::EventFilter(SDL_Event *e)
-{
-	SDL_Event m;
-
-	// handle events for mobile platform
-	switch (e->type) {
-	case SDL_APP_TERMINATING:
-		// quit app
-		app_quit = true;
-		return 0;
-
-	case SDL_APP_LOWMEMORY:
-		return 0;
-
-	case SDL_APP_WILLENTERBACKGROUND:
-		// save state 0 (refer to Java_org_libsdl_app_SDLActivity_nativeQuit)
-		Save(0);
-
-		m.window.event = SDL_WINDOWEVENT_HIDDEN;
-		OnWindow(&m);
-		return 0;
-
-	case SDL_APP_DIDENTERBACKGROUND:
-		m.window.event = SDL_WINDOWEVENT_HIDDEN;
-		OnWindow(&m);
-		return 0;
-
-	case SDL_APP_WILLENTERFOREGROUND:
-		m.window.event = SDL_WINDOWEVENT_SHOWN;
-		OnWindow(&m);
-		return 0;
-
-	case SDL_APP_DIDENTERFOREGROUND:
-		m.window.event = SDL_WINDOWEVENT_SHOWN;
-		OnWindow(&m);
-		return 0;
-
-	default:
-		break;
-	}
-
-	return 1;
-}
 
 //
 // Poll()

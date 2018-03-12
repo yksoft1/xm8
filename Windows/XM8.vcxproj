@@ -84,7 +84,7 @@
       </PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>_PC8801MA;SDL;WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_PC8801MA;SDL;WIN32;_DEBUG;_CONSOLE;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>$(ProjectDir)\SDL\include;$(ProjectDir)..\UI;$(ProjectDir)..\ePC-8801MA;$(ProjectDir)..\ePC-8801MA\vm;$(ProjectDir)..\ePC-8801MA\vm\pc8801;$(ProjectDir)..\ePC-8801MA\vm\fmgen</AdditionalIncludeDirectories>
       <StructMemberAlignment>Default</StructMemberAlignment>
     </ClCompile>
@@ -100,7 +100,7 @@
       </PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>_PC8801MA;SDL;WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_PC8801MA;SDL;WIN32;_DEBUG;_CONSOLE;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>$(ProjectDir)\SDL\include;$(ProjectDir)..\UI;$(ProjectDir)..\ePC-8801MA;$(ProjectDir)..\ePC-8801MA\vm;$(ProjectDir)..\ePC-8801MA\vm\pc8801;$(ProjectDir)..\ePC-8801MA\vm\fmgen</AdditionalIncludeDirectories>
       <StructMemberAlignment>Default</StructMemberAlignment>
     </ClCompile>
@@ -118,7 +118,7 @@
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>_PC8801MA;SDL;WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_PC8801MA;SDL;WIN32;NDEBUG;_CONSOLE;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>$(ProjectDir)\SDL\include;$(ProjectDir)..\UI;$(ProjectDir)..\ePC-8801MA;$(ProjectDir)..\ePC-8801MA\vm;$(ProjectDir)..\ePC-8801MA\vm\fmgen;$(ProjectDir)..\ePC-8801MA\vm\pc8801;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
     </ClCompile>
@@ -139,7 +139,7 @@
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>_PC8801MA;SDL;WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_PC8801MA;SDL;WIN32;NDEBUG;_CONSOLE;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>$(ProjectDir)\SDL\include;$(ProjectDir)..\UI;$(ProjectDir)..\ePC-8801MA;$(ProjectDir)..\ePC-8801MA\vm;$(ProjectDir)..\ePC-8801MA\vm\fmgen;$(ProjectDir)..\ePC-8801MA\vm\pc8801;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
     </ClCompile>

@@ -25,6 +25,9 @@ private:
 #ifdef SDL
 	void *fp;
 	bool readonly;
+#ifdef __ANDROID__
+	void* SDL_RWFromFile_SAF(const char *filename, const char *mode);
+#endif // __ANDROID__
 #else
 	FILE *fp;
 #endif // SDL

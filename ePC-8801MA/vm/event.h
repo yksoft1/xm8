@@ -228,6 +228,9 @@ public:
 
 	// version 1.60
 	void adjust_event(int regsiter_id, double usec);
+
+	// version 1.70
+	void reset_vblank_clocks() { vblank_clocks = 0; }
 #endif // SDL
 };
 

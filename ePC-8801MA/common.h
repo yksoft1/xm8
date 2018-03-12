@@ -23,7 +23,9 @@
 
 // Linux
 #ifdef __linux__
+#ifndef __LITTLE_ENDIAN__
 #define __LITTLE_ENDIAN__
+#endif // !__LITTLE_ENDIAN__
 #define _MAX_PATH			4096
 #define __min	min
 #define __stdcall

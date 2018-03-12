@@ -284,16 +284,16 @@ void VM::initialize_sound(int rate, int samples)
 	
 	// init sound gen
 	if (pc88opn->is_ym2608() == true) {
-		pc88opn->init(rate, 7987248, samples, 0, -4);
+		pc88opn->init(rate, 7987248, samples, 0, 0);
 	}
 	else {
-		pc88opn->init(rate, 3993624, samples, 0, -4);
+		pc88opn->init(rate, 3993624, samples, 0, 0);
 	}
 	if (pc88sb2->is_ym2608() == true) {
-		pc88sb2->init(rate, 7987248, samples, 0, -4);
+		pc88sb2->init(rate, 7987248, samples, 0, 0);
 	}
 	else {
-		pc88sb2->init(rate, 3993624, samples, 0, -4);
+		pc88sb2->init(rate, 3993624, samples, 0, 0);
 	}
 
 	pc88pcm->init(rate, 8000);

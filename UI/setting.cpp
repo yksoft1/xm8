@@ -54,23 +54,18 @@
 										// version 1.30
 #define SETTING_VERSION_150		20151020
 										// version 1.50
+#define SETTING_VERSION_170		20180120
+										// version 1.70
 
 // video
 #define DEFAULT_WINDOW_WIDTH	640
 										// window width
 #define DEFAULT_SKIP_FRAME		0
 										// skip frame
-#ifdef __ANDROID__
-#define DEFAULT_SCAN_LINE		(false)
-										// scan line
-#define DEFAULT_BRIGHTNESS		0xE8
-										// brightness for vm
-#else
 #define DEFAULT_SCAN_LINE		(true)
 										// scan line
 #define DEFAULT_BRIGHTNESS		0xFF
 										// brightness for vm
-#endif // __ANDROID__
 #define DEFAULT_MENU_ALPHA		0xD0
 										// alpha blending level for menu
 #define DEFAULT_STATUS_LINE		(true)
@@ -103,7 +98,7 @@
 #endif // __ANDROID__
 
 // input
-#define DEFAULT_SOFTKEY_ALPHA	0x80
+#define DEFAULT_SOFTKEY_ALPHA	0x60
 										// alpha blending level for softkey
 #define DEFAULT_SOFTKEY_TIME	4000
 										// softkey timeout (ms)
@@ -196,7 +191,7 @@ bool Setting::Init()
 	// default settings (system)
 	config.boot_mode = SETTING_V2_MODE;
 	config.cpu_type = SETTING_CPU_4MHZ;
-	config.dipswitch = 0;
+	config.dipswitch = DIP_LINE_25;
 	config.device_type = SETTING_USE_JOYSTICK;
 
 	// defult settings (floppy disk)
@@ -310,6 +305,13 @@ bool Setting::LoadSetting(FILEIO *fio)
 			status_line = fio->FgetBool();
 			status_alpha = fio->FgetUint8();
 			scale_quality[0] = (char)('0' + fio->FgetInt32());
+
+#ifndef _WIN32
+			// version 1.70
+			if (scale_quality[0] == '2') {
+				scale_quality[0] = '1';
+			}
+#endif // !_WIN32
 		}
 
 		// version 1.10
@@ -334,6 +336,14 @@ bool Setting::LoadSetting(FILEIO *fio)
 				joystick_to_key[loop] = fio->FgetUint32();
 			}
 		}
+
+#ifdef __ANDROID__
+		// version 1.00-1.61 to version 1.70
+		if (version < SETTING_VERSION_170) {
+			brightness = DEFAULT_BRIGHTNESS;
+			config.scan_line = DEFAULT_SCAN_LINE;
+		}
+#endif // __ANDROID__
 
 		return true;
 	}
@@ -368,7 +378,7 @@ void Setting::SaveSetting(FILEIO *fio)
 	int loop;
 
 	// version
-	fio->FputUint32(SETTING_VERSION_150);
+	fio->FputUint32(SETTING_VERSION_170);
 
 	// system
 	fio->FputInt32(config.boot_mode);

@@ -33,6 +33,8 @@
 										// softkey infinite time (ms)
 #define MENU_DELAY_TIME			400
 										// menu delay time (ms)
+#define KEY_SOFT_MIN_TIME		32
+										// key minumum made time (ms)
 
 //
 // Input()
@@ -72,6 +74,10 @@ Input::Input(App *a)
 
 	// default key table
 	memcpy(key_table, key_base, sizeof(key_table));
+
+	// key make tick (from softkey only)
+	memset(key_soft_make_tick, 0, sizeof(key_soft_make_tick));
+	memset(key_soft_break_flag, 0, sizeof(key_soft_break_flag));
 }
 
 //
@@ -624,6 +630,13 @@ void Input::OnKeyDown(bool soft, SDL_Scancode code)
 
 	// soft ?
 	if (soft == true) {
+		// version 1.70
+		key_soft_make_tick[code] = SDL_GetTicks();
+		if (key_soft_make_tick[code] == 0) {
+			// 0 means not made the key by soft
+			key_soft_make_tick[code]++;
+		}
+
 		// RSHIFT ?
 		if (code == SDL_SCANCODE_RSHIFT) {
 			// lock (toggle on each make)
@@ -718,6 +731,20 @@ void Input::OnKeyUp(bool soft, SDL_Scancode code)
 
 	// soft ?
 	if (soft == true) {
+		// version 1.70
+		if (key_soft_make_tick[code] != 0) {
+			// made by soft
+			if ((Uint32)(SDL_GetTicks() - key_soft_make_tick[code]) < KEY_SOFT_MIN_TIME) {
+				// make->break : too fast!
+				key_soft_break_flag[code] = true;
+				return;
+			}
+			else {
+				key_soft_make_tick[code] = 0;
+				key_soft_break_flag[code] = false;
+			}
+		}
+
 		// RSHIFT ?
 		if (code == SDL_SCANCODE_RSHIFT) {
 			// lock (toggle on each make)
@@ -730,6 +757,26 @@ void Input::OnKeyUp(bool soft, SDL_Scancode code)
 
 	// set key status
 	SetKeyStatus();
+}
+
+//
+// DelayedBreak()
+// break the key after minimum time
+//
+void Input::DelayedBreak()
+{
+	int code;
+
+	for (code=0; code<SDL_arraysize(key_soft_break_flag); code++) {
+		// delayed braek required ?
+		if (key_soft_break_flag[code] == true) {
+			// over?
+			if ((Uint32)(SDL_GetTicks() - key_soft_make_tick[code]) >= KEY_SOFT_MIN_TIME) {
+				// delayed break
+				OnKeyUp(true, (SDL_Scancode)code);
+			}
+		}
+	}
 }
 
 //
@@ -1244,7 +1291,7 @@ const Uint32 Input::key_base[0x120] = {
 	0x0000002d,		// SDL_SCANCODE_INSERT
 	0x00000024,		// SDL_SCANCODE_HOME
 	0x00000022,		// SDL_SCANCODE_PAGEUP
-	0x0000002e,		// SDL_SCANCODE_DELETE
+	0x0000003b,		// SDL_SCANCODE_DELETE
 	0x00000023,		// SDL_SCANCODE_END
 	0x00000021,		// SDL_SCANCODE_PAGEDOWN
 	0x00000027,		// SDL_SCANCODE_RIGHT
@@ -1311,12 +1358,12 @@ const Uint32 Input::key_base[0x120] = {
 	0x00000000,
 	0x0000006c,		// SDL_SCANCODE_KP_COMMA
 	0x00000000,
-	0x00000018,		// SDL_SCANCODE_INTERNATIONAL1
-	0x00000019,		// SDL_SCANCODE_INTERNATIONAL2
-	0x0000001c,		// SDL_SCANCODE_INTERNATIONAL3
-	0x0000001d,		// SDL_SCANCODE_INTERNATIONAL4
 	0x00000000,
 	0x00000000,
+	0x00000000,
+	0x0000001c,		// SDL_SCANCODE_INTERNATIONAL4
+	0x0000001d,		// SDL_SCANCODE_INTERNATIONAL5
+	0x00000018,		// SDL_SCANCODE_INTERNATIONAL6
 	0x00000000,
 	0x00000000,
 	0x00000000,
@@ -1416,7 +1463,7 @@ const Uint32 Input::key_base[0x120] = {
 	0x000000a0,		// SDL_SCANCODE_LSHIFT
 	0x00000012,		// SDL_SCANCODE_LALT
 	0x00000000,
-	0x00000011,		// SDL_SCANCODE_RCTRL
+	0x00000019,		// SDL_SCANCODE_RCTRL
 	0x000000a1,		// SDL_SCANCODE_RSHIFT
 	0x00000000,		// [Unassigned]SDL_SCANCODE_RALT
 	0x00000000,
@@ -1573,11 +1620,11 @@ const softkey_param Input::softkey_full[66 + 1] = {
 
 	{  8 + 5 * 0, 12 + 7 * 4, 4, 6, 1, "\xb6""\xc5", (int)SDL_SCANCODE_SCROLLLOCK },
 	{  8 + 5 * 1, 12 + 7 * 4, 4, 6, 1, "GR\nPH", (int)SDL_SCANCODE_LALT },
-	{  8 + 5 * 2, 12 + 7 * 4, 9, 6, 1, "SPACE\n""\x8c""\x88""\x92""\xe8", (int)SDL_SCANCODE_INTERNATIONAL4 },
+	{  8 + 5 * 2, 12 + 7 * 4, 9, 6, 1, "SPACE\n""\x8c""\x88""\x92""\xe8", (int)SDL_SCANCODE_INTERNATIONAL5 },
 	{  8 + 5 * 4, 12 + 7 * 4, 11, 6, 1, "SPACE\n", (int)SDL_SCANCODE_SPACE },
-	{  8 + 5 * 6 + 2, 12 + 7 * 4, 12, 6, 1, "SPACE\n""\x95""\xcf""\x8a""\xb7", (int)SDL_SCANCODE_INTERNATIONAL3 },
-	{  8 + 5 * 9, 12 + 7 * 4, 4, 6, 1, "PC", (int)SDL_SCANCODE_INTERNATIONAL1 },
-	{  8 + 5 * 10, 12 + 7 * 4, 4, 6, 1, "\x91""\x53""\n""\x8a""\x70", (int)SDL_SCANCODE_INTERNATIONAL2 },
+	{  8 + 5 * 6 + 2, 12 + 7 * 4, 12, 6, 1, "SPACE\n""\x95""\xcf""\x8a""\xb7", (int)SDL_SCANCODE_INTERNATIONAL4 },
+	{  8 + 5 * 9, 12 + 7 * 4, 4, 6, 1, "PC", (int)SDL_SCANCODE_INTERNATIONAL6 },
+	{  8 + 5 * 10, 12 + 7 * 4, 4, 6, 1, "\x91""\x53""\n""\x8a""\x70", (int)SDL_SCANCODE_RCTRL },
 
 	{  2 + 5 * 14, 12 + 7 * 1, 5, 13, 1, "RET", (int)SDL_SCANCODE_RETURN },
 

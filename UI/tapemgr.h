@@ -43,6 +43,8 @@ public:
 										// check tape mount (rec)
 	const char* GetDir();
 										// get tape dir
+	const char* GetFileName();
+										// get tape file name
 	void Load(FILEIO *fio);
 										// load state
 	void Save(FILEIO *fio);
@@ -63,6 +65,8 @@ private:
 										// tape dir
 	char state_path[_MAX_PATH * 3];
 										// state path
+	char nullstr[1];
+										// null string
 };
 
 #endif // TAPEMGR_H

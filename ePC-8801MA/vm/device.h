@@ -641,6 +641,15 @@ public:
 	virtual void event_frame() {}
 #ifdef SDL
 	virtual int event_vline(int v) { return 1; }
+
+	// version 1.70
+	virtual void reset_vblank_clocks()
+	{
+		if(event_manager == NULL) {
+			event_manager = vm->first_device->next_device;
+		}
+		event_manager->reset_vblank_clocks();
+	}
 #else
 	virtual void event_vline(int v, int clock) {}
 #endif // SDL

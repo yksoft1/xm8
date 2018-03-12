@@ -61,6 +61,8 @@ public:
 										// get access status
 	const char* GetDir();
 										// get disk dir
+	const char* GetFileName();
+										// get disk file name
 	int GetBank();
 										// get current bank
 	int GetBanks();
