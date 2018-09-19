@@ -1,0 +1,13 @@
+-----------------------------------------------------------------------
+
+eXellent Multi-platform emulator type 8 - 'XM8'
+based on ePC-8801MA
+
+Copyright (C) 2015-2018 £Ð£É£®
+version 1.70 (2018/01/23)
+
+-----------------------------------------------------------------------
+
+yksoft1's fork
+
+I added simple makefiles for building with MSYS1/MinGW.org/SDL2 and Emscripten, with some fixes.

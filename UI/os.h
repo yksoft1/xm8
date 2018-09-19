@@ -37,6 +37,14 @@
 #include <time.h>
 #endif // __linux__ && !__ANDROID__
 
+#if defined(EMSCRIPTEN)
+#include <emscripten.h>
+#include <SDL.h>
+#include <stdio.h>
+#include <string.h>
+#include <time.h>
+#endif
+
 //
 // Android
 //

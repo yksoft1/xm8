@@ -1,0 +1,5 @@
+[
+"_main",
+
+"__ZN3App3RunEv"
+]

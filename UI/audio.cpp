@@ -62,7 +62,10 @@ bool Audio::Init()
 	// create semaphore
 	audio_sem = SDL_CreateSemaphore(1);
 	if (audio_sem == NULL) {
+		fprintf(stderr, "SDL_CreateSemaphore err\n");
+#ifndef EMSCRIPTEN
 		return false;
+#endif
 	}
 
 	// get the number of devices
@@ -94,7 +97,7 @@ bool Audio::Init()
 		ptr += single_len;
 		ptr++;
 	}
-
+	
 	// initialize
 	device_id = 0;
 	play_pause = true;
@@ -328,7 +331,7 @@ int Audio::GetFreeSamples()
 	int samples;
 
 	// lock
-	SDL_SemWait(audio_sem);
+	//SDL_SemWait(audio_sem);
 
 	if (sample_buffer != NULL) {
 		samples = sample_size - sample_num;
@@ -340,7 +343,7 @@ int Audio::GetFreeSamples()
 	}
 
 	// unlock
-	SDL_SemPost(audio_sem);
+	//SDL_SemPost(audio_sem);
 
 	return samples;;
 }
@@ -368,7 +371,7 @@ int Audio::Write(Uint8 *stream, int len)
 	len *= (device_spec.channels * sizeof(Sint16));
 
 	// lock
-	SDL_SemWait(audio_sem);
+	//SDL_SemWait(audio_sem);
 
 	// percent of current buffer before writting (256:100%)
 	pct = (sample_num << 8) / sample_size;
@@ -430,7 +433,7 @@ int Audio::Write(Uint8 *stream, int len)
 	}
 
 	// unlock
-	SDL_SemPost(audio_sem);
+	//SDL_SemPost(audio_sem);
 
 	return pct;
 }
@@ -460,7 +463,7 @@ void Audio::Callback(Uint8 *stream, int len)
 	int size2;
 
 	// lock
-	SDL_SemWait(audio_sem);
+	//SDL_SemWait(audio_sem);
 
 	if (len > sample_num) {
 		// buffer underrun (ex: move window)
@@ -489,7 +492,7 @@ void Audio::Callback(Uint8 *stream, int len)
 	}
 
 	// unlock
-	SDL_SemPost(audio_sem);
+	//SDL_SemPost(audio_sem);
 }
 
 #endif // SDL

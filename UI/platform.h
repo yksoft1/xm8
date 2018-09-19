@@ -76,6 +76,18 @@ private:
 	bool dir_up;
 										// FindUp() result
 #endif // __linux__
+
+#ifdef EMSCRIPTEN
+	bool FindUp(const char *dir);
+										// find ..
+	void *dir_handle;
+										// DIR *
+	char dir_name[_MAX_PATH * 3];
+										// file name (shift-jis)
+	bool dir_up;
+										// FindUp() result
+#endif // __linux__
+
 };
 
 #endif // PLATFORM_H

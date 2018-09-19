@@ -19,6 +19,9 @@
 #ifdef _WIN32
 #define strnicmp _strnicmp
 #define stricmp _stricmp
+#ifdef __MINGW32__
+#define __min	min
+#endif
 #endif // _WIN32
 
 // Linux
@@ -33,6 +36,18 @@ typedef int errno_t;
 #define strnicmp strncasecmp
 #define stricmp strcasecmp
 #endif	// __linux__
+
+#ifdef EMSCRIPTEN
+#ifndef __LITTLE_ENDIAN__
+#define __LITTLE_ENDIAN__
+#endif // !__LITTLE_ENDIAN__
+#define _MAX_PATH			4096
+#define __min	min
+#define __stdcall
+typedef int errno_t;
+#define strnicmp strncasecmp
+#define stricmp strcasecmp
+#endif
 
 // max() and min() macro
 #ifndef max

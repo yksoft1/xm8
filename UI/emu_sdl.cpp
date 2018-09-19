@@ -155,7 +155,11 @@ scrntype* EMU_SDL::get_screen_buf(int y)
 // 
 void EMU_SDL::current_thread_sleep(uint32 ms)
 {
+#ifndef EMSCRIPTEN
 	SDL_Delay((Uint32)ms);
+#else
+	emscripten_sleep_with_yield(ms);
+#endif
 }
 
 #endif // SDL

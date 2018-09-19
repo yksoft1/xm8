@@ -10,9 +10,10 @@
 
 #ifdef SDL
 
-#ifdef _WIN32
+#if defined (_WIN32) || defined (WIN32)
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
+#include <imm.h>
 #endif // _WIN32
 
 #include "os.h"
@@ -32,6 +33,11 @@
 #include <sys/stat.h>
 #endif // __linux__
 
+#ifdef EMSCRIPTEN
+#include <dirent.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#endif // __linux__
 //
 // defines
 //
@@ -143,6 +149,66 @@ bool Platform::Init(SDL_Window *window)
 		return false;
 	}
 #endif // _WIN32 && UNICODE
+
+#if defined(_WIN32) && !defined(UNICODE)
+	HANDLE hMutex;
+	HINSTANCE hInstance;
+	HWND hWnd;
+	HANDLE hImage;
+	SDL_SysWMinfo info;
+
+	// create mutex
+	hMutex = CreateMutexA(NULL, TRUE, "XM8");
+	if (hMutex == NULL) {
+		return false;
+	}
+	if (GetLastError() == ERROR_ALREADY_EXISTS) {
+		return false;
+	}
+	mutex_handle = (void*)hMutex;
+/*
+	// get current module instance
+	hInstance = GetModuleHandle(NULL);
+
+	// get window handle
+	SDL_VERSION(&info.version);
+	if (SDL_GetWindowWMInfo(window, &info) == SDL_TRUE) {
+		hWnd = info.info.win.window;
+
+		// load icon
+		hImage = LoadImage( hInstance,
+							MAKEINTRESOURCE(100),
+							IMAGE_ICON,
+							0,
+							0,
+							LR_DEFAULTCOLOR);
+
+		// set icon
+		if ((hWnd != NULL) && (hImage != NULL)) {
+			SendMessage(hWnd, WM_SETICON, ICON_SMALL, (LPARAM)hImage);
+		}
+
+		// load icon (big)
+		hImage = LoadImage( hInstance,
+							MAKEINTRESOURCE(101),
+							IMAGE_ICON,
+							0,
+							0,
+							LR_DEFAULTCOLOR);
+
+		// set icon
+		if ((hWnd != NULL) && (hImage != NULL)) {
+			SendMessage(hWnd, WM_SETICON, ICON_BIG, (LPARAM)hImage);
+		}
+	}
+	*/
+	// allocate WIN32_FIND_DATA
+	find_data = (void*)SDL_malloc(sizeof(WIN32_FIND_DATA));
+	if (find_data == NULL) {
+		return false;
+	}
+#endif // _WIN32 && UNICODE
+
 
 #if defined(__linux__) && !defined(__ANDROID__)
 	char *opaque;
@@ -282,6 +348,104 @@ const char* Platform::FindFirst(const char *dir, Uint32 *info)
 	return NULL;
 #endif // _WIN32 && UNICODE
 
+#if defined(_WIN32) && !defined(UNICODE)
+	char sdir[MAX_PATH];
+	LPWIN32_FIND_DATA win32_find_data;
+	HANDLE handle;
+	DWORD drives;
+	int loop;
+	
+	// check root
+	if ((dir[1] == ':') && (dir[2] == '\\') && (dir[3] == '\0')) {
+		find_root = true;
+		find_drive = 0;
+	}
+	else {
+		find_root = false;
+	}
+
+	// UTF-8 to UNICODE
+	strcpy(sdir, dir);
+	strcat(sdir, "*.*");
+
+	// FindFirst
+	win32_find_data = (LPWIN32_FIND_DATA)find_data;
+	handle = FindFirstFileA(sdir, win32_find_data);
+
+	// result
+	if (handle != INVALID_HANDLE_VALUE) {
+		// save handle
+		find_handle = (void*)handle;
+
+		// UNICODE to SHIFT-JIS
+		strcpy(find_name, win32_find_data->cFileName);
+		
+		// save info
+		*info = (Uint32)win32_find_data->dwFileAttributes;
+
+		// directory ?
+		if ((win32_find_data->dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) != 0) {
+			strcat(find_name, "\\");
+		}
+
+		if (strcmp(find_name, ".\\") == 0) {
+			return FindNext(info);
+		}
+		else {
+			return find_name;
+		}
+	}
+
+	if (find_root == true) {
+		// get valid drive bit map
+		drives = GetLogicalDrives();
+
+		// search valid drive
+		for (loop=0; loop<32; loop++) {
+			if ((drives & 1) != 0) {
+				find_name[0] = (char)('A' + loop);
+				find_name[1] = ':';
+				find_name[2] = '\\';
+				find_name[3] = '\0';
+				*info = FILE_ATTRIBUTE_DIRECTORY;
+				find_drive = loop + 1;
+				return find_name;
+			}
+			drives >>= 1;
+		}
+	}
+
+	return NULL;
+#endif // _WIN32 && UNICODE
+
+
+#ifdef EMSCRIPTEN
+	DIR *dir_ret;
+
+	// Find ..
+	dir_up = FindUp(dir);
+
+	// open directory
+	dir_ret = opendir(dir);
+	if (dir_ret == NULL) {
+		return NULL;
+	}
+
+	// save
+	dir_handle = (void*)dir_ret;
+
+	// ..
+	if (dir_up == true) {
+		strcpy(dir_name, "../");
+		*info = DT_DIR;
+		return dir_name;
+	}
+
+	// find next
+	return FindNext(info);
+#endif // __liunx__
+
+
 #ifdef __linux__
 	DIR *dir_ret;
 
@@ -384,6 +548,108 @@ const char* Platform::FindNext(Uint32 *info)
 	return NULL;
 #endif // _WIN32 && UNICODE
 
+
+#if defined(_WIN32) && !defined(UNICODE)
+	HANDLE handle;
+	LPWIN32_FIND_DATA win32_find_data;
+	BOOL result;
+	DWORD drives;
+	int loop;
+
+	// FindNext
+	win32_find_data = (LPWIN32_FIND_DATA)find_data;
+	handle = (HANDLE)find_handle;
+	if (handle != INVALID_HANDLE_VALUE) {
+		result = FindNextFileA((HANDLE)find_handle, win32_find_data);
+
+		if (result == FALSE) {
+			// fail
+			FindClose(handle);
+			handle = INVALID_HANDLE_VALUE;
+			find_handle = (void*)handle;
+		}
+		else {
+			// success
+			strcpy (find_name, win32_find_data->cFileName);
+			// save info
+			*info = (Uint32)win32_find_data->dwFileAttributes;
+
+			// directory ?
+			if ((win32_find_data->dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) != 0) {
+				strcat(find_name, "\\");
+			}
+
+			return find_name;
+		}
+	}
+
+	if (find_root == true) {
+		// get valid drive bit map
+		drives = GetLogicalDrives();
+
+		// skip drives
+		for (loop=0; loop<find_drive; loop++) {
+			drives >>= 1;
+		}
+
+		// search valid drive
+		for (loop=0; loop<32; loop++) {
+			if ((drives & 1) != 0) {
+				find_name[0] = (char)('A' + find_drive + loop);
+				find_name[1] = ':';
+				find_name[2] = '\\';
+				find_name[3] = '\0';
+				*info = FILE_ATTRIBUTE_DIRECTORY;
+				find_drive += (loop + 1);
+				return find_name;
+			}
+			drives >>= 1;
+		}
+	}
+
+	return NULL;
+#endif // _WIN32 && UNICODE
+
+
+#ifdef EMSCRIPTEN
+	struct dirent *entry;
+	Converter *converter;
+
+	// get converter
+	converter = app->GetConverter();
+
+	// find
+	for (;;) {
+		entry = readdir((DIR*)dir_handle);
+		if (entry == NULL) {
+			closedir((DIR*)dir_handle);
+			dir_handle = NULL;
+			return NULL;
+		}
+
+		// check .
+		if (entry->d_name[0] != '.') {
+			break;
+		}
+	}
+
+	// name
+	converter->UtfToSjis(entry->d_name, dir_name);
+
+	// directory ?
+	if (entry->d_type == DT_DIR) {
+		if (dir_name[strlen(dir_name) - 1] != '/') {
+			strcat(dir_name, "/");
+		}
+	}
+
+	// type
+	*info = (Uint32)entry->d_type;
+
+	return dir_name;
+#endif // __liunx__
+
+
 #ifdef __linux__
 	struct dirent *entry;
 	Converter *converter;
@@ -466,6 +732,49 @@ bool Platform::FindUp(const char *dir)
 }
 #endif // __liunx__
 
+#ifdef EMSCRIPTEN
+//
+// FindUp()
+// find ..
+//
+bool Platform::FindUp(const char *dir)
+{
+	struct dirent *entry;
+	DIR *dir_ret;
+
+	// root ?
+	if (strcmp(dir, "/") == 0) {
+		return false;
+	}
+
+	// open directory
+	dir_ret = opendir(dir);
+	if (dir_ret == NULL) {
+		return false;
+	}
+
+	// find loop
+	for (;;) {
+		entry = readdir(dir_ret);
+		if (entry == NULL) {
+			break;
+		}
+
+		// check '..'
+		if (strcmp(entry->d_name, "..") == 0) {
+			if (entry->d_type == DT_DIR) {
+				closedir(dir_ret);
+				return true;
+			}
+		}
+	}
+
+	// close and false
+	closedir(dir_ret);
+	return false;
+}
+#endif // __liunx__
+
 //
 // IsDir()
 // check directory
@@ -495,6 +804,16 @@ bool Platform::IsDir(Uint32 info)
 		return false;
 	}
 #endif // __linux__
+
+#ifdef EMSCRIPTEN
+	if (info == DT_DIR) {
+		return true;
+	}
+	else {
+		return false;
+	}
+#endif // __linux__
+
 }
 
 //
@@ -556,6 +875,66 @@ bool Platform::MakePath(char *dir, const char *name)
 
 	return true;
 #endif // _WIN32 && UNICODE
+
+#if defined(_WIN32) && !defined(UNICODE)
+	size_t len_dir;
+	size_t len_name;
+	char ndir[MAX_PATH];
+	char nname[MAX_PATH];
+	LPSTR part;
+	
+	strcpy(ndir,dir);
+	strcpy(nname,name);
+	// cat
+	if ((nname[1] == ':') && (nname[2] == '\\') && (nname[3] == '\0')) {
+		strcpy(ndir, nname);
+	}
+	else {
+		strcat(ndir, nname);
+	}
+	
+	// GetFullPathName
+	GetFullPathNameA(ndir, SDL_arraysize(nname), nname, &part);
+
+	strcpy(dir,nname);
+
+
+	return true;
+#endif // _WIN32 && UNICODE
+
+
+#ifdef EMSCRIPTEN
+	Converter *converter;
+	struct stat filestat;
+
+	// get converter
+	converter = app->GetConverter();
+
+	// SHIFT-JIS to UTF-8
+	converter->SjisToUtf(name, dir_name);
+
+	// cat
+	strcat(dir, dir_name);
+
+	// realpath
+	if (realpath(dir, dir_name) == NULL) {
+		return false;
+	}
+
+	// directory ?
+	if (stat(dir_name, &filestat) == 0) {
+		if (S_ISDIR(filestat.st_mode)) {
+			if (dir_name[strlen(dir_name) - 1] != '/') {
+				strcat(dir_name, "/");
+			}
+		}
+	}
+
+	// realpath to dir
+	strcpy(dir, dir_name);
+
+	return true;
+#endif // __linux__
 
 #ifdef __linux__
 	Converter *converter;
@@ -661,6 +1040,31 @@ bool Platform::GetFileDateTime(const char *name, cur_time_t *cur_time)
 
 	return false;
 #endif // __linux__
+#ifdef EMSCRIPTEN
+	struct stat filestat;
+	time_t timep;
+	struct tm local_time;
+
+	if (stat(name, &filestat) == 0) {
+		// get last modified date at filestat.st_mtime
+		timep = (time_t)filestat.st_mtime;
+		tzset();
+		localtime_r(&timep, &local_time);
+
+		cur_time->year = local_time.tm_year + 1900;
+		cur_time->month = local_time.tm_mon + 1;
+		cur_time->day = local_time.tm_mday;
+		cur_time->day_of_week = local_time.tm_wday;
+		cur_time->hour = local_time.tm_hour;
+		cur_time->minute = local_time.tm_min;
+		cur_time->second = local_time.tm_sec;
+
+		return true;
+	}
+
+	return false;
+#endif // __linux__
+
 }
 
 //

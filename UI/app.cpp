@@ -654,6 +654,9 @@ void App::Run()
 
 	// main loop
 	while (app_quit == false) {
+#ifdef EMSCRIPTEN
+		emscripten_sleep_with_yield(1);
+#endif
 		// stop virtual machine or menu
 		if ((app_menu == true) || (app_background == true) || (app_powerdown == true)) {
 			// draw
@@ -769,7 +772,11 @@ void App::Run()
 					while (buffer_samples < buffer_evmgr) {
 						// buffer underrun
 						UnlockVM();
+#ifndef EMSCRIPTEN
 						SDL_Delay(1);
+#else
+						emscripten_sleep_with_yield(1);
+#endif
 						LockVM();
 						buffer_samples = audio->GetFreeSamples();
 					}
@@ -907,7 +914,11 @@ void App::Run()
 
 		// sleep 0 if full speed
 		if (app_fullspeed == true) {
+#ifndef EMSCRIPTEN
 			SDL_Delay(0);
+#else
+			emscripten_sleep_with_yield(0);
+#endif
 		}
 	}
 
