@@ -13,7 +13,13 @@
 #
 
 CXX = em++
-SDL_CONFIG ?= C:/emsdk/emscripten/1.38.12/system/bin/sdl-config
+
+ifeq ($(EMSCRIPTEN_ROOT),)
+#Set it yourself if EMSCRIPTEN_ROOT not there
+	EMSCRIPTEN_ROOT=c:/emsdk/emscripten/1.38.12
+endif
+
+SDL_CONFIG ?= $(EMSCRIPTEN_ROOT)/system/bin/sdl2-config
 #
 # options for SDL
 #
