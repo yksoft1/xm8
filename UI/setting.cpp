@@ -82,8 +82,11 @@
 #define DEFAULT_AUDIO_FREQ		48000
 										// audio freqency (Hz)
 #else
+#ifdef EMSCRIPTEN
+#define DEFAULT_AUDIO_FREQ		44100
+#else
 #define DEFAULT_AUDIO_FREQ		55467
-										// audio freqency (Hz)
+#endif									// audio freqency (Hz)
 #endif // __ANDROID__
 #define DEFAULT_AUDIO_POWER		11
 										// audio power (2^n)

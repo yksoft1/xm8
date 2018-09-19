@@ -655,7 +655,7 @@ void App::Run()
 	// main loop
 	while (app_quit == false) {
 #ifdef EMSCRIPTEN
-		emscripten_sleep_with_yield(1);
+		emscripten_sleep_with_yield(0);
 #endif
 		// stop virtual machine or menu
 		if ((app_menu == true) || (app_background == true) || (app_powerdown == true)) {

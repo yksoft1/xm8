@@ -330,8 +330,10 @@ int Audio::GetFreeSamples()
 {
 	int samples;
 
+#ifndef EMSCRIPTEN
 	// lock
-	//SDL_SemWait(audio_sem);
+	SDL_SemWait(audio_sem);
+#endif
 
 	if (sample_buffer != NULL) {
 		samples = sample_size - sample_num;
@@ -342,8 +344,10 @@ int Audio::GetFreeSamples()
 		samples = 0xffff;
 	}
 
+#ifndef EMSCRIPTEN
 	// unlock
-	//SDL_SemPost(audio_sem);
+	SDL_SemPost(audio_sem);
+#endif
 
 	return samples;;
 }
@@ -370,8 +374,10 @@ int Audio::Write(Uint8 *stream, int len)
 
 	len *= (device_spec.channels * sizeof(Sint16));
 
+#ifndef EMSCRIPTEN
 	// lock
-	//SDL_SemWait(audio_sem);
+	SDL_SemWait(audio_sem);
+#endif
 
 	// percent of current buffer before writting (256:100%)
 	pct = (sample_num << 8) / sample_size;
@@ -432,8 +438,10 @@ int Audio::Write(Uint8 *stream, int len)
 		sample_num += size2;
 	}
 
+#ifndef EMSCRIPTEN
 	// unlock
-	//SDL_SemPost(audio_sem);
+	SDL_SemPost(audio_sem);
+#endif
 
 	return pct;
 }
@@ -462,8 +470,10 @@ void Audio::Callback(Uint8 *stream, int len)
 	int size1;
 	int size2;
 
+#ifndef EMSCRIPTEN
 	// lock
-	//SDL_SemWait(audio_sem);
+	SDL_SemWait(audio_sem);
+#endif
 
 	if (len > sample_num) {
 		// buffer underrun (ex: move window)
@@ -491,8 +501,11 @@ void Audio::Callback(Uint8 *stream, int len)
 		sample_num -= size2;
 	}
 
+#ifndef EMSCRIPTEN
 	// unlock
-	//SDL_SemPost(audio_sem);
+	SDL_SemPost(audio_sem);
+#endif
+
 }
 
 #endif // SDL
